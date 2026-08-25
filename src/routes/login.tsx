@@ -32,6 +32,14 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+/**
+ * Protótipo: sem backend, simula se a usuária que está logando já tem o
+ * Perfil da Empresa preenchido. No sistema real essa checagem viria do
+ * backend (ex.: existe um registro de PerfilEmpresa vinculado ao
+ * idUsuario). Alterne manualmente para visualizar os dois estados.
+ */
+const perfilJaPreenchido = true;
+
 function LoginPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
@@ -76,8 +84,13 @@ function LoginPage() {
     setLoading(true);
     window.setTimeout(() => {
       setLoading(false);
-      // Protótipo: sem backend, o login sempre segue para a área logada.
-      void navigate({ to: "/dashboard" });
+      // Protótipo: sem backend, decide o destino a partir do estado
+      // simulado perfilJaPreenchido (ver comentário acima do componente).
+      if (perfilJaPreenchido) {
+        void navigate({ to: "/dashboard" });
+      } else {
+        void navigate({ to: "/perfil-empresa", search: { onboarding: true } });
+      }
     }, 1200);
   }
 
