@@ -460,19 +460,23 @@ function PerfilEmpresaPage() {
     <main className="min-h-screen bg-cream px-4 py-10 sm:py-14">
       <header className="mx-auto max-w-3xl">
         <div className="mb-5 flex items-center gap-2 text-sm text-muted-foreground">
-          <button
-            type="button"
-            disabled
-            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 opacity-60 transition hover:bg-pale"
-            aria-label="Voltar"
-          >
-            <ArrowLeft size={16} />
-            Voltar
-          </button>
+          {!isOnboarding && (
+            <>
+              <button
+                type="button"
+                onClick={() => void navigate({ to: "/dashboard" })}
+                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition hover:bg-pale"
+                aria-label="Voltar para a área logada"
+              >
+                <ArrowLeft size={16} />
+                Voltar
+              </button>
 
-          <span className="text-petal">
-            /
-          </span>
+              <span className="text-petal">
+                /
+              </span>
+            </>
+          )}
 
           <span className="font-medium text-wine">
             Perfil da Empresa
