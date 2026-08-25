@@ -10,7 +10,7 @@ import {
   validarNovaSenha,
   validarConfirmacaoSenha,
 } from "@/lib/validation";
-
+import { cadastrarUsuario } from "@/services/usuarioService";
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({
@@ -42,6 +42,7 @@ function CadastroPage() {
   const [showSenha, setShowSenha] = useState(false);
   const [showConfirmar, setShowConfirmar] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const [errors, setErrors] = useState<{
     email?: string | undefined;
     senha?: string | undefined;
@@ -56,25 +57,42 @@ function CadastroPage() {
 
   function handleEmailChange(value: string) {
     setEmail(value);
-    if (errors.email && !validarEmailCadastro(value))
+
+    if (errors.email && !validarEmailCadastro(value)) {
       setFieldError("email", undefined);
+    }
   }
 
   function handleSenhaChange(value: string) {
     setSenha(value);
-    if (errors.senha && !validarNovaSenha(value)) setFieldError("senha", undefined);
-    if (errors.confirmarSenha && confirmarSenha && confirmarSenha === value)
+
+    if (errors.senha && !validarNovaSenha(value)) {
+      setFieldError("senha", undefined);
+    }
+
+    if (
+      errors.confirmarSenha &&
+      confirmarSenha &&
+      confirmarSenha === value
+    ) {
       setFieldError("confirmarSenha", undefined);
+    }
   }
 
   function handleConfirmarChange(value: string) {
     setConfirmarSenha(value);
-    if (errors.confirmarSenha && !validarConfirmacaoSenha(value, senha))
+
+    if (
+      errors.confirmarSenha &&
+      !validarConfirmacaoSenha(value, senha)
+    ) {
       setFieldError("confirmarSenha", undefined);
+    }
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+
     const next = {
       email: validarEmailCadastro(email),
       senha: validarNovaSenha(senha),
@@ -82,17 +100,31 @@ function CadastroPage() {
     };
 
     setErrors(next);
-    if (next.email || next.senha || next.confirmarSenha) return;
+
+    if (next.email || next.senha || next.confirmarSenha) {
+      return;
+    }
 
     setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
-      // Protótipo: sem backend, o cadastro sempre segue para o login,
-      // exibindo a mensagem de sucesso lá (?cadastro=sucesso).
-      void navigate({ to: "/login", search: { cadastro: "sucesso" } });
-    }, 1600);
-  }
 
+    try {
+      await cadastrarUsuario({
+        email,
+        senha,
+      });
+
+      setLoading(false);
+
+      void navigate({
+        to: "/login",
+        search: { cadastro: "sucesso" },
+      });
+    } catch (error) {
+      setLoading(false);
+
+      console.error("Erro ao cadastrar:", error);
+    }
+  }
 
   const inputBase =
     "w-full rounded-2xl border bg-white px-4 py-3 font-sans text-ink placeholder:text-muted-foreground/70 transition outline-none focus:border-berry focus:ring-4 focus:ring-rose/25";
@@ -107,22 +139,34 @@ function CadastroPage() {
       <div className="relative w-full max-w-md">
         <header className="mb-8 text-center">
           <Wordmark />
+
           <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
             Crie sua conta e comece a organizar sua precificação
           </p>
         </header>
 
         <section className="rounded-[28px] border border-petal/40 bg-white p-7 shadow-[0_20px_60px_-25px_rgba(107,21,48,0.35)] sm:p-9">
-          <h1 className="font-display text-2xl font-semibold text-wine">Criar conta</h1>
+          <h1 className="font-display text-2xl font-semibold text-wine">
+            Criar conta
+          </h1>
+
           <p className="mt-1 text-sm text-muted-foreground">
             Preencha os dados abaixo para acessar o Lumine.
           </p>
 
-          <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-5">
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="mt-7 space-y-5"
+          >
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-wine">
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-sm font-semibold text-wine"
+              >
                 E-mail
               </label>
+
               <input
                 id="email"
                 name="email"
@@ -131,17 +175,31 @@ function CadastroPage() {
                 placeholder="voce@exemplo.com"
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
-                onBlur={() => setFieldError("email", validarEmailCadastro(email))}
+                onBlur={() =>
+                  setFieldError(
+                    "email",
+                    validarEmailCadastro(email)
+                  )
+                }
                 aria-invalid={!!errors.email}
-                className={`${inputBase} ${errors.email ? "border-berry ring-4 ring-berry/15" : "border-petal"}`}
+                className={`${inputBase} ${
+                  errors.email
+                    ? "border-berry ring-4 ring-berry/15"
+                    : "border-petal"
+                }`}
               />
+
               <FieldError message={errors.email} />
             </div>
 
             <div>
-              <label htmlFor="senha" className="mb-1.5 block text-sm font-semibold text-wine">
+              <label
+                htmlFor="senha"
+                className="mb-1.5 block text-sm font-semibold text-wine"
+              >
                 Senha
               </label>
+
               <div className="relative">
                 <input
                   id="senha"
@@ -150,29 +208,56 @@ function CadastroPage() {
                   autoComplete="new-password"
                   placeholder="••••••••"
                   value={senha}
-                  onChange={(e) => handleSenhaChange(e.target.value)}
-                  onBlur={() => setFieldError("senha", validarNovaSenha(senha))}
+                  onChange={(e) =>
+                    handleSenhaChange(e.target.value)
+                  }
+                  onBlur={() =>
+                    setFieldError(
+                      "senha",
+                      validarNovaSenha(senha)
+                    )
+                  }
                   aria-invalid={!!errors.senha}
-                  className={`${inputBase} pr-12 ${errors.senha ? "border-berry ring-4 ring-berry/15" : "border-petal"}`}
+                  className={`${inputBase} pr-12 ${
+                    errors.senha
+                      ? "border-berry ring-4 ring-berry/15"
+                      : "border-petal"
+                  }`}
                 />
+
                 <button
                   type="button"
-                  onClick={() => setShowSenha((v) => !v)}
-                  aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                  onClick={() =>
+                    setShowSenha((v) => !v)
+                  }
+                  aria-label={
+                    showSenha
+                      ? "Ocultar senha"
+                      : "Mostrar senha"
+                  }
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-wine/60 transition hover:bg-pale hover:text-berry"
                 >
-                  {showSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showSenha ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
+
               <FieldError message={errors.senha} />
 
               <PasswordStrengthIndicator password={senha} />
             </div>
 
             <div>
-              <label htmlFor="confirmarSenha" className="mb-1.5 block text-sm font-semibold text-wine">
+              <label
+                htmlFor="confirmarSenha"
+                className="mb-1.5 block text-sm font-semibold text-wine"
+              >
                 Confirmar senha
               </label>
+
               <div className="relative">
                 <input
                   id="confirmarSenha"
@@ -181,28 +266,48 @@ function CadastroPage() {
                   autoComplete="new-password"
                   placeholder="••••••••"
                   value={confirmarSenha}
-                  onChange={(e) => handleConfirmarChange(e.target.value)}
+                  onChange={(e) =>
+                    handleConfirmarChange(e.target.value)
+                  }
                   onBlur={() =>
                     setFieldError(
                       "confirmarSenha",
-                      validarConfirmacaoSenha(confirmarSenha, senha)
+                      validarConfirmacaoSenha(
+                        confirmarSenha,
+                        senha
+                      )
                     )
                   }
                   aria-invalid={!!errors.confirmarSenha}
-                  className={`${inputBase} pr-12 ${errors.confirmarSenha ? "border-berry ring-4 ring-berry/15" : "border-petal"}`}
+                  className={`${inputBase} pr-12 ${
+                    errors.confirmarSenha
+                      ? "border-berry ring-4 ring-berry/15"
+                      : "border-petal"
+                  }`}
                 />
+
                 <button
                   type="button"
-                  onClick={() => setShowConfirmar((v) => !v)}
-                  aria-label={showConfirmar ? "Ocultar confirmação" : "Mostrar confirmação"}
+                  onClick={() =>
+                    setShowConfirmar((v) => !v)
+                  }
+                  aria-label={
+                    showConfirmar
+                      ? "Ocultar confirmação"
+                      : "Mostrar confirmação"
+                  }
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-wine/60 transition hover:bg-pale hover:text-berry"
                 >
-                  {showConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showConfirmar ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
+
               <FieldError message={errors.confirmarSenha} />
             </div>
-
 
             <button
               type="submit"
@@ -211,7 +316,10 @@ function CadastroPage() {
             >
               {loading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" />
+                  <Loader2
+                    size={18}
+                    className="animate-spin"
+                  />
                   Criando conta...
                 </>
               ) : (
