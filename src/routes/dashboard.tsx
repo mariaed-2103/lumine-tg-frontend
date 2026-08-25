@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 /**
  * Placeholder da área logada.
@@ -27,6 +27,13 @@ function DashboardPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Placeholder — em breve o dashboard do Lumine.
         </p>
+        {/* Espaço reservado para o menu/sidebar real do sistema */}
+        <Link
+          to="/perfil-empresa"
+          className="mt-6 inline-block font-sans text-sm font-bold text-berry transition hover:text-rose hover:underline"
+        >
+          Perfil da Empresa
+        </Link>
       </div>
     </main>
   );

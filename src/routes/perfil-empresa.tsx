@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useRef, type FormEvent } from "react";
+import { z } from "zod";
 import {
   ArrowLeft,
   Camera,
@@ -39,6 +40,11 @@ export const Route = createFileRoute("/perfil-empresa")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: z.object({
+    // Presente e true quando vem do fluxo de onboarding (pós-cadastro),
+    // conforme RN004: sem esses dados, os cálculos financeiros não rodam.
+    onboarding: z.boolean().optional(),
+  }),
   component: PerfilEmpresaPage,
 });
 
@@ -52,6 +58,17 @@ const DADOS_EXISTENTES = {
   cnpj: "12.345.678/0001-90",
   diasTrabalhadosMes: "22",
   horasDisponiveisDia: "6.5",
+};
+
+// Protótipo: simula uma usuária recém-cadastrada, sem Perfil da Empresa
+// preenchido ainda, para o fluxo de onboarding.
+const PERFIL_VAZIO = {
+  nomeProfissional: "",
+  nomeClinica: "",
+  telefone: "",
+  cnpj: "",
+  diasTrabalhadosMes: "",
+  horasDisponiveisDia: "",
 };
 
 function maskTelefone(value: string) {
@@ -77,8 +94,16 @@ type FormData = typeof DADOS_EXISTENTES;
 type Errors = Partial<Record<keyof FormData, string | undefined>>;
 
 function PerfilEmpresaPage() {
-  const [mode, setMode] = useState<"view" | "edit">("view");
-  const [form, setForm] = useState<FormData>({ ...DADOS_EXISTENTES });
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  // Onboarding: acabou de se cadastrar, ainda não existe Perfil da Empresa
+  // (RN004) — a tela abre direto em edição, com os campos vazios.
+  const isOnboarding = search.onboarding === true;
+
+  const [mode, setMode] = useState<"view" | "edit">(isOnboarding ? "edit" : "view");
+  const [form, setForm] = useState<FormData>(
+    isOnboarding ? { ...PERFIL_VAZIO } : { ...DADOS_EXISTENTES },
+  );
   const [logotipo, setLogotipo] = useState<string>("");
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
@@ -159,6 +184,12 @@ function PerfilEmpresaPage() {
     setLoading(true);
     window.setTimeout(() => {
       setLoading(false);
+      if (isOnboarding) {
+        // Primeira configuração: não há tela de visualização para voltar,
+        // segue direto para a área logada.
+        void navigate({ to: "/dashboard" });
+        return;
+      }
       setSuccess(true);
       setMode("view");
     }, 1400);
@@ -557,14 +588,16 @@ function PerfilEmpresaPage() {
             </div>
 
             <div className="mt-8 flex flex-col-reverse gap-3 pb-4 sm:flex-row sm:items-center sm:justify-end">
-              <button
-                type="button"
-                onClick={cancelEdit}
-                disabled={loading}
-                className="inline-flex w-full items-center justify-center rounded-2xl border border-berry bg-transparent px-5 py-3 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
-              >
-                Cancelar
-              </button>
+              {!isOnboarding && (
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  disabled={loading}
+                  className="inline-flex w-full items-center justify-center rounded-2xl border border-berry bg-transparent px-5 py-3 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+                >
+                  Cancelar
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={loading}

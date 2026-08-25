@@ -87,9 +87,10 @@ function CadastroPage() {
     setLoading(true);
     window.setTimeout(() => {
       setLoading(false);
-      // Protótipo: sem backend, o cadastro sempre segue para o login,
-      // exibindo a mensagem de sucesso lá (?cadastro=sucesso).
-      void navigate({ to: "/login", search: { cadastro: "sucesso" } });
+      // Protótipo: sem backend, o cadastro sempre segue para o onboarding
+      // do Perfil da Empresa (RN004 — dados de capacidade operacional
+      // precisam existir antes do resto do sistema poder ser usado).
+      void navigate({ to: "/perfil-empresa", search: { onboarding: true } });
     }, 1600);
   }
 
