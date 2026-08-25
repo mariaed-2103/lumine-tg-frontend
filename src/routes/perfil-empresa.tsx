@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useRef, type FormEvent } from "react";
 import { z } from "zod";
 import {
@@ -20,7 +20,6 @@ import {
   validarHorasDia,
 } from "@/lib/validation";
 
-
 export const Route = createFileRoute("/perfil-empresa")({
   head: () => ({
     meta: [
@@ -30,21 +29,30 @@ export const Route = createFileRoute("/perfil-empresa")({
         content:
           "Cadastre e edite os dados do seu negócio e sua capacidade operacional no Lumine.",
       },
-      { property: "og:title", content: "Perfil da Empresa | Lumine" },
+      {
+        property: "og:title",
+        content: "Perfil da Empresa | Lumine",
+      },
       {
         property: "og:description",
         content:
           "Dados do negócio e capacidade de atendimento usados para calcular seus custos.",
       },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      {
+        property: "og:type",
+        content: "website",
+      },
+      {
+        name: "twitter:card",
+        content: "summary_large_image",
+      },
     ],
   }),
+
   validateSearch: z.object({
-    // Presente e true quando vem do fluxo de onboarding (pós-cadastro),
-    // conforme RN004: sem esses dados, os cálculos financeiros não rodam.
     onboarding: z.boolean().optional(),
   }),
+
   component: PerfilEmpresaPage,
 });
 
@@ -60,8 +68,6 @@ const DADOS_EXISTENTES = {
   horasDisponiveisDia: "6.5",
 };
 
-// Protótipo: simula uma usuária recém-cadastrada, sem Perfil da Empresa
-// preenchido ainda, para o fluxo de onboarding.
 const PERFIL_VAZIO = {
   nomeProfissional: "",
   nomeClinica: "",
@@ -73,90 +79,192 @@ const PERFIL_VAZIO = {
 
 function maskTelefone(value: string) {
   const d = value.replace(/\D/g, "").slice(0, 11);
-  if (d.length <= 2) return d.length ? `(${d}` : "";
-  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  if (d.length <= 10)
+
+  if (d.length <= 2) {
+    return d.length ? `(${d}` : "";
+  }
+
+  if (d.length <= 6) {
+    return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  }
+
+  if (d.length <= 10) {
     return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  }
+
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
 function maskCnpj(value: string) {
   const d = value.replace(/\D/g, "").slice(0, 14);
+
   let out = d.slice(0, 2);
-  if (d.length > 2) out += `.${d.slice(2, 5)}`;
-  if (d.length > 5) out += `.${d.slice(5, 8)}`;
-  if (d.length > 8) out += `/${d.slice(8, 12)}`;
-  if (d.length > 12) out += `-${d.slice(12, 14)}`;
+
+  if (d.length > 2) {
+    out += `.${d.slice(2, 5)}`;
+  }
+
+  if (d.length > 5) {
+    out += `.${d.slice(5, 8)}`;
+  }
+
+  if (d.length > 8) {
+    out += `/${d.slice(8, 12)}`;
+  }
+
+  if (d.length > 12) {
+    out += `-${d.slice(12, 14)}`;
+  }
+
   return out;
 }
 
 type FormData = typeof DADOS_EXISTENTES;
-type Errors = Partial<Record<keyof FormData, string | undefined>>;
+
+type Errors = Partial<
+  Record<keyof FormData, string | undefined>
+>;
 
 function PerfilEmpresaPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  // Onboarding: acabou de se cadastrar, ainda não existe Perfil da Empresa
-  // (RN004) — a tela abre direto em edição, com os campos vazios.
+
   const isOnboarding = search.onboarding === true;
 
-  const [mode, setMode] = useState<"view" | "edit">(isOnboarding ? "edit" : "view");
-  const [form, setForm] = useState<FormData>(
-    isOnboarding ? { ...PERFIL_VAZIO } : { ...DADOS_EXISTENTES },
+  const [mode, setMode] = useState<"view" | "edit">(
+    isOnboarding ? "edit" : "view"
   );
+
+  const [form, setForm] = useState<FormData>(
+    isOnboarding
+      ? { ...PERFIL_VAZIO }
+      : { ...DADOS_EXISTENTES }
+  );
+
   const [logotipo, setLogotipo] = useState<string>("");
+
   const [errors, setErrors] = useState<Errors>({});
+
   const [loading, setLoading] = useState(false);
+
   const [success, setSuccess] = useState(false);
+
+  const [apiError, setApiError] = useState("");
+
   const fileRef = useRef<HTMLInputElement>(null);
 
   const horasMes = useMemo(() => {
-    const dias = parseInt(form.diasTrabalhadosMes || "0", 10);
-    const horas = parseFloat((form.horasDisponiveisDia || "0").replace(",", "."));
-    if (!dias || !horas || Number.isNaN(dias) || Number.isNaN(horas)) return null;
-    const total = dias * horas;
-    return Number.isInteger(total) ? String(total) : total.toFixed(1);
-  }, [form.diasTrabalhadosMes, form.horasDisponiveisDia]);
+    const dias = parseInt(
+      form.diasTrabalhadosMes || "0",
+      10
+    );
 
-  function validarCampo(field: keyof FormData, value: string) {
+    const horas = parseFloat(
+      (form.horasDisponiveisDia || "0").replace(",", ".")
+    );
+
+    if (
+      !dias ||
+      !horas ||
+      Number.isNaN(dias) ||
+      Number.isNaN(horas)
+    ) {
+      return null;
+    }
+
+    const total = dias * horas;
+
+    return Number.isInteger(total)
+      ? String(total)
+      : total.toFixed(1);
+  }, [
+    form.diasTrabalhadosMes,
+    form.horasDisponiveisDia,
+  ]);
+
+  function validarCampo(
+    field: keyof FormData,
+    value: string
+  ) {
     switch (field) {
       case "nomeProfissional":
-        return validarObrigatorio(value, "Nome da profissional é obrigatório");
+        return validarObrigatorio(
+          value,
+          "Nome da profissional é obrigatório"
+        );
+
       case "nomeClinica":
-        return validarObrigatorio(value, "Nome da clínica é obrigatório");
+        return validarObrigatorio(
+          value,
+          "Nome da clínica é obrigatório"
+        );
+
       case "telefone":
         return validarTelefone(value);
+
       case "cnpj":
         return validarCnpj(value);
+
       case "diasTrabalhadosMes":
         return validarDiasMes(value);
+
       case "horasDisponiveisDia":
         return validarHorasDia(value);
+
       default:
         return undefined;
     }
   }
 
-  function update(field: keyof FormData, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    // O erro some assim que o valor volta a ser válido, sem esperar o blur.
-    if (errors[field] && !validarCampo(field, value))
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    if (success) setSuccess(false);
+  function update(
+    field: keyof FormData,
+    value: string
+  ) {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    if (
+      errors[field] &&
+      !validarCampo(field, value)
+    ) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
+
+    if (success) {
+      setSuccess(false);
+    }
+
+    if (apiError) {
+      setApiError("");
+    }
   }
 
   function handleBlur(field: keyof FormData) {
-    setErrors((prev) => ({ ...prev, [field]: validarCampo(field, form[field]) }));
+    setErrors((prev) => ({
+      ...prev,
+      [field]: validarCampo(field, form[field]),
+    }));
   }
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFile(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
     const file = e.target.files?.[0];
-    if (file) setLogotipo(URL.createObjectURL(file));
+
+    if (file) {
+      setLogotipo(URL.createObjectURL(file));
+    }
   }
 
   function enterEditMode() {
     setSuccess(false);
     setErrors({});
+    setApiError("");
     setMode("edit");
   }
 
@@ -165,39 +273,171 @@ function PerfilEmpresaPage() {
     setLogotipo("");
     setErrors({});
     setSuccess(false);
+    setApiError("");
     setMode("view");
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(
+    e: FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
+
     setSuccess(false);
+    setApiError("");
 
     const next: Errors = {};
-    (Object.keys(form) as (keyof FormData)[]).forEach((field) => {
-      const message = validarCampo(field, form[field]);
-      if (message) next[field] = message;
+
+    (
+      Object.keys(form) as (keyof FormData)[]
+    ).forEach((field) => {
+      const message = validarCampo(
+        field,
+        form[field]
+      );
+
+      if (message) {
+        next[field] = message;
+      }
     });
 
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+
+    if (Object.keys(next).length > 0) {
+      return;
+    }
+
+    /*
+     * ID DO USUÁRIO
+     *
+     * Durante o cadastro do usuário,
+     * precisamos ter salvo o idUsuario.
+     *
+     * Exemplo:
+     * localStorage.setItem("idUsuario", String(idUsuario));
+     */
+
+    const idUsuario = localStorage.getItem("idUsuario");
+
+    if (!idUsuario) {
+      setApiError(
+        "Usuário não identificado. Faça o cadastro novamente."
+      );
+      return;
+    }
 
     setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
+
+    try {
+      const dados = {
+        idUsuario: Number(idUsuario),
+        nomeProfissional: form.nomeProfissional,
+        nomeClinica: form.nomeClinica,
+        logotipo: logotipo || null,
+        telefone: form.telefone,
+        cnpj: form.cnpj || null,
+        diasTrabalhadosMes: Number(
+          form.diasTrabalhadosMes
+        ),
+        horasDisponiveisDia: Number(
+          form.horasDisponiveisDia.replace(",", ".")
+        ),
+      };
+
+      /*
+       * ONBOARDING
+       *
+       * Primeiro cadastro do perfil.
+       */
+
       if (isOnboarding) {
-        // Primeira configuração: não há tela de visualização para voltar,
-        // segue direto para a área logada.
-        void navigate({ to: "/dashboard" });
+        const response = await fetch(
+          "http://localhost:8080/perfis-empresa",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(dados),
+          }
+        );
+
+        if (!response.ok) {
+          const mensagem = await response.text();
+
+          throw new Error(
+            mensagem ||
+              "Erro ao cadastrar o perfil da empresa."
+          );
+        }
+
+        setLoading(false);
+
+        /*
+         * Depois de cadastrar o perfil,
+         * vai para o dashboard.
+         */
+
+        void navigate({
+          to: "/dashboard",
+        });
+
         return;
       }
+
+      /*
+       * EDIÇÃO
+       *
+       * Atualiza o perfil existente.
+       */
+
+      const response = await fetch(
+        `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dados),
+        }
+      );
+
+      if (!response.ok) {
+        const mensagem = await response.text();
+
+        throw new Error(
+          mensagem ||
+            "Erro ao atualizar o perfil da empresa."
+        );
+      }
+
+      setLoading(false);
       setSuccess(true);
       setMode("view");
-    }, 1400);
+    } catch (error) {
+      setLoading(false);
+
+      console.error(
+        "Erro ao salvar perfil da empresa:",
+        error
+      );
+
+      if (error instanceof Error) {
+        setApiError(error.message);
+      } else {
+        setApiError(
+          "Não foi possível salvar o perfil da empresa."
+        );
+      }
+    }
   }
 
-
   const fieldClass = (err?: string) =>
-    cn(inputBase, err ? "border-berry ring-4 ring-berry/15" : "border-petal");
+    cn(
+      inputBase,
+      err
+        ? "border-berry ring-4 ring-berry/15"
+        : "border-petal"
+    );
 
   const avatar = (
     <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-pale bg-pale">
@@ -208,34 +448,44 @@ function PerfilEmpresaPage() {
           className="h-full w-full object-cover"
         />
       ) : (
-        <Camera size={30} className="text-berry/70" />
+        <Camera
+          size={30}
+          className="text-berry/70"
+        />
       )}
     </div>
   );
 
   return (
     <main className="min-h-screen bg-cream px-4 py-10 sm:py-14">
-      {/* Espaço reservado para o menu/sidebar do sistema */}
       <header className="mx-auto max-w-3xl">
         <div className="mb-5 flex items-center gap-2 text-sm text-muted-foreground">
           <button
             type="button"
             disabled
             className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 opacity-60 transition hover:bg-pale"
-            aria-label="Voltar (reservado para navegação futura)"
+            aria-label="Voltar"
           >
             <ArrowLeft size={16} />
             Voltar
           </button>
-          <span className="text-petal">/</span>
-          <span className="font-medium text-wine">Perfil da Empresa</span>
+
+          <span className="text-petal">
+            /
+          </span>
+
+          <span className="font-medium text-wine">
+            Perfil da Empresa
+          </span>
         </div>
+
         <h1 className="font-display text-3xl font-semibold text-wine">
           Perfil da Empresa
         </h1>
+
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-          Esses dados são usados para calcular seus custos e identificar seu
-          negócio no sistema
+          Esses dados são usados para calcular seus
+          custos e identificar seu negócio no sistema
         </p>
       </header>
 
@@ -245,11 +495,24 @@ function PerfilEmpresaPage() {
           className="mx-auto mt-6 flex max-w-3xl items-start gap-3 rounded-2xl border border-petal/50 bg-pale p-4"
         >
           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-berry text-white">
-            <Check size={14} strokeWidth={3} />
+            <Check
+              size={14}
+              strokeWidth={3}
+            />
           </div>
+
           <p className="text-sm font-semibold text-wine">
             Perfil atualizado com sucesso
           </p>
+        </div>
+      )}
+
+      {apiError && (
+        <div
+          role="alert"
+          className="mx-auto mt-6 max-w-3xl rounded-2xl border border-berry/30 bg-rose/10 p-4 text-sm font-medium text-berry"
+        >
+          {apiError}
         </div>
       )}
 
@@ -258,11 +521,15 @@ function PerfilEmpresaPage() {
           <div className="transition-opacity duration-300">
             <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-start">
               <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-                <div className="shrink-0">{avatar}</div>
+                <div className="shrink-0">
+                  {avatar}
+                </div>
+
                 <div>
                   <h2 className="font-display text-2xl font-semibold text-wine">
                     {form.nomeClinica}
                   </h2>
+
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     {form.nomeProfissional}
                   </p>
@@ -284,6 +551,7 @@ function PerfilEmpresaPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Telefone/WhatsApp
                 </p>
+
                 <p className="mt-1 text-base font-semibold text-wine">
                   {form.telefone}
                 </p>
@@ -293,10 +561,13 @@ function PerfilEmpresaPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   CNPJ
                 </p>
+
                 <p
                   className={cn(
                     "mt-1 text-base font-semibold",
-                    form.cnpj ? "text-wine" : "text-muted-foreground/70"
+                    form.cnpj
+                      ? "text-wine"
+                      : "text-muted-foreground/70"
                   )}
                 >
                   {form.cnpj || "Não informado"}
@@ -307,6 +578,7 @@ function PerfilEmpresaPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Dias trabalhados por mês
                 </p>
+
                 <p className="mt-1 text-base font-semibold text-wine">
                   {form.diasTrabalhadosMes} dias
                 </p>
@@ -316,6 +588,7 @@ function PerfilEmpresaPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Horas disponíveis por dia
                 </p>
+
                 <p className="mt-1 text-base font-semibold text-wine">
                   {form.horasDisponiveisDia} horas
                 </p>
@@ -326,10 +599,13 @@ function PerfilEmpresaPage() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-berry">
                 <Calculator size={16} />
               </div>
+
               <p className="text-sm text-wine">
                 Isso representa até{" "}
-                <span className="font-bold">{horasMes ?? "—"}</span> horas
-                disponíveis por mês
+                <span className="font-bold">
+                  {horasMes ?? "—"}
+                </span>{" "}
+                horas disponíveis por mês
               </p>
             </div>
           </div>
@@ -339,11 +615,13 @@ function PerfilEmpresaPage() {
             noValidate
             className="transition-opacity duration-300"
           >
-            {/* Seção 1 — Dados da Empresa */}
+            {/* DADOS DA EMPRESA */}
+
             <div className="border-b border-petal/30 pb-8">
               <h2 className="font-display text-xl font-semibold text-wine">
                 Dados da Empresa
               </h2>
+
               <p className="mt-1 text-sm text-muted-foreground">
                 Informações de identificação do seu negócio.
               </p>
@@ -352,7 +630,9 @@ function PerfilEmpresaPage() {
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => fileRef.current?.click()}
+                    onClick={() =>
+                      fileRef.current?.click()
+                    }
                     aria-label="Enviar logotipo"
                     className="group relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-pale bg-pale transition focus:outline-none focus:ring-4 focus:ring-rose/35"
                   >
@@ -363,21 +643,32 @@ function PerfilEmpresaPage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <Camera size={30} className="text-berry/70" />
+                      <Camera
+                        size={30}
+                        className="text-berry/70"
+                      />
                     )}
+
                     <div className="absolute inset-0 flex items-center justify-center rounded-full bg-wine/30 opacity-0 transition group-hover:opacity-100">
-                      <Camera size={30} className="text-white" />
+                      <Camera
+                        size={30}
+                        className="text-white"
+                      />
                     </div>
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => fileRef.current?.click()}
+                    onClick={() =>
+                      fileRef.current?.click()
+                    }
                     aria-label="Enviar logotipo"
                     className="absolute bottom-0 right-0 rounded-full bg-berry p-2 text-white shadow-lg shadow-berry/30 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35"
                   >
                     <Upload size={14} />
                   </button>
                 </div>
+
                 <input
                   ref={fileRef}
                   id="logotipo"
@@ -387,9 +678,12 @@ function PerfilEmpresaPage() {
                   className="sr-only"
                   onChange={handleFile}
                 />
+
                 <button
                   type="button"
-                  onClick={() => fileRef.current?.click()}
+                  onClick={() =>
+                    fileRef.current?.click()
+                  }
                   className="rounded-xl px-3 py-1.5 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35"
                 >
                   Alterar logotipo
@@ -404,6 +698,7 @@ function PerfilEmpresaPage() {
                   >
                     Nome da profissional
                   </label>
+
                   <input
                     id="nomeProfissional"
                     name="nomeProfissional"
@@ -412,12 +707,28 @@ function PerfilEmpresaPage() {
                     autoComplete="name"
                     placeholder="Como você quer ser chamada"
                     value={form.nomeProfissional}
-                    onChange={(e) => update("nomeProfissional", e.target.value)}
-                    onBlur={() => handleBlur("nomeProfissional")}
-                    aria-invalid={!!errors.nomeProfissional}
-                    className={fieldClass(errors.nomeProfissional)}
+                    onChange={(e) =>
+                      update(
+                        "nomeProfissional",
+                        e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      handleBlur("nomeProfissional")
+                    }
+                    aria-invalid={
+                      !!errors.nomeProfissional
+                    }
+                    className={fieldClass(
+                      errors.nomeProfissional
+                    )}
                   />
-                  <FieldError message={errors.nomeProfissional} />
+
+                  <FieldError
+                    message={
+                      errors.nomeProfissional
+                    }
+                  />
                 </div>
 
                 <div className="sm:col-span-2">
@@ -427,6 +738,7 @@ function PerfilEmpresaPage() {
                   >
                     Nome da clínica
                   </label>
+
                   <input
                     id="nomeClinica"
                     name="nomeClinica"
@@ -434,12 +746,26 @@ function PerfilEmpresaPage() {
                     maxLength={150}
                     placeholder="Nome do seu espaço"
                     value={form.nomeClinica}
-                    onChange={(e) => update("nomeClinica", e.target.value)}
-                    onBlur={() => handleBlur("nomeClinica")}
-                    aria-invalid={!!errors.nomeClinica}
-                    className={fieldClass(errors.nomeClinica)}
+                    onChange={(e) =>
+                      update(
+                        "nomeClinica",
+                        e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      handleBlur("nomeClinica")
+                    }
+                    aria-invalid={
+                      !!errors.nomeClinica
+                    }
+                    className={fieldClass(
+                      errors.nomeClinica
+                    )}
                   />
-                  <FieldError message={errors.nomeClinica} />
+
+                  <FieldError
+                    message={errors.nomeClinica}
+                  />
                 </div>
 
                 <div>
@@ -449,6 +775,7 @@ function PerfilEmpresaPage() {
                   >
                     Telefone/WhatsApp
                   </label>
+
                   <input
                     id="telefone"
                     name="telefone"
@@ -457,12 +784,26 @@ function PerfilEmpresaPage() {
                     maxLength={20}
                     placeholder="(00) 00000-0000"
                     value={form.telefone}
-                    onChange={(e) => update("telefone", maskTelefone(e.target.value))}
-                    onBlur={() => handleBlur("telefone")}
+                    onChange={(e) =>
+                      update(
+                        "telefone",
+                        maskTelefone(
+                          e.target.value
+                        )
+                      )
+                    }
+                    onBlur={() =>
+                      handleBlur("telefone")
+                    }
                     aria-invalid={!!errors.telefone}
-                    className={fieldClass(errors.telefone)}
+                    className={fieldClass(
+                      errors.telefone
+                    )}
                   />
-                  <FieldError message={errors.telefone} />
+
+                  <FieldError
+                    message={errors.telefone}
+                  />
                 </div>
 
                 <div>
@@ -475,6 +816,7 @@ function PerfilEmpresaPage() {
                       (opcional)
                     </span>
                   </label>
+
                   <input
                     id="cnpj"
                     name="cnpj"
@@ -483,24 +825,41 @@ function PerfilEmpresaPage() {
                     maxLength={18}
                     placeholder="00.000.000/0000-00"
                     value={form.cnpj}
-                    onChange={(e) => update("cnpj", maskCnpj(e.target.value))}
-                    onBlur={() => handleBlur("cnpj")}
+                    onChange={(e) =>
+                      update(
+                        "cnpj",
+                        maskCnpj(
+                          e.target.value
+                        )
+                      )
+                    }
+                    onBlur={() =>
+                      handleBlur("cnpj")
+                    }
                     aria-invalid={!!errors.cnpj}
-                    className={fieldClass(errors.cnpj)}
+                    className={fieldClass(
+                      errors.cnpj
+                    )}
                   />
-                  <FieldError message={errors.cnpj} />
+
+                  <FieldError
+                    message={errors.cnpj}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Seção 2 — Capacidade Operacional */}
+            {/* CAPACIDADE OPERACIONAL */}
+
             <div className="pt-8">
               <h2 className="font-display text-xl font-semibold text-wine">
                 Capacidade Operacional
               </h2>
+
               <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Esses dados definem sua capacidade de atendimento e são usados
-                para calcular o custo fixo de cada procedimento.
+                Esses dados definem sua capacidade de
+                atendimento e são usados para calcular o
+                custo fixo de cada procedimento.
               </p>
 
               <div className="mt-7 grid gap-5 sm:grid-cols-2">
@@ -511,6 +870,7 @@ function PerfilEmpresaPage() {
                   >
                     Dias trabalhados por mês
                   </label>
+
                   <div className="relative">
                     <input
                       id="diasTrabalhadosMes"
@@ -521,22 +881,41 @@ function PerfilEmpresaPage() {
                       step={1}
                       inputMode="numeric"
                       placeholder="22"
-                      value={form.diasTrabalhadosMes}
-                      onChange={(e) =>
-                        update("diasTrabalhadosMes", e.target.value)
+                      value={
+                        form.diasTrabalhadosMes
                       }
-                      onBlur={() => handleBlur("diasTrabalhadosMes")}
-                      aria-invalid={!!errors.diasTrabalhadosMes}
+                      onChange={(e) =>
+                        update(
+                          "diasTrabalhadosMes",
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        handleBlur(
+                          "diasTrabalhadosMes"
+                        )
+                      }
+                      aria-invalid={
+                        !!errors.diasTrabalhadosMes
+                      }
                       className={cn(
-                        fieldClass(errors.diasTrabalhadosMes),
+                        fieldClass(
+                          errors.diasTrabalhadosMes
+                        ),
                         "pr-16"
                       )}
                     />
+
                     <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                       dias
                     </span>
                   </div>
-                  <FieldError message={errors.diasTrabalhadosMes} />
+
+                  <FieldError
+                    message={
+                      errors.diasTrabalhadosMes
+                    }
+                  />
                 </div>
 
                 <div>
@@ -546,6 +925,7 @@ function PerfilEmpresaPage() {
                   >
                     Horas disponíveis por dia
                   </label>
+
                   <div className="relative">
                     <input
                       id="horasDisponiveisDia"
@@ -556,22 +936,41 @@ function PerfilEmpresaPage() {
                       step={0.5}
                       inputMode="decimal"
                       placeholder="6.5"
-                      value={form.horasDisponiveisDia}
-                      onChange={(e) =>
-                        update("horasDisponiveisDia", e.target.value)
+                      value={
+                        form.horasDisponiveisDia
                       }
-                      onBlur={() => handleBlur("horasDisponiveisDia")}
-                      aria-invalid={!!errors.horasDisponiveisDia}
+                      onChange={(e) =>
+                        update(
+                          "horasDisponiveisDia",
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        handleBlur(
+                          "horasDisponiveisDia"
+                        )
+                      }
+                      aria-invalid={
+                        !!errors.horasDisponiveisDia
+                      }
                       className={cn(
-                        fieldClass(errors.horasDisponiveisDia),
+                        fieldClass(
+                          errors.horasDisponiveisDia
+                        ),
                         "pr-20"
                       )}
                     />
+
                     <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                       horas
                     </span>
                   </div>
-                  <FieldError message={errors.horasDisponiveisDia} />
+
+                  <FieldError
+                    message={
+                      errors.horasDisponiveisDia
+                    }
+                  />
                 </div>
               </div>
 
@@ -579,13 +978,18 @@ function PerfilEmpresaPage() {
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-berry">
                   <Calculator size={16} />
                 </div>
+
                 <p className="text-sm text-wine">
                   Isso representa até{" "}
-                  <span className="font-bold">{horasMes ?? "—"}</span> horas
-                  disponíveis por mês
+                  <span className="font-bold">
+                    {horasMes ?? "—"}
+                  </span>{" "}
+                  horas disponíveis por mês
                 </p>
               </div>
             </div>
+
+            {/* BOTÕES */}
 
             <div className="mt-8 flex flex-col-reverse gap-3 pb-4 sm:flex-row sm:items-center sm:justify-end">
               {!isOnboarding && (
@@ -598,6 +1002,7 @@ function PerfilEmpresaPage() {
                   Cancelar
                 </button>
               )}
+
               <button
                 type="submit"
                 disabled={loading}
@@ -605,7 +1010,10 @@ function PerfilEmpresaPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
+                    <Loader2
+                      size={18}
+                      className="animate-spin"
+                    />
                     Salvando...
                   </>
                 ) : (

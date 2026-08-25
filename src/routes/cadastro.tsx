@@ -108,16 +108,25 @@ function CadastroPage() {
     setLoading(true);
 
     try {
-      await cadastrarUsuario({
+      const usuario = await cadastrarUsuario({
         email,
         senha,
       });
 
+      // Guarda o ID do usuário para criar o Perfil da Empresa
+      sessionStorage.setItem(
+        "idUsuario",
+        String(usuario.idUsuario)
+      );
+
       setLoading(false);
 
+      // Vai para o cadastro do Perfil da Empresa
       void navigate({
-        to: "/login",
-        search: { cadastro: "sucesso" },
+        to: "/perfil-empresa",
+        search: {
+          onboarding: true,
+        },
       });
     } catch (error) {
       setLoading(false);
@@ -131,7 +140,6 @@ function CadastroPage() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-12">
-      {/* decorative sparks */}
       <Spark className="pointer-events-none absolute -left-10 top-16 h-40 w-40 text-petal/30" />
       <Spark className="pointer-events-none absolute -right-12 bottom-10 h-56 w-56 text-petal/25" />
       <Spark className="pointer-events-none absolute right-1/4 top-8 h-10 w-10 text-rose/25" />
