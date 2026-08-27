@@ -1,97 +1,120 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import { z } from "zod";
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+
 import { Wordmark } from "@/components/lumine/Wordmark";
 import { Spark } from "@/components/lumine/Spark";
 import { FieldError } from "@/components/lumine/FieldError";
-import { validarEmail, validarSenhaObrigatoria } from "@/lib/validation";
+
+import {
+  validarEmail,
+  validarSenhaObrigatoria,
+} from "@/lib/validation";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({
-    meta: [
-      { title: "Entrar | Lumine - Gestão para profissionais de estética" },
-      {
-        name: "description",
-        content:
-          "Acesse o Lumine e gerencie custos, preços e rentabilidade dos seus serviços de estética em um só lugar.",
-      },
-      { property: "og:title", content: "Entrar | Lumine" },
-      {
-        property: "og:description",
-        content:
-          "Gestão de custos e rentabilidade para profissionais autônomas de estética.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  validateSearch: z.object({
-    cadastro: z.literal("sucesso").optional(),
-  }),
   component: LoginPage,
 });
 
-/**
- * Protótipo: sem backend, simula se a usuária que está logando já tem o
- * Perfil da Empresa preenchido. No sistema real essa checagem viria do
- * backend (ex.: existe um registro de PerfilEmpresa vinculado ao
- * idUsuario). Alterne manualmente para visualizar os dois estados.
- */
-const perfilJaPreenchido = true;
-
 function LoginPage() {
-  const search = Route.useSearch();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [showSenha, setShowSenha] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{
-    email?: string | undefined;
-    senha?: string | undefined;
-  }>({});
 
-  function setFieldError(field: "email" | "senha", message?: string) {
-    setErrors((prev) => ({ ...prev, [field]: message }));
-  }
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const [senhaError, setSenhaError] = useState<string | undefined>();
+  const [formError, setFormError] = useState<string | undefined>();
 
   function handleEmailChange(value: string) {
     setEmail(value);
-    setFormError(null);
-    if (errors.email && !validarEmail(value)) setFieldError("email", undefined);
+    setEmailError(undefined);
+    setFormError(undefined);
   }
 
   function handleSenhaChange(value: string) {
     setSenha(value);
-    setFormError(null);
-    if (errors.senha && !validarSenhaObrigatoria(value))
-      setFieldError("senha", undefined);
+    setSenhaError(undefined);
+    setFormError(undefined);
   }
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setFormError(null);
-    const next = {
-      email: validarEmail(email),
-      senha: validarSenhaObrigatoria(senha),
-    };
-    setErrors(next);
-    if (next.email || next.senha) return;
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-    setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
-      // Protótipo: sem backend, decide o destino a partir do estado
-      // simulado perfilJaPreenchido (ver comentário acima do componente).
-      if (perfilJaPreenchido) {
-        void navigate({ to: "/dashboard" });
-      } else {
-        void navigate({ to: "/perfil-empresa", search: { onboarding: true } });
+    const erroEmail = validarEmail(email);
+    const erroSenha = validarSenhaObrigatoria(senha);
+
+    setEmailError(erroEmail);
+    setSenhaError(erroSenha);
+
+    if (erroEmail || erroSenha) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setFormError(undefined);
+
+      const response = await fetch(
+        "http://localhost:8080/usuarios/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            senha: senha,
+          }),
+        }
+      );
+
+      const texto = await response.text();
+
+      if (!response.ok) {
+        setFormError(
+          texto || "E-mail ou senha incorretos."
+        );
+
+        return;
       }
-    }, 1200);
+
+      const usuario = JSON.parse(texto);
+
+      // Salva o ID do usuário logado
+      localStorage.setItem(
+        "idUsuario",
+        String(usuario.idUsuario)
+      );
+
+      // Salva também o e-mail
+      localStorage.setItem(
+        "emailUsuario",
+        usuario.email
+      );
+
+      console.log("Usuário logado:", usuario);
+      console.log(
+        "ID salvo:",
+        usuario.idUsuario
+      );
+
+      void navigate({
+        to: "/dashboard",
+      });
+    } catch (error) {
+      console.error(
+        "Erro ao fazer login:",
+        error
+      );
+
+      setFormError(
+        "Não foi possível conectar ao backend."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   const inputBase =
@@ -99,54 +122,65 @@ function LoginPage() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-12">
-      {/* decorative sparks */}
-      <Spark className="pointer-events-none absolute -left-10 top-16 h-40 w-40 text-petal/30" />
-      <Spark className="pointer-events-none absolute -right-12 bottom-10 h-56 w-56 text-petal/25" />
-      <Spark className="pointer-events-none absolute right-1/4 top-8 h-10 w-10 text-rose/25" />
+      <Spark
+        className="pointer-events-none absolute -left-10 top-16 h-40 w-40 text-petal/30"
+      />
+
+      <Spark
+        className="pointer-events-none absolute -right-12 bottom-10 h-56 w-56 text-petal/25"
+      />
+
+      <Spark
+        className="pointer-events-none absolute right-1/4 top-8 h-10 w-10 text-rose/25"
+      />
 
       <div className="relative w-full max-w-md">
         <header className="mb-8 text-center">
           <Wordmark />
+
           <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
             Gestão de custos e rentabilidade para profissionais de estética
           </p>
         </header>
 
         <section className="rounded-[28px] border border-petal/40 bg-white p-7 shadow-[0_20px_60px_-25px_rgba(107,21,48,0.35)] sm:p-9">
-          <h1 className="font-display text-2xl font-semibold text-wine">Bem-vinda de volta</h1>
+          <h1 className="font-display text-2xl font-semibold text-wine">
+            Bem-vinda de volta
+          </h1>
+
           <p className="mt-1 text-sm text-muted-foreground">
             Entre para acompanhar seus serviços e lucros.
           </p>
-
-          {search.cadastro === "sucesso" && (
-            <div
-              role="status"
-              className="mt-6 flex items-center gap-2 rounded-2xl border border-rose/40 bg-pale px-3.5 py-3"
-            >
-              <CheckCircle2 size={18} className="shrink-0 text-berry" />
-              <p className="font-sans text-[12.5px] font-semibold tracking-tight text-wine whitespace-nowrap">
-                Conta criada com sucesso! Faça login para continuar.
-              </p>
-            </div>
-          )}
 
           {formError && (
             <div
               role="alert"
               className="mt-6 flex items-start gap-2.5 rounded-2xl border border-berry/40 bg-berry/5 p-3.5"
             >
-              <AlertCircle size={18} className="mt-0.5 shrink-0 text-berry" />
+              <AlertCircle
+                size={18}
+                className="mt-0.5 shrink-0 text-berry"
+              />
+
               <p className="font-sans text-[13px] font-semibold text-berry">
                 {formError}
               </p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-5">
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="mt-7 space-y-5"
+          >
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-wine">
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-sm font-semibold text-wine"
+              >
                 E-mail
               </label>
+
               <input
                 id="email"
                 name="email"
@@ -154,18 +188,31 @@ function LoginPage() {
                 autoComplete="email"
                 placeholder="voce@exemplo.com"
                 value={email}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                onBlur={() => setFieldError("email", validarEmail(email))}
-                aria-invalid={!!errors.email}
-                className={`${inputBase} ${errors.email ? "border-berry ring-4 ring-berry/15" : "border-petal"}`}
+                onChange={(event) =>
+                  handleEmailChange(event.target.value)
+                }
+                onBlur={() =>
+                  setEmailError(validarEmail(email))
+                }
+                aria-invalid={Boolean(emailError)}
+                className={`${inputBase} ${
+                  emailError
+                    ? "border-berry ring-4 ring-berry/15"
+                    : "border-petal"
+                }`}
               />
-              <FieldError message={errors.email} />
+
+              <FieldError message={emailError} />
             </div>
 
             <div>
-              <label htmlFor="senha" className="mb-1.5 block text-sm font-semibold text-wine">
+              <label
+                htmlFor="senha"
+                className="mb-1.5 block text-sm font-semibold text-wine"
+              >
                 Senha
               </label>
+
               <div className="relative">
                 <input
                   id="senha"
@@ -174,23 +221,43 @@ function LoginPage() {
                   autoComplete="current-password"
                   placeholder="••••••••"
                   value={senha}
-                  onChange={(e) => handleSenhaChange(e.target.value)}
-                  onBlur={() =>
-                    setFieldError("senha", validarSenhaObrigatoria(senha))
+                  onChange={(event) =>
+                    handleSenhaChange(event.target.value)
                   }
-                  aria-invalid={!!errors.senha}
-                  className={`${inputBase} pr-12 ${errors.senha ? "border-berry ring-4 ring-berry/15" : "border-petal"}`}
+                  onBlur={() =>
+                    setSenhaError(
+                      validarSenhaObrigatoria(senha)
+                    )
+                  }
+                  aria-invalid={Boolean(senhaError)}
+                  className={`${inputBase} pr-12 ${
+                    senhaError
+                      ? "border-berry ring-4 ring-berry/15"
+                      : "border-petal"
+                  }`}
                 />
+
                 <button
                   type="button"
-                  onClick={() => setShowSenha((v) => !v)}
-                  aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                  onClick={() =>
+                    setShowSenha((valor) => !valor)
+                  }
+                  aria-label={
+                    showSenha
+                      ? "Ocultar senha"
+                      : "Mostrar senha"
+                  }
                   className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-wine/60 transition hover:bg-pale hover:text-berry"
                 >
-                  {showSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showSenha ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
-              <FieldError message={errors.senha} />
+
+              <FieldError message={senhaError} />
 
               <div className="mt-2 text-right">
                 <Link
@@ -209,7 +276,10 @@ function LoginPage() {
             >
               {loading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" />
+                  <Loader2
+                    size={18}
+                    className="animate-spin"
+                  />
                   Entrando...
                 </>
               ) : (
@@ -220,6 +290,7 @@ function LoginPage() {
 
           <div className="mt-7 border-t border-petal/50 pt-5 text-center text-sm text-muted-foreground">
             Ainda não tem conta?{" "}
+
             <Link
               to="/cadastro"
               className="font-semibold text-berry transition hover:text-rose hover:underline"
