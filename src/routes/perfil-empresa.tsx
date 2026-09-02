@@ -1,5 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo, useRef, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { z } from "zod";
 import {
   ArrowLeft,
@@ -9,7 +15,9 @@ import {
   Calculator,
   Upload,
   Pencil,
+  AlertCircle,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { FieldError } from "@/components/lumine/FieldError";
 import {
@@ -23,7 +31,9 @@ import {
 export const Route = createFileRoute("/perfil-empresa")({
   head: () => ({
     meta: [
-      { title: "Perfil da Empresa | Lumine" },
+      {
+        title: "Perfil da Empresa | Lumine",
+      },
       {
         name: "description",
         content:
@@ -59,15 +69,6 @@ export const Route = createFileRoute("/perfil-empresa")({
 const inputBase =
   "w-full rounded-2xl border bg-white px-4 py-3 font-sans text-ink placeholder:text-muted-foreground/70 transition outline-none focus:border-berry focus:ring-4 focus:ring-rose/25";
 
-const DADOS_EXISTENTES = {
-  nomeProfissional: "Marina Alves",
-  nomeClinica: "Lumine Estética Avançada",
-  telefone: "(11) 98765-4321",
-  cnpj: "12.345.678/0001-90",
-  diasTrabalhadosMes: "22",
-  horasDisponiveisDia: "6.5",
-};
-
 const PERFIL_VAZIO = {
   nomeProfissional: "",
   nomeClinica: "",
@@ -76,6 +77,22 @@ const PERFIL_VAZIO = {
   diasTrabalhadosMes: "",
   horasDisponiveisDia: "",
 };
+
+type FormData = typeof PERFIL_VAZIO;
+
+type Errors = Partial<Record<keyof FormData, string | undefined>>;
+
+interface PerfilEmpresaResponse {
+  idPerfilEmpresa: number;
+  idUsuario: number;
+  nomeProfissional: string;
+  nomeClinica: string;
+  logotipo: string | null;
+  telefone: string;
+  cnpj: string | null;
+  diasTrabalhadosMes: number;
+  horasDisponiveisDia: number;
+}
 
 function maskTelefone(value: string) {
   const d = value.replace(/\D/g, "").slice(0, 11);
@@ -119,45 +136,44 @@ function maskCnpj(value: string) {
   return out;
 }
 
-type FormData = typeof DADOS_EXISTENTES;
-
-type Errors = Partial<
-  Record<keyof FormData, string | undefined>
->;
+function converterPerfilParaFormulario(
+  perfil: PerfilEmpresaResponse
+): FormData {
+  return {
+    nomeProfissional: perfil.nomeProfissional ?? "",
+    nomeClinica: perfil.nomeClinica ?? "",
+    telefone: perfil.telefone ?? "",
+    cnpj: perfil.cnpj ?? "",
+    diasTrabalhadosMes:
+      perfil.diasTrabalhadosMes != null
+        ? String(perfil.diasTrabalhadosMes)
+        : "",
+    horasDisponiveisDia:
+      perfil.horasDisponiveisDia != null
+        ? String(perfil.horasDisponiveisDia).replace(".", ",")
+        : "",
+  };
+}
 
 function PerfilEmpresaPage() {
-  const search = Route.useSearch();
   const navigate = useNavigate();
 
-  const isOnboarding = search.onboarding === true;
-
-  const [mode, setMode] = useState<"view" | "edit">(
-    isOnboarding ? "edit" : "view"
-  );
-
-  const [form, setForm] = useState<FormData>(
-    isOnboarding
-      ? { ...PERFIL_VAZIO }
-      : { ...DADOS_EXISTENTES }
-  );
+  const [form, setForm] = useState<FormData>({
+    ...PERFIL_VAZIO,
+  });
 
   const [logotipo, setLogotipo] = useState<string>("");
-
   const [errors, setErrors] = useState<Errors>({});
-
   const [loading, setLoading] = useState(false);
-
+  const [carregandoPerfil, setCarregandoPerfil] = useState(true);
+  const [perfilExiste, setPerfilExiste] = useState(false);
   const [success, setSuccess] = useState(false);
-
   const [apiError, setApiError] = useState("");
 
   const fileRef = useRef<HTMLInputElement>(null);
 
   const horasMes = useMemo(() => {
-    const dias = parseInt(
-      form.diasTrabalhadosMes || "0",
-      10
-    );
+    const dias = parseInt(form.diasTrabalhadosMes || "0", 10);
 
     const horas = parseFloat(
       (form.horasDisponiveisDia || "0").replace(",", ".")
@@ -182,6 +198,86 @@ function PerfilEmpresaPage() {
     form.horasDisponiveisDia,
   ]);
 
+  /*
+   * BUSCA O PERFIL DO USUÁRIO
+   *
+   * Se encontrar:
+   * - carrega os dados
+   * - entra no modo de edição
+   *
+   * Se não encontrar:
+   * - mantém formulário vazio
+   * - prepara o cadastro
+   */
+  useEffect(() => {
+    async function carregarPerfil() {
+      const idUsuario = localStorage.getItem("idUsuario");
+
+      if (!idUsuario) {
+        setApiError(
+          "Usuário não identificado. Faça o login novamente."
+        );
+
+        setCarregandoPerfil(false);
+        return;
+      }
+
+      try {
+        setCarregandoPerfil(true);
+        setApiError("");
+
+        const response = await fetch(
+          `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`
+        );
+
+        if (response.status === 404) {
+          /*
+           * O usuário existe, mas ainda não possui
+           * perfil da empresa.
+           */
+          setPerfilExiste(false);
+          setForm({ ...PERFIL_VAZIO });
+          setLogotipo("");
+
+          return;
+        }
+
+        if (!response.ok) {
+          const mensagem = await response.text();
+
+          throw new Error(
+            mensagem ||
+              "Não foi possível carregar o perfil da empresa."
+          );
+        }
+
+        const perfil: PerfilEmpresaResponse =
+          await response.json();
+
+        setForm(converterPerfilParaFormulario(perfil));
+        setLogotipo(perfil.logotipo ?? "");
+        setPerfilExiste(true);
+      } catch (error) {
+        console.error(
+          "Erro ao carregar perfil da empresa:",
+          error
+        );
+
+        if (error instanceof Error) {
+          setApiError(error.message);
+        } else {
+          setApiError(
+            "Não foi possível carregar o perfil da empresa."
+          );
+        }
+      } finally {
+        setCarregandoPerfil(false);
+      }
+    }
+
+    void carregarPerfil();
+  }, []);
+
   function validarCampo(
     field: keyof FormData,
     value: string
@@ -203,7 +299,9 @@ function PerfilEmpresaPage() {
         return validarTelefone(value);
 
       case "cnpj":
-        return validarCnpj(value);
+        return value.trim()
+          ? validarCnpj(value)
+          : undefined;
 
       case "diasTrabalhadosMes":
         return validarDiasMes(value);
@@ -261,20 +359,66 @@ function PerfilEmpresaPage() {
     }
   }
 
-  function enterEditMode() {
+  function cancelarEdicao() {
     setSuccess(false);
     setErrors({});
     setApiError("");
-    setMode("edit");
+
+    /*
+     * Recarrega os dados originais do backend.
+     */
+    const idUsuario = localStorage.getItem("idUsuario");
+
+    if (!idUsuario) {
+      return;
+    }
+
+    void carregarPerfilNovamente(idUsuario);
   }
 
-  function cancelEdit() {
-    setForm({ ...DADOS_EXISTENTES });
-    setLogotipo("");
-    setErrors({});
-    setSuccess(false);
-    setApiError("");
-    setMode("view");
+  async function carregarPerfilNovamente(
+    idUsuario: string
+  ) {
+    try {
+      setCarregandoPerfil(true);
+      setApiError("");
+
+      const response = await fetch(
+        `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`
+      );
+
+      if (response.status === 404) {
+        setPerfilExiste(false);
+        setForm({ ...PERFIL_VAZIO });
+        setLogotipo("");
+
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          "Não foi possível carregar o perfil."
+        );
+      }
+
+      const perfil: PerfilEmpresaResponse =
+        await response.json();
+
+      setForm(converterPerfilParaFormulario(perfil));
+      setLogotipo(perfil.logotipo ?? "");
+      setPerfilExiste(true);
+    } catch (error) {
+      console.error(
+        "Erro ao recarregar perfil:",
+        error
+      );
+
+      setApiError(
+        "Não foi possível carregar os dados do perfil."
+      );
+    } finally {
+      setCarregandoPerfil(false);
+    }
   }
 
   async function handleSubmit(
@@ -300,28 +444,23 @@ function PerfilEmpresaPage() {
       }
     });
 
+    /*
+     * Como logotipo e CNPJ são tratados como opcionais
+     * no frontend, eles não entram nessa validação.
+     */
     setErrors(next);
 
     if (Object.keys(next).length > 0) {
       return;
     }
 
-    /*
-     * ID DO USUÁRIO
-     *
-     * Durante o cadastro do usuário,
-     * precisamos ter salvo o idUsuario.
-     *
-     * Exemplo:
-     * localStorage.setItem("idUsuario", String(idUsuario));
-     */
-
     const idUsuario = localStorage.getItem("idUsuario");
 
     if (!idUsuario) {
       setApiError(
-        "Usuário não identificado. Faça o cadastro novamente."
+        "Usuário não identificado. Faça o login novamente."
       );
+
       return;
     }
 
@@ -344,12 +483,16 @@ function PerfilEmpresaPage() {
       };
 
       /*
-       * ONBOARDING
+       * PRIMEIRO CADASTRO
        *
-       * Primeiro cadastro do perfil.
+       * Se o usuário ainda não possui perfil,
+       * fazemos POST.
        */
+      if (!perfilExiste) {
+        console.log(
+          "CADASTRANDO NOVO PERFIL DA EMPRESA..."
+        );
 
-      if (isOnboarding) {
         const response = await fetch(
           "http://localhost:8080/perfis-empresa",
           {
@@ -361,22 +504,35 @@ function PerfilEmpresaPage() {
           }
         );
 
-        if (!response.ok) {
-          const mensagem = await response.text();
+        const texto = await response.text();
 
+        console.log(
+          "STATUS DO BACKEND:",
+          response.status
+        );
+
+        console.log(
+          "RESPOSTA DO BACKEND:",
+          texto
+        );
+
+        if (!response.ok) {
           throw new Error(
-            mensagem ||
-              "Erro ao cadastrar o perfil da empresa."
+            texto ||
+              `Erro ao cadastrar o perfil da empresa. Status: ${response.status}`
           );
         }
 
-        setLoading(false);
+        /*
+         * Agora o perfil existe no banco.
+         */
+        setPerfilExiste(true);
+        setSuccess(true);
 
         /*
-         * Depois de cadastrar o perfil,
-         * vai para o dashboard.
+         * Redireciona para o dashboard depois
+         * do cadastro inicial.
          */
-
         void navigate({
           to: "/dashboard",
         });
@@ -387,8 +543,11 @@ function PerfilEmpresaPage() {
       /*
        * EDIÇÃO
        *
-       * Atualiza o perfil existente.
+       * Se o perfil já existe, fazemos PUT.
        */
+      console.log(
+        "ATUALIZANDO PERFIL DA EMPRESA..."
+      );
 
       const response = await fetch(
         `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`,
@@ -401,21 +560,53 @@ function PerfilEmpresaPage() {
         }
       );
 
-      if (!response.ok) {
-        const mensagem = await response.text();
+      const texto = await response.text();
 
+      console.log(
+        "STATUS DO BACKEND:",
+        response.status
+      );
+
+      console.log(
+        "RESPOSTA DO BACKEND:",
+        texto
+      );
+
+      if (!response.ok) {
         throw new Error(
-          mensagem ||
-            "Erro ao atualizar o perfil da empresa."
+          texto ||
+            `Erro ao atualizar o perfil da empresa. Status: ${response.status}`
         );
       }
 
-      setLoading(false);
       setSuccess(true);
-      setMode("view");
-    } catch (error) {
-      setLoading(false);
 
+      /*
+       * Atualiza os dados exibidos com a resposta
+       * do backend.
+       */
+      if (texto) {
+        try {
+          const perfilAtualizado: PerfilEmpresaResponse =
+            JSON.parse(texto);
+
+          setForm(
+            converterPerfilParaFormulario(
+              perfilAtualizado
+            )
+          );
+
+          setLogotipo(
+            perfilAtualizado.logotipo ?? ""
+          );
+        } catch {
+          /*
+           * Se o backend não retornar JSON,
+           * mantemos os dados atuais.
+           */
+        }
+      }
+    } catch (error) {
       console.error(
         "Erro ao salvar perfil da empresa:",
         error
@@ -428,6 +619,8 @@ function PerfilEmpresaPage() {
           "Não foi possível salvar o perfil da empresa."
         );
       }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -456,27 +649,44 @@ function PerfilEmpresaPage() {
     </div>
   );
 
+  if (carregandoPerfil) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-cream px-4">
+        <div className="flex flex-col items-center gap-3 text-wine">
+          <Loader2
+            size={32}
+            className="animate-spin text-berry"
+          />
+
+          <p className="text-sm font-semibold">
+            Carregando perfil...
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-cream px-4 py-10 sm:py-14">
       <header className="mx-auto max-w-3xl">
         <div className="mb-5 flex items-center gap-2 text-sm text-muted-foreground">
-          {!isOnboarding && (
-            <>
-              <button
-                type="button"
-                onClick={() => void navigate({ to: "/dashboard" })}
-                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition hover:bg-pale"
-                aria-label="Voltar para a área logada"
-              >
-                <ArrowLeft size={16} />
-                Voltar
-              </button>
+          <button
+            type="button"
+            onClick={() =>
+              void navigate({
+                to: "/dashboard",
+              })
+            }
+            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition hover:bg-pale"
+            aria-label="Voltar para o dashboard"
+          >
+            <ArrowLeft size={16} />
+            Voltar
+          </button>
 
-              <span className="text-petal">
-                /
-              </span>
-            </>
-          )}
+          <span className="text-petal">
+            /
+          </span>
 
           <span className="font-medium text-wine">
             Perfil da Empresa
@@ -489,7 +699,7 @@ function PerfilEmpresaPage() {
 
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
           Esses dados são usados para calcular seus
-          custos e identificar seu negócio no sistema
+          custos e identificar seu negócio no sistema.
         </p>
       </header>
 
@@ -506,7 +716,9 @@ function PerfilEmpresaPage() {
           </div>
 
           <p className="text-sm font-semibold text-wine">
-            Perfil atualizado com sucesso
+            {perfilExiste
+              ? "Perfil atualizado com sucesso."
+              : "Perfil cadastrado com sucesso."}
           </p>
         </div>
       )}
@@ -514,88 +726,367 @@ function PerfilEmpresaPage() {
       {apiError && (
         <div
           role="alert"
-          className="mx-auto mt-6 max-w-3xl rounded-2xl border border-berry/30 bg-rose/10 p-4 text-sm font-medium text-berry"
+          className="mx-auto mt-6 flex max-w-3xl items-start gap-3 rounded-2xl border border-berry/30 bg-rose/10 p-4 text-sm font-medium text-berry"
         >
-          {apiError}
+          <AlertCircle
+            size={18}
+            className="mt-0.5 shrink-0"
+          />
+
+          <p>{apiError}</p>
         </div>
       )}
 
       <section className="mx-auto mt-6 max-w-3xl rounded-[28px] border border-petal/40 bg-white p-7 shadow-[0_20px_60px_-25px_rgba(107,21,48,0.25)] sm:p-9">
-        {mode === "view" ? (
-          <div className="transition-opacity duration-300">
-            <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-start">
-              <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-                <div className="shrink-0">
-                  {avatar}
-                </div>
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="transition-opacity duration-300"
+        >
+          {/* DADOS DA EMPRESA */}
 
-                <div>
-                  <h2 className="font-display text-2xl font-semibold text-wine">
-                    {form.nomeClinica}
-                  </h2>
+          <div className="border-b border-petal/30 pb-8">
+            <h2 className="font-display text-xl font-semibold text-wine">
+              Dados da Empresa
+            </h2>
 
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    {form.nomeProfissional}
-                  </p>
-                </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Informações de identificação do seu negócio.
+            </p>
+
+            <div className="mt-7 flex flex-col items-center gap-3">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() =>
+                    fileRef.current?.click()
+                  }
+                  aria-label="Enviar logotipo"
+                  className="group relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-pale bg-pale transition focus:outline-none focus:ring-4 focus:ring-rose/35"
+                >
+                  {logotipo ? (
+                    <img
+                      src={logotipo}
+                      alt="Logotipo da clínica"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Camera
+                      size={30}
+                      className="text-berry/70"
+                    />
+                  )}
+
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-wine/30 opacity-0 transition group-hover:opacity-100">
+                    <Camera
+                      size={30}
+                      className="text-white"
+                    />
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    fileRef.current?.click()
+                  }
+                  aria-label="Enviar logotipo"
+                  className="absolute bottom-0 right-0 rounded-full bg-berry p-2 text-white shadow-lg shadow-berry/30 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35"
+                >
+                  <Upload size={14} />
+                </button>
               </div>
+
+              <input
+                ref={fileRef}
+                id="logotipo"
+                name="logotipo"
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={handleFile}
+              />
 
               <button
                 type="button"
-                onClick={enterEditMode}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-berry bg-transparent px-5 py-3 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35 sm:w-auto"
+                onClick={() =>
+                  fileRef.current?.click()
+                }
+                className="rounded-xl px-3 py-1.5 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35"
               >
-                <Pencil size={16} />
-                Editar perfil
+                Alterar logotipo
               </button>
             </div>
 
-            <div className="mt-9 grid gap-6 sm:grid-cols-2">
-              <div className="rounded-2xl border border-petal/30 bg-cream/50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Telefone/WhatsApp
-                </p>
-
-                <p className="mt-1 text-base font-semibold text-wine">
-                  {form.telefone}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-petal/30 bg-cream/50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  CNPJ
-                </p>
-
-                <p
-                  className={cn(
-                    "mt-1 text-base font-semibold",
-                    form.cnpj
-                      ? "text-wine"
-                      : "text-muted-foreground/70"
-                  )}
+            <div className="mt-7 grid gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="nomeProfissional"
+                  className="mb-1.5 block text-sm font-semibold text-wine"
                 >
-                  {form.cnpj || "Não informado"}
-                </p>
+                  Nome da profissional
+                </label>
+
+                <input
+                  id="nomeProfissional"
+                  name="nomeProfissional"
+                  type="text"
+                  maxLength={150}
+                  autoComplete="name"
+                  placeholder="Como você quer ser chamada"
+                  value={form.nomeProfissional}
+                  onChange={(e) =>
+                    update(
+                      "nomeProfissional",
+                      e.target.value
+                    )
+                  }
+                  onBlur={() =>
+                    handleBlur("nomeProfissional")
+                  }
+                  aria-invalid={
+                    !!errors.nomeProfissional
+                  }
+                  className={fieldClass(
+                    errors.nomeProfissional
+                  )}
+                />
+
+                <FieldError
+                  message={errors.nomeProfissional}
+                />
               </div>
 
-              <div className="rounded-2xl border border-petal/30 bg-cream/50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="nomeClinica"
+                  className="mb-1.5 block text-sm font-semibold text-wine"
+                >
+                  Nome da clínica
+                </label>
+
+                <input
+                  id="nomeClinica"
+                  name="nomeClinica"
+                  type="text"
+                  maxLength={150}
+                  placeholder="Nome do seu espaço"
+                  value={form.nomeClinica}
+                  onChange={(e) =>
+                    update(
+                      "nomeClinica",
+                      e.target.value
+                    )
+                  }
+                  onBlur={() =>
+                    handleBlur("nomeClinica")
+                  }
+                  aria-invalid={!!errors.nomeClinica}
+                  className={fieldClass(
+                    errors.nomeClinica
+                  )}
+                />
+
+                <FieldError
+                  message={errors.nomeClinica}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="telefone"
+                  className="mb-1.5 block text-sm font-semibold text-wine"
+                >
+                  Telefone/WhatsApp
+                </label>
+
+                <input
+                  id="telefone"
+                  name="telefone"
+                  type="tel"
+                  inputMode="tel"
+                  maxLength={20}
+                  placeholder="(00) 00000-0000"
+                  value={form.telefone}
+                  onChange={(e) =>
+                    update(
+                      "telefone",
+                      maskTelefone(e.target.value)
+                    )
+                  }
+                  onBlur={() =>
+                    handleBlur("telefone")
+                  }
+                  aria-invalid={!!errors.telefone}
+                  className={fieldClass(
+                    errors.telefone
+                  )}
+                />
+
+                <FieldError
+                  message={errors.telefone}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="cnpj"
+                  className="mb-1.5 block text-sm font-semibold text-wine"
+                >
+                  CNPJ{" "}
+                  <span className="font-normal text-muted-foreground">
+                    (opcional)
+                  </span>
+                </label>
+
+                <input
+                  id="cnpj"
+                  name="cnpj"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={18}
+                  placeholder="00.000.000/0000-00"
+                  value={form.cnpj}
+                  onChange={(e) =>
+                    update(
+                      "cnpj",
+                      maskCnpj(e.target.value)
+                    )
+                  }
+                  onBlur={() =>
+                    handleBlur("cnpj")
+                  }
+                  aria-invalid={!!errors.cnpj}
+                  className={fieldClass(
+                    errors.cnpj
+                  )}
+                />
+
+                <FieldError
+                  message={errors.cnpj}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* CAPACIDADE OPERACIONAL */}
+
+          <div className="pt-8">
+            <h2 className="font-display text-xl font-semibold text-wine">
+              Capacidade Operacional
+            </h2>
+
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+              Esses dados definem sua capacidade de
+              atendimento e são usados para calcular o
+              custo fixo de cada procedimento.
+            </p>
+
+            <div className="mt-7 grid gap-5 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="diasTrabalhadosMes"
+                  className="mb-1.5 block text-sm font-semibold text-wine"
+                >
                   Dias trabalhados por mês
-                </p>
+                </label>
 
-                <p className="mt-1 text-base font-semibold text-wine">
-                  {form.diasTrabalhadosMes} dias
-                </p>
+                <div className="relative">
+                  <input
+                    id="diasTrabalhadosMes"
+                    name="diasTrabalhadosMes"
+                    type="number"
+                    min={1}
+                    max={31}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder="22"
+                    value={form.diasTrabalhadosMes}
+                    onChange={(e) =>
+                      update(
+                        "diasTrabalhadosMes",
+                        e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      handleBlur(
+                        "diasTrabalhadosMes"
+                      )
+                    }
+                    aria-invalid={
+                      !!errors.diasTrabalhadosMes
+                    }
+                    className={cn(
+                      fieldClass(
+                        errors.diasTrabalhadosMes
+                      ),
+                      "pr-16"
+                    )}
+                  />
+
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                    dias
+                  </span>
+                </div>
+
+                <FieldError
+                  message={
+                    errors.diasTrabalhadosMes
+                  }
+                />
               </div>
 
-              <div className="rounded-2xl border border-petal/30 bg-cream/50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <div>
+                <label
+                  htmlFor="horasDisponiveisDia"
+                  className="mb-1.5 block text-sm font-semibold text-wine"
+                >
                   Horas disponíveis por dia
-                </p>
+                </label>
 
-                <p className="mt-1 text-base font-semibold text-wine">
-                  {form.horasDisponiveisDia} horas
-                </p>
+                <div className="relative">
+                  <input
+                    id="horasDisponiveisDia"
+                    name="horasDisponiveisDia"
+                    type="number"
+                    min={0.5}
+                    max={24}
+                    step={0.5}
+                    inputMode="decimal"
+                    placeholder="6.5"
+                    value={form.horasDisponiveisDia}
+                    onChange={(e) =>
+                      update(
+                        "horasDisponiveisDia",
+                        e.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      handleBlur(
+                        "horasDisponiveisDia"
+                      )
+                    }
+                    aria-invalid={
+                      !!errors.horasDisponiveisDia
+                    }
+                    className={cn(
+                      fieldClass(
+                        errors.horasDisponiveisDia
+                      ),
+                      "pr-20"
+                    )}
+                  />
+
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                    horas
+                  </span>
+                </div>
+
+                <FieldError
+                  message={
+                    errors.horasDisponiveisDia
+                  }
+                />
               </div>
             </div>
 
@@ -613,420 +1104,48 @@ function PerfilEmpresaPage() {
               </p>
             </div>
           </div>
-        ) : (
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            className="transition-opacity duration-300"
-          >
-            {/* DADOS DA EMPRESA */}
 
-            <div className="border-b border-petal/30 pb-8">
-              <h2 className="font-display text-xl font-semibold text-wine">
-                Dados da Empresa
-              </h2>
+          {/* BOTÕES */}
 
-              <p className="mt-1 text-sm text-muted-foreground">
-                Informações de identificação do seu negócio.
-              </p>
-
-              <div className="mt-7 flex flex-col items-center gap-3">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      fileRef.current?.click()
-                    }
-                    aria-label="Enviar logotipo"
-                    className="group relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-pale bg-pale transition focus:outline-none focus:ring-4 focus:ring-rose/35"
-                  >
-                    {logotipo ? (
-                      <img
-                        src={logotipo}
-                        alt="Logotipo da clínica"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <Camera
-                        size={30}
-                        className="text-berry/70"
-                      />
-                    )}
-
-                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-wine/30 opacity-0 transition group-hover:opacity-100">
-                      <Camera
-                        size={30}
-                        className="text-white"
-                      />
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      fileRef.current?.click()
-                    }
-                    aria-label="Enviar logotipo"
-                    className="absolute bottom-0 right-0 rounded-full bg-berry p-2 text-white shadow-lg shadow-berry/30 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35"
-                  >
-                    <Upload size={14} />
-                  </button>
-                </div>
-
-                <input
-                  ref={fileRef}
-                  id="logotipo"
-                  name="logotipo"
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={handleFile}
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    fileRef.current?.click()
-                  }
-                  className="rounded-xl px-3 py-1.5 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35"
-                >
-                  Alterar logotipo
-                </button>
-              </div>
-
-              <div className="mt-7 grid gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label
-                    htmlFor="nomeProfissional"
-                    className="mb-1.5 block text-sm font-semibold text-wine"
-                  >
-                    Nome da profissional
-                  </label>
-
-                  <input
-                    id="nomeProfissional"
-                    name="nomeProfissional"
-                    type="text"
-                    maxLength={150}
-                    autoComplete="name"
-                    placeholder="Como você quer ser chamada"
-                    value={form.nomeProfissional}
-                    onChange={(e) =>
-                      update(
-                        "nomeProfissional",
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      handleBlur("nomeProfissional")
-                    }
-                    aria-invalid={
-                      !!errors.nomeProfissional
-                    }
-                    className={fieldClass(
-                      errors.nomeProfissional
-                    )}
-                  />
-
-                  <FieldError
-                    message={
-                      errors.nomeProfissional
-                    }
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label
-                    htmlFor="nomeClinica"
-                    className="mb-1.5 block text-sm font-semibold text-wine"
-                  >
-                    Nome da clínica
-                  </label>
-
-                  <input
-                    id="nomeClinica"
-                    name="nomeClinica"
-                    type="text"
-                    maxLength={150}
-                    placeholder="Nome do seu espaço"
-                    value={form.nomeClinica}
-                    onChange={(e) =>
-                      update(
-                        "nomeClinica",
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      handleBlur("nomeClinica")
-                    }
-                    aria-invalid={
-                      !!errors.nomeClinica
-                    }
-                    className={fieldClass(
-                      errors.nomeClinica
-                    )}
-                  />
-
-                  <FieldError
-                    message={errors.nomeClinica}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="telefone"
-                    className="mb-1.5 block text-sm font-semibold text-wine"
-                  >
-                    Telefone/WhatsApp
-                  </label>
-
-                  <input
-                    id="telefone"
-                    name="telefone"
-                    type="tel"
-                    inputMode="tel"
-                    maxLength={20}
-                    placeholder="(00) 00000-0000"
-                    value={form.telefone}
-                    onChange={(e) =>
-                      update(
-                        "telefone",
-                        maskTelefone(
-                          e.target.value
-                        )
-                      )
-                    }
-                    onBlur={() =>
-                      handleBlur("telefone")
-                    }
-                    aria-invalid={!!errors.telefone}
-                    className={fieldClass(
-                      errors.telefone
-                    )}
-                  />
-
-                  <FieldError
-                    message={errors.telefone}
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="cnpj"
-                    className="mb-1.5 block text-sm font-semibold text-wine"
-                  >
-                    CNPJ{" "}
-                    <span className="font-normal text-muted-foreground">
-                      (opcional)
-                    </span>
-                  </label>
-
-                  <input
-                    id="cnpj"
-                    name="cnpj"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={18}
-                    placeholder="00.000.000/0000-00"
-                    value={form.cnpj}
-                    onChange={(e) =>
-                      update(
-                        "cnpj",
-                        maskCnpj(
-                          e.target.value
-                        )
-                      )
-                    }
-                    onBlur={() =>
-                      handleBlur("cnpj")
-                    }
-                    aria-invalid={!!errors.cnpj}
-                    className={fieldClass(
-                      errors.cnpj
-                    )}
-                  />
-
-                  <FieldError
-                    message={errors.cnpj}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* CAPACIDADE OPERACIONAL */}
-
-            <div className="pt-8">
-              <h2 className="font-display text-xl font-semibold text-wine">
-                Capacidade Operacional
-              </h2>
-
-              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Esses dados definem sua capacidade de
-                atendimento e são usados para calcular o
-                custo fixo de cada procedimento.
-              </p>
-
-              <div className="mt-7 grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label
-                    htmlFor="diasTrabalhadosMes"
-                    className="mb-1.5 block text-sm font-semibold text-wine"
-                  >
-                    Dias trabalhados por mês
-                  </label>
-
-                  <div className="relative">
-                    <input
-                      id="diasTrabalhadosMes"
-                      name="diasTrabalhadosMes"
-                      type="number"
-                      min={1}
-                      max={31}
-                      step={1}
-                      inputMode="numeric"
-                      placeholder="22"
-                      value={
-                        form.diasTrabalhadosMes
-                      }
-                      onChange={(e) =>
-                        update(
-                          "diasTrabalhadosMes",
-                          e.target.value
-                        )
-                      }
-                      onBlur={() =>
-                        handleBlur(
-                          "diasTrabalhadosMes"
-                        )
-                      }
-                      aria-invalid={
-                        !!errors.diasTrabalhadosMes
-                      }
-                      className={cn(
-                        fieldClass(
-                          errors.diasTrabalhadosMes
-                        ),
-                        "pr-16"
-                      )}
-                    />
-
-                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
-                      dias
-                    </span>
-                  </div>
-
-                  <FieldError
-                    message={
-                      errors.diasTrabalhadosMes
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="horasDisponiveisDia"
-                    className="mb-1.5 block text-sm font-semibold text-wine"
-                  >
-                    Horas disponíveis por dia
-                  </label>
-
-                  <div className="relative">
-                    <input
-                      id="horasDisponiveisDia"
-                      name="horasDisponiveisDia"
-                      type="number"
-                      min={0.5}
-                      max={24}
-                      step={0.5}
-                      inputMode="decimal"
-                      placeholder="6.5"
-                      value={
-                        form.horasDisponiveisDia
-                      }
-                      onChange={(e) =>
-                        update(
-                          "horasDisponiveisDia",
-                          e.target.value
-                        )
-                      }
-                      onBlur={() =>
-                        handleBlur(
-                          "horasDisponiveisDia"
-                        )
-                      }
-                      aria-invalid={
-                        !!errors.horasDisponiveisDia
-                      }
-                      className={cn(
-                        fieldClass(
-                          errors.horasDisponiveisDia
-                        ),
-                        "pr-20"
-                      )}
-                    />
-
-                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
-                      horas
-                    </span>
-                  </div>
-
-                  <FieldError
-                    message={
-                      errors.horasDisponiveisDia
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex items-start gap-3 rounded-2xl bg-pale p-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-berry">
-                  <Calculator size={16} />
-                </div>
-
-                <p className="text-sm text-wine">
-                  Isso representa até{" "}
-                  <span className="font-bold">
-                    {horasMes ?? "—"}
-                  </span>{" "}
-                  horas disponíveis por mês
-                </p>
-              </div>
-            </div>
-
-            {/* BOTÕES */}
-
-            <div className="mt-8 flex flex-col-reverse gap-3 pb-4 sm:flex-row sm:items-center sm:justify-end">
-              {!isOnboarding && (
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  disabled={loading}
-                  className="inline-flex w-full items-center justify-center rounded-2xl border border-berry bg-transparent px-5 py-3 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
-                >
-                  Cancelar
-                </button>
-              )}
-
+          <div className="mt-8 flex flex-col-reverse gap-3 pb-4 sm:flex-row sm:items-center sm:justify-end">
+            {perfilExiste && (
               <button
-                type="submit"
+                type="button"
+                onClick={cancelarEdicao}
                 disabled={loading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-berry px-5 py-3 font-sans text-sm font-bold text-white shadow-lg shadow-berry/25 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80 sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-berry bg-transparent px-5 py-3 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
               >
-                {loading ? (
-                  <>
-                    <Loader2
-                      size={18}
-                      className="animate-spin"
-                    />
-                    Salvando...
-                  </>
-                ) : (
-                  "Salvar alterações"
-                )}
+                Cancelar
               </button>
-            </div>
-          </form>
-        )}
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-berry px-5 py-3 font-sans text-sm font-bold text-white shadow-lg shadow-berry/25 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80 sm:w-auto"
+            >
+              {loading ? (
+                <>
+                  <Loader2
+                    size={18}
+                    className="animate-spin"
+                  />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  {perfilExiste && (
+                    <Pencil size={16} />
+                  )}
+
+                  {perfilExiste
+                    ? "Salvar alterações"
+                    : "Cadastrar perfil"}
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </section>
     </main>
   );

@@ -26,3 +26,30 @@ export async function cadastrarUsuario(
 
   return response.json();
 }
+
+export interface UsuarioLogin {
+  email: string;
+  senha: string;
+}
+
+export async function loginUsuario(
+  dados: UsuarioLogin
+): Promise<UsuarioResponse> {
+  const response = await fetch("http://localhost:8080/usuarios/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dados),
+  });
+
+  if (!response.ok) {
+    const mensagem = await response.text();
+
+    throw new Error(
+      mensagem || "E-mail ou senha incorretos."
+    );
+  }
+
+  return response.json();
+}
