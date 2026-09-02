@@ -28,12 +28,23 @@ function DashboardPage() {
           Placeholder — em breve o dashboard do Lumine.
         </p>
         {/* Espaço reservado para o menu/sidebar real do sistema */}
-        <Link
-          to="/perfil-empresa"
-          className="mt-6 inline-block font-sans text-sm font-bold text-berry transition hover:text-rose hover:underline"
-        >
-          Perfil da Empresa
-        </Link>
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <Link
+            to="/perfil-empresa"
+            className="font-sans text-sm font-bold text-berry transition hover:text-rose hover:underline"
+          >
+            Perfil da Empresa
+          </Link>
+
+          <span className="text-petal">/</span>
+
+          <Link
+            to="/insumos"
+            className="font-sans text-sm font-bold text-berry transition hover:text-rose hover:underline"
+          >
+            Insumos
+          </Link>
+        </div>
       </div>
     </main>
   );

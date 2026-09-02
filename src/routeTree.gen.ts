@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as InsumosRouteImport } from './routes/insumos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PerfilEmpresaRouteImport } from './routes/perfil-empresa'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
@@ -30,6 +31,11 @@ const CadastroRoute = CadastroRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsumosRoute = InsumosRouteImport.update({
+  id: '/insumos',
+  path: '/insumos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
+  '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
+  '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
+  '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/dashboard'
+    | '/insumos'
     | '/login'
     | '/perfil-empresa'
     | '/recuperar-senha'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/dashboard'
+    | '/insumos'
     | '/login'
     | '/perfil-empresa'
     | '/recuperar-senha'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/dashboard'
+    | '/insumos'
     | '/login'
     | '/perfil-empresa'
     | '/recuperar-senha'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastroRoute: typeof CadastroRoute
   DashboardRoute: typeof DashboardRoute
+  InsumosRoute: typeof InsumosRoute
   LoginRoute: typeof LoginRoute
   PerfilEmpresaRoute: typeof PerfilEmpresaRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insumos': {
+      id: '/insumos'
+      path: '/insumos'
+      fullPath: '/insumos'
+      preLoaderRoute: typeof InsumosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastroRoute: CadastroRoute,
   DashboardRoute: DashboardRoute,
+  InsumosRoute: InsumosRoute,
   LoginRoute: LoginRoute,
   PerfilEmpresaRoute: PerfilEmpresaRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
