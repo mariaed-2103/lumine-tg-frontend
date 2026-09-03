@@ -1,7 +1,7 @@
-export type UnidadeMedida = 'mL' | 'g' | 'unidade';
+export type UnidadeMedida = "mL" | "g" | "unidade";
 
 export interface Insumo {
-  idInsumo: string;
+  idInsumo: number;
   nome: string;
   unidadeMedida: UnidadeMedida;
   quantidadePorEmbalagem: number;
@@ -26,5 +26,15 @@ export interface InsumoFormErrors {
   estoqueMinimo?: string;
 }
 
-export type FilterOption = 'todos' | 'estoque_baixo' | 'mL' | 'g' | 'unidade';
-export type SortOption = 'nome_asc' | 'nome_desc' | 'estoque_asc' | 'estoque_desc';
+export type FilterOption =
+  | "todos"
+  | "estoque_baixo"
+  | "mL"
+  | "g"
+  | "unidade";
+
+export type SortOption =
+  | "nome_asc"
+  | "nome_desc"
+  | "estoque_asc"
+  | "estoque_desc";
