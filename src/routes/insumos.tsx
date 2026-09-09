@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
@@ -30,6 +30,8 @@ import {
   excluirInsumo,
 } from "@/services/insumoService";
 
+import { AppShell } from "@/components/layout/AppShell";
+
 export const Route = createFileRoute("/insumos")({
   head: () => ({
     meta: [
@@ -45,8 +47,6 @@ export const Route = createFileRoute("/insumos")({
 });
 
 function InsumosPage() {
-  const navigate = useNavigate();
-
   // ================================
   // Estados principais
   // ================================
@@ -404,46 +404,7 @@ function InsumosPage() {
   // ================================
 
   return (
-    <main className="min-h-screen bg-pale flex flex-col font-sans antialiased selection:bg-petal selection:text-wine p-4 sm:p-6 lg:p-8">
-      {/* Container principal */}
-      <div className="max-w-7xl w-full mx-auto flex flex-col lg:flex-row gap-6 items-start">
-
-        {/* Sidebar */}
-        <aside className="w-52 sm:w-56 shrink-0 rounded-3xl border border-dashed border-petal p-6 hidden lg:flex flex-col min-h-[580px] bg-transparent">
-          <span className="font-bold text-sm text-wine">
-            Menu do sistema
-          </span>
-
-          <span className="text-xs text-wine/60 mt-1 font-medium">
-            Espaço reservado
-          </span>
-        </aside>
-
-        {/* Conteúdo */}
-        <div className="flex-1 w-full min-w-0">
-
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-wine/80 mb-3">
-            <button
-              type="button"
-              onClick={() =>
-                void navigate({
-                  to: "/dashboard",
-                })
-              }
-              className="hover:text-wine transition-colors cursor-pointer flex items-center gap-1"
-            >
-              <span>&lt; Voltar</span>
-            </button>
-
-            <span className="text-wine/40">
-              /
-            </span>
-
-            <span className="font-bold text-wine">
-              Insumos
-            </span>
-          </div>
+    <AppShell mobileTitle="Insumos">
 
           {/* Título */}
           <div className="mb-6">
@@ -757,8 +718,6 @@ function InsumosPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
 
       {/* Modal: Cadastro / Edição */}
       <InsumoFormModal
@@ -791,6 +750,6 @@ function InsumosPage() {
         toasts={toasts}
         onDismiss={removeToast}
       />
-    </main>
+    </AppShell>
   );
 }

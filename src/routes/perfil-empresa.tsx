@@ -27,6 +27,7 @@ import {
   validarDiasMes,
   validarHorasDia,
 } from "@/lib/validation";
+import { AppShell } from "@/components/layout/AppShell";
 
 export const Route = createFileRoute("/perfil-empresa")({
   head: () => ({
@@ -667,7 +668,7 @@ function PerfilEmpresaPage() {
   }
 
   return (
-    <main className="min-h-screen bg-cream px-4 py-10 sm:py-14">
+    <AppShell mobileTitle="Perfil da Empresa">
       <header className="mx-auto max-w-3xl">
         <div className="mb-5 flex items-center gap-2 text-sm text-muted-foreground">
           <button
@@ -1147,6 +1148,6 @@ function PerfilEmpresaPage() {
           </div>
         </form>
       </section>
-    </main>
+    </AppShell>
   );
 }
