@@ -73,7 +73,7 @@ function RedefinirSenhaPage() {
     setErrors((prev) => ({ ...prev, [field]: message }));
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const next = {
       novaSenha: validarNovaSenha(novaSenha),
@@ -84,10 +84,29 @@ function RedefinirSenhaPage() {
     if (next.novaSenha || next.confirmarNovaSenha) return;
 
     setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await fetch(
+        "http://localhost:8080/recuperacao-senha/redefinir",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: search.token, novaSenha }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao redefinir senha.");
+      }
+
       setSubmitted(true);
-    }, 1400);
+    } catch {
+      setErrors((prev) => ({
+        ...prev,
+        novaSenha: "Não foi possível redefinir a senha. Tente novamente.",
+      }));
+    } finally {
+      setLoading(false);
+    }
   }
 
 
