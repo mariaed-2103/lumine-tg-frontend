@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as GestaoFinanceiraRouteImport } from './routes/gestao-financeira'
 import { Route as InsumosRouteImport } from './routes/insumos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PerfilEmpresaRouteImport } from './routes/perfil-empresa'
@@ -32,6 +33,11 @@ const CadastroRoute = CadastroRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GestaoFinanceiraRoute = GestaoFinanceiraRouteImport.update({
+  id: '/gestao-financeira',
+  path: '/gestao-financeira',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsumosRoute = InsumosRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
+  '/gestao-financeira': typeof GestaoFinanceiraRoute
   '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
+  '/gestao-financeira': typeof GestaoFinanceiraRoute
   '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
+  '/gestao-financeira': typeof GestaoFinanceiraRoute
   '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/dashboard'
+    | '/gestao-financeira'
     | '/insumos'
     | '/login'
     | '/perfil-empresa'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/dashboard'
+    | '/gestao-financeira'
     | '/insumos'
     | '/login'
     | '/perfil-empresa'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/dashboard'
+    | '/gestao-financeira'
     | '/insumos'
     | '/login'
     | '/perfil-empresa'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CadastroRoute: typeof CadastroRoute
   DashboardRoute: typeof DashboardRoute
+  GestaoFinanceiraRoute: typeof GestaoFinanceiraRoute
   InsumosRoute: typeof InsumosRoute
   LoginRoute: typeof LoginRoute
   PerfilEmpresaRoute: typeof PerfilEmpresaRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gestao-financeira': {
+      id: '/gestao-financeira'
+      path: '/gestao-financeira'
+      fullPath: '/gestao-financeira'
+      preLoaderRoute: typeof GestaoFinanceiraRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insumos': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastroRoute: CadastroRoute,
   DashboardRoute: DashboardRoute,
+  GestaoFinanceiraRoute: GestaoFinanceiraRoute,
   InsumosRoute: InsumosRoute,
   LoginRoute: LoginRoute,
   PerfilEmpresaRoute: PerfilEmpresaRoute,
