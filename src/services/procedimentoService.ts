@@ -2,21 +2,11 @@ import type { Procedimento } from "@/components/procedimentos/types";
 
 const API_URL = "http://localhost:8080/procedimentos";
 
-/**
- * Formato de dados enviado ao criar/editar um procedimento.
- *
- * ATENÇÃO: o formato de envio da Ficha Técnica aqui assume que o backend
- * aceita a lista de itens ("itensFichaTecnica") aninhada dentro do próprio
- * payload do procedimento — igual ao que já fizemos no protótipo do Google
- * AI Studio. Isso ainda não foi confirmado com o contrato real da API.
- * Se o backend esperar outro formato (ex: endpoints separados para
- * associar/desassociar insumos de um procedimento), essas funções
- * precisarão ser ajustadas.
- */
-export type DadosProcedimento = Omit<
-  Procedimento,
-  "idProcedimento" | "dataCadastro"
->;
+export type DadosProcedimento = {
+  nome: string;
+  duracaoMinutos: number;
+  precoPadrao: number | null;
+};
 
 async function obterMensagemErro(
   response: Response,
@@ -43,15 +33,20 @@ export async function listarProcedimentos(): Promise<Procedimento[]> {
   const response = await fetch(API_URL);
 
   if (!response.ok) {
-    const mensagem = await obterMensagemErro(
-      response,
-      "Não foi possível carregar os procedimentos."
+    throw new Error(
+      await obterMensagemErro(
+        response,
+        "Não foi possível carregar os procedimentos."
+      )
     );
-
-    throw new Error(mensagem);
   }
 
-  return response.json();
+  const procedimentos = await response.json();
+
+  return procedimentos.map((procedimento: Omit<Procedimento, "itensFichaTecnica">) => ({
+    ...procedimento,
+    itensFichaTecnica: [],
+  }));
 }
 
 export async function buscarProcedimentoPorId(
@@ -60,15 +55,20 @@ export async function buscarProcedimentoPorId(
   const response = await fetch(`${API_URL}/${idProcedimento}`);
 
   if (!response.ok) {
-    const mensagem = await obterMensagemErro(
-      response,
-      "Não foi possível buscar o procedimento."
+    throw new Error(
+      await obterMensagemErro(
+        response,
+        "Não foi possível buscar o procedimento."
+      )
     );
-
-    throw new Error(mensagem);
   }
 
-  return response.json();
+  const procedimento = await response.json();
+
+  return {
+    ...procedimento,
+    itensFichaTecnica: [],
+  };
 }
 
 export async function cadastrarProcedimento(
@@ -83,15 +83,20 @@ export async function cadastrarProcedimento(
   });
 
   if (!response.ok) {
-    const mensagem = await obterMensagemErro(
-      response,
-      "Não foi possível cadastrar o procedimento."
+    throw new Error(
+      await obterMensagemErro(
+        response,
+        "Não foi possível cadastrar o procedimento."
+      )
     );
-
-    throw new Error(mensagem);
   }
 
-  return response.json();
+  const procedimento = await response.json();
+
+  return {
+    ...procedimento,
+    itensFichaTecnica: [],
+  };
 }
 
 export async function editarProcedimento(
@@ -107,15 +112,20 @@ export async function editarProcedimento(
   });
 
   if (!response.ok) {
-    const mensagem = await obterMensagemErro(
-      response,
-      "Não foi possível editar o procedimento."
+    throw new Error(
+      await obterMensagemErro(
+        response,
+        "Não foi possível editar o procedimento."
+      )
     );
-
-    throw new Error(mensagem);
   }
 
-  return response.json();
+  const procedimento = await response.json();
+
+  return {
+    ...procedimento,
+    itensFichaTecnica: [],
+  };
 }
 
 export async function excluirProcedimento(
@@ -126,11 +136,30 @@ export async function excluirProcedimento(
   });
 
   if (!response.ok) {
-    const mensagem = await obterMensagemErro(
-      response,
-      "Não foi possível excluir o procedimento."
+    throw new Error(
+      await obterMensagemErro(
+        response,
+        "Não foi possível excluir o procedimento."
+      )
     );
-
-    throw new Error(mensagem);
   }
+}
+
+export async function possuiFichaTecnica(
+  idProcedimento: number
+): Promise<boolean> {
+  const response = await fetch(
+    `${API_URL}/${idProcedimento}/possui-ficha-tecnica`
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      await obterMensagemErro(
+        response,
+        "Não foi possível verificar a ficha técnica."
+      )
+    );
+  }
+
+  return response.json();
 }
