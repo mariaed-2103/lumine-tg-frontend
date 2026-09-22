@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Sparkles, Package, X, ChevronRight, Building2 } from "lucide-react";
+import { Sparkles, Package, Wallet, X, ChevronRight, Building2 } from "lucide-react";
 
 import { listarInsumos } from "@/services/insumoService";
 import { listarProcedimentos } from "@/services/procedimentoService";
@@ -145,6 +145,37 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                     {procedimentosCount}
                   </span>
                 )}
+                <ChevronRight
+                  className={`h-3.5 w-3.5 transition-transform ${
+                    isActive
+                      ? "translate-x-0.5 text-white"
+                      : "text-wine/30 group-hover:translate-x-0.5 group-hover:text-wine/60"
+                  }`}
+                />
+              </div>
+            </>
+          )}
+        </Link>
+
+        <Link
+          to="/gestao-financeira"
+          onClick={onCloseMobile}
+          className={linkBaseClass}
+          activeProps={{ className: `${linkBaseClass} ${linkActiveClass}` }}
+          inactiveProps={{ className: `${linkBaseClass} ${linkInactiveClass}` }}
+        >
+          {({ isActive }) => (
+            <>
+              <div className="flex items-center gap-2.5 truncate">
+                <Wallet
+                  className={`h-4 w-4 shrink-0 transition-colors ${
+                    isActive ? "text-white" : "text-rose group-hover:text-berry"
+                  }`}
+                />
+                <span className="truncate">Gestão Financeira</span>
+              </div>
+
+              <div className="ml-2 flex shrink-0 items-center gap-1">
                 <ChevronRight
                   className={`h-3.5 w-3.5 transition-transform ${
                     isActive

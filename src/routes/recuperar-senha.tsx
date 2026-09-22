@@ -34,7 +34,7 @@ function RecuperarSenhaPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const message = validarEmail(email);
     setError(message ?? null);
@@ -42,10 +42,19 @@ function RecuperarSenhaPage() {
 
     // RN003: a tela sempre segue para a confirmação, exista ou não o e-mail.
     setLoading(true);
-    window.setTimeout(() => {
+    try {
+      await fetch("http://localhost:8080/recuperacao-senha/solicitar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } catch {
+      // Erros de rede não são expostos ao usuário (anti-enumeração).
+      // A tela de confirmação é exibida de qualquer forma.
+    } finally {
       setLoading(false);
       setSent(true);
-    }, 1200);
+    }
   }
 
 
