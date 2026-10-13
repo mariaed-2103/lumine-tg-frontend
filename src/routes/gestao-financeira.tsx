@@ -117,6 +117,7 @@ function GestaoFinanceiraPage() {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [idPerfilEmpresa, setIdPerfilEmpresa] = useState<number | null>(null);
 
   // ================================
   // Modal de exclusão genérico
@@ -172,16 +173,63 @@ function GestaoFinanceiraPage() {
         if (insumosData.status === "fulfilled") setInsumos(insumosData.value);
         else console.error("Erro ao carregar insumos:", insumosData.reason);
 
-        // Configuração financeira: trata 404 como "ainda não existe"
-        try {
-          const config = await buscarConfiguracaoFinanceira();
-          setConfiguracao(config);
-        } catch {
-          // Backend retornou 404 ou erro — usa configuração padrão sem bloquear a tela
+        // Busca o perfil para obter o idPerfilEmpresa exigido pela API financeira.
+        const idUsuario = localStorage.getItem("idUsuario");
+
+        if (!idUsuario) {
           addToast(
-            "Configuração financeira não encontrada. Usando valores padrão.",
-            "info"
+            "Usuário não identificado. Faça login novamente para carregar a configuração financeira.",
+            "error"
           );
+        } else {
+          try {
+            const perfilResponse = await fetch(
+              `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`
+            );
+
+            if (perfilResponse.status === 404) {
+              addToast(
+                "Você ainda não possui um perfil de empresa. Cadastre seu perfil antes de configurar os dados financeiros.",
+                "info"
+              );
+            } else if (!perfilResponse.ok) {
+              throw new Error("Não foi possível identificar o perfil da empresa.");
+            } else {
+              const perfil: { idPerfilEmpresa: number } =
+                await perfilResponse.json();
+
+              if (!perfil.idPerfilEmpresa) {
+                throw new Error("O backend não retornou o identificador do perfil da empresa.");
+              }
+
+              setIdPerfilEmpresa(perfil.idPerfilEmpresa);
+
+              try {
+                const config = await buscarConfiguracaoFinanceira(
+                  perfil.idPerfilEmpresa
+                );
+                setConfiguracao(config);
+              } catch (error) {
+                // Se ainda não existe configuração, mantém os valores padrão.
+                console.info(
+                  "Não foi possível carregar a configuração financeira; os valores padrão serão exibidos.",
+                  error
+                );
+                addToast(
+                  "Configuração financeira não encontrada. Confira os valores e salve para cadastrá-la.",
+                  "info"
+                );
+              }
+            }
+          } catch (error) {
+            console.error("Erro ao identificar perfil da empresa:", error);
+            addToast(
+              error instanceof Error
+                ? error.message
+                : "Não foi possível identificar o perfil da empresa.",
+              "error"
+            );
+          }
         }
       } finally {
         setLoading(false);
@@ -369,13 +417,20 @@ function GestaoFinanceiraPage() {
   const handleSaveConfiguracao = async (
     dados: Omit<ConfiguracaoFinanceira, "idConfiguracao" | "dataAtualizacao">
   ) => {
+    if (idPerfilEmpresa === null) {
+      const mensagem =
+        "Não foi possível salvar: o perfil da empresa não foi identificado. Confira se seu perfil está cadastrado e tente novamente.";
+      addToast(mensagem, "error");
+      throw new Error(mensagem);
+    }
+
     try {
       const payload: ConfiguracaoFinanceira = {
         ...configuracao,
         ...dados,
         dataAtualizacao: new Date().toISOString(),
       };
-      const salva = await salvarConfiguracaoFinanceira(payload);
+      const salva = await salvarConfiguracaoFinanceira(idPerfilEmpresa, payload);
       setConfiguracao(salva);
       addToast("Configuração financeira salva com sucesso!");
     } catch (error) {
