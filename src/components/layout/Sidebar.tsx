@@ -1,6 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Sparkles, Package, Wallet, X, ChevronRight, Building2 } from "lucide-react";
+import {
+  Sparkles,
+  Package,
+  Wallet,
+  X,
+  ChevronRight,
+  Building2,
+  BadgeDollarSign,
+} from "lucide-react";
 
 import { listarInsumos } from "@/services/insumoService";
 import { listarProcedimentos } from "@/services/procedimentoService";
@@ -21,9 +29,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
   // Se a chamada falhar (ex: backend fora do ar), o badge some silenciosamente
   // em vez de travar a navegação.
   const [insumosCount, setInsumosCount] = useState<number | null>(null);
-  const [procedimentosCount, setProcedimentosCount] = useState<number | null>(
-    null
-  );
+  const [procedimentosCount, setProcedimentosCount] = useState<number | null>(null);
 
   useEffect(() => {
     listarInsumos()
@@ -95,9 +101,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                 {insumosCount !== null && (
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-pale text-wine group-hover:bg-white"
+                      isActive ? "bg-white/20 text-white" : "bg-pale text-wine group-hover:bg-white"
                     }`}
                   >
                     {insumosCount}
@@ -137,9 +141,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                 {procedimentosCount !== null && (
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-pale text-wine group-hover:bg-white"
+                      isActive ? "bg-white/20 text-white" : "bg-pale text-wine group-hover:bg-white"
                     }`}
                   >
                     {procedimentosCount}
@@ -153,6 +155,26 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                   }`}
                 />
               </div>
+            </>
+          )}
+        </Link>
+
+        <Link
+          to="/precificacao"
+          onClick={onCloseMobile}
+          className={linkBaseClass}
+          activeProps={{ className: `${linkBaseClass} ${linkActiveClass}` }}
+          inactiveProps={{ className: `${linkBaseClass} ${linkInactiveClass}` }}
+        >
+          {({ isActive }) => (
+            <>
+              <div className="flex items-center gap-2.5 truncate">
+                <BadgeDollarSign
+                  className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-rose group-hover:text-berry"}`}
+                />
+                <span className="truncate">Precificação</span>
+              </div>
+              <ChevronRight className={`h-3.5 w-3.5 ${isActive ? "text-white" : "text-wine/30"}`} />
             </>
           )}
         </Link>

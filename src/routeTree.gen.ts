@@ -16,6 +16,7 @@ import { Route as GestaoFinanceiraRouteImport } from './routes/gestao-financeira
 import { Route as InsumosRouteImport } from './routes/insumos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PerfilEmpresaRouteImport } from './routes/perfil-empresa'
+import { Route as PrecificacaoRouteImport } from './routes/precificacao'
 import { Route as ProcedimentosRouteImport } from './routes/procedimentos'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
@@ -55,6 +56,11 @@ const PerfilEmpresaRoute = PerfilEmpresaRouteImport.update({
   path: '/perfil-empresa',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrecificacaoRoute = PrecificacaoRouteImport.update({
+  id: '/precificacao',
+  path: '/precificacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProcedimentosRoute = ProcedimentosRouteImport.update({
   id: '/procedimentos',
   path: '/procedimentos',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
+  '/precificacao': typeof PrecificacaoRoute
   '/procedimentos': typeof ProcedimentosRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
+  '/precificacao': typeof PrecificacaoRoute
   '/procedimentos': typeof ProcedimentosRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/insumos': typeof InsumosRoute
   '/login': typeof LoginRoute
   '/perfil-empresa': typeof PerfilEmpresaRoute
+  '/precificacao': typeof PrecificacaoRoute
   '/procedimentos': typeof ProcedimentosRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/insumos'
     | '/login'
     | '/perfil-empresa'
+    | '/precificacao'
     | '/procedimentos'
     | '/recuperar-senha'
     | '/redefinir-senha'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/insumos'
     | '/login'
     | '/perfil-empresa'
+    | '/precificacao'
     | '/procedimentos'
     | '/recuperar-senha'
     | '/redefinir-senha'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/insumos'
     | '/login'
     | '/perfil-empresa'
+    | '/precificacao'
     | '/procedimentos'
     | '/recuperar-senha'
     | '/redefinir-senha'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   InsumosRoute: typeof InsumosRoute
   LoginRoute: typeof LoginRoute
   PerfilEmpresaRoute: typeof PerfilEmpresaRoute
+  PrecificacaoRoute: typeof PrecificacaoRoute
   ProcedimentosRoute: typeof ProcedimentosRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
@@ -211,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerfilEmpresaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/precificacao': {
+      id: '/precificacao'
+      path: '/precificacao'
+      fullPath: '/precificacao'
+      preLoaderRoute: typeof PrecificacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/procedimentos': {
       id: '/procedimentos'
       path: '/procedimentos'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   InsumosRoute: InsumosRoute,
   LoginRoute: LoginRoute,
   PerfilEmpresaRoute: PerfilEmpresaRoute,
+  PrecificacaoRoute: PrecificacaoRoute,
   ProcedimentosRoute: ProcedimentosRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
