@@ -28,7 +28,7 @@ export async function apiFetch(
     headers,
   });
 
-  if (resposta.status === 401) {
+  if (resposta.status === 401 || (resposta.status === 403 && !token)) {
     localStorage.removeItem("tokenLumine");
     localStorage.removeItem("idUsuario");
     localStorage.removeItem("emailUsuario");

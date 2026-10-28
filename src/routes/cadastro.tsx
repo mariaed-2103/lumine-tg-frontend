@@ -151,6 +151,34 @@ function CadastroPage() {
         usuario.email
       );
 
+      // Se o endpoint de cadastro já retornar token, salva direto
+      if (usuario.token) {
+        localStorage.setItem("tokenLumine", usuario.token);
+      } else {
+        // Caso contrário, faz login automático para gerar e salvar o token JWT
+        try {
+          const loginResp = await fetch("http://localhost:8080/usuarios/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: email.trim(),
+              senha: senha,
+            }),
+          });
+
+          if (loginResp.ok) {
+            const loginDados = await loginResp.json();
+            if (loginDados.token) {
+              localStorage.setItem("tokenLumine", loginDados.token);
+            }
+          }
+        } catch (loginErr) {
+          console.error("Erro ao autenticar automaticamente após cadastro:", loginErr);
+        }
+      }
+
       console.log(
         "ID DO USUÁRIO SALVO:",
         usuario.idUsuario
