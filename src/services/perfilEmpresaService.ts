@@ -21,14 +21,13 @@ export interface PerfilEmpresaResponse {
   horasDisponiveisDia: number;
 }
 
+import { apiFetch } from "@/services/api";
+
 export async function cadastrarPerfilEmpresa(
   dados: PerfilEmpresaCadastro
 ): Promise<PerfilEmpresaResponse> {
-  const response = await fetch("http://localhost:8080/perfis-empresa", {
+  const response = await apiFetch("/perfis-empresa", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(dados),
   });
 

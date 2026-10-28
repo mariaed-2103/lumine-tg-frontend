@@ -1,6 +1,5 @@
 import type { FichaTecnicaItem } from "@/components/procedimentos/types";
-
-const API_URL = "http://localhost:8080/fichas-tecnicas";
+import { apiFetch } from "@/services/api";
 
 async function obterMensagemErro(
   response: Response,
@@ -26,8 +25,8 @@ async function obterMensagemErro(
 export async function listarFichaTecnica(
   idProcedimento: number
 ): Promise<FichaTecnicaItem[]> {
-  const response = await fetch(
-    `${API_URL}/procedimento/${idProcedimento}`
+  const response = await apiFetch(
+    `/fichas-tecnicas/procedimento/${idProcedimento}`
   );
 
   if (!response.ok) {
@@ -59,7 +58,7 @@ export async function cadastrarFichaTecnica(
     quantidadeUtilizada: String(quantidadeUtilizada),
   });
 
-  const response = await fetch(`${API_URL}?${params.toString()}`, {
+  const response = await apiFetch(`/fichas-tecnicas?${params.toString()}`, {
     method: "POST",
   });
 
@@ -89,8 +88,8 @@ export async function editarFichaTecnica(
     quantidadeUtilizada: String(quantidadeUtilizada),
   });
 
-  const response = await fetch(
-    `${API_URL}/${idFichaTecnica}?${params.toString()}`,
+  const response = await apiFetch(
+    `/fichas-tecnicas/${idFichaTecnica}?${params.toString()}`,
     {
       method: "PUT",
     }
@@ -117,7 +116,7 @@ export async function editarFichaTecnica(
 export async function excluirFichaTecnica(
   idFichaTecnica: number
 ): Promise<void> {
-  const response = await fetch(`${API_URL}/${idFichaTecnica}`, {
+  const response = await apiFetch(`/fichas-tecnicas/${idFichaTecnica}`, {
     method: "DELETE",
   });
 
@@ -134,8 +133,8 @@ export async function excluirFichaTecnica(
 export async function possuiInsumos(
   idProcedimento: number
 ): Promise<boolean> {
-  const response = await fetch(
-    `${API_URL}/procedimento/${idProcedimento}/possui-insumos`
+  const response = await apiFetch(
+    `/fichas-tecnicas/procedimento/${idProcedimento}/possui-insumos`
   );
 
   if (!response.ok) {

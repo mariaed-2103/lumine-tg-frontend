@@ -1,11 +1,11 @@
 import type { FormaPagamento } from "@/components/financeiro/types";
+import { apiFetch } from "@/services/api";
 
 /**
  * ATENÇÃO: o endpoint "/formas-pagamento" é uma convenção provisória seguindo
  * o padrão de nomenclatura em português já usado em "/procedimentos" e
  * "/insumos". Confirmar com o time de backend antes de subir para produção.
  */
-const API_URL = "http://localhost:8080/formas-pagamento";
 
 export type DadosFormaPagamento = Omit<FormaPagamento, "idFormaPagamento">;
 
@@ -24,7 +24,7 @@ async function obterMensagemErro(
 }
 
 export async function listarFormasPagamento(): Promise<FormaPagamento[]> {
-  const response = await fetch(API_URL);
+  const response = await apiFetch("/formas-pagamento");
 
   if (!response.ok) {
     const mensagem = await obterMensagemErro(
@@ -40,9 +40,8 @@ export async function listarFormasPagamento(): Promise<FormaPagamento[]> {
 export async function cadastrarFormaPagamento(
   dados: DadosFormaPagamento
 ): Promise<FormaPagamento> {
-  const response = await fetch(API_URL, {
+  const response = await apiFetch("/formas-pagamento", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
 
@@ -61,9 +60,8 @@ export async function editarFormaPagamento(
   idFormaPagamento: number,
   dados: DadosFormaPagamento
 ): Promise<FormaPagamento> {
-  const response = await fetch(`${API_URL}/${idFormaPagamento}`, {
+  const response = await apiFetch(`/formas-pagamento/${idFormaPagamento}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
 
@@ -81,7 +79,7 @@ export async function editarFormaPagamento(
 export async function excluirFormaPagamento(
   idFormaPagamento: number
 ): Promise<void> {
-  const response = await fetch(`${API_URL}/${idFormaPagamento}`, {
+  const response = await apiFetch(`/formas-pagamento/${idFormaPagamento}`, {
     method: "DELETE",
   });
 

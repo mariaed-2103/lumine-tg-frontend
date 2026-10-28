@@ -1,11 +1,11 @@
 import type { DespesaFixa } from "@/components/financeiro/types";
+import { apiFetch } from "@/services/api";
 
 /**
  * ATENÇÃO: o endpoint "/despesas-fixas" é uma convenção provisória seguindo
  * o padrão de nomenclatura em português já usado em "/procedimentos" e
  * "/insumos". Confirmar com o time de backend antes de subir para produção.
  */
-const API_URL = "http://localhost:8080/despesas-fixas";
 
 export type DadosDespesaFixa = Omit<DespesaFixa, "idDespesa">;
 
@@ -24,7 +24,7 @@ async function obterMensagemErro(
 }
 
 export async function listarDespesasFixas(): Promise<DespesaFixa[]> {
-  const response = await fetch(API_URL);
+  const response = await apiFetch("/despesas-fixas");
 
   if (!response.ok) {
     const mensagem = await obterMensagemErro(
@@ -40,9 +40,8 @@ export async function listarDespesasFixas(): Promise<DespesaFixa[]> {
 export async function cadastrarDespesaFixa(
   dados: DadosDespesaFixa
 ): Promise<DespesaFixa> {
-  const response = await fetch(API_URL, {
+  const response = await apiFetch("/despesas-fixas", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
 
@@ -61,9 +60,8 @@ export async function editarDespesaFixa(
   idDespesa: number,
   dados: DadosDespesaFixa
 ): Promise<DespesaFixa> {
-  const response = await fetch(`${API_URL}/${idDespesa}`, {
+  const response = await apiFetch(`/despesas-fixas/${idDespesa}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
 
@@ -79,7 +77,7 @@ export async function editarDespesaFixa(
 }
 
 export async function excluirDespesaFixa(idDespesa: number): Promise<void> {
-  const response = await fetch(`${API_URL}/${idDespesa}`, {
+  const response = await apiFetch(`/despesas-fixas/${idDespesa}`, {
     method: "DELETE",
   });
 

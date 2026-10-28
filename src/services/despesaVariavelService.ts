@@ -1,11 +1,11 @@
 import type { DespesaVariavel } from "@/components/financeiro/types";
+import { apiFetch } from "@/services/api";
 
 /**
  * ATENÇÃO: o endpoint "/despesas-variaveis" é uma convenção provisória seguindo
  * o padrão de nomenclatura em português já usado em "/procedimentos" e
  * "/insumos". Confirmar com o time de backend antes de subir para produção.
  */
-const API_URL = "http://localhost:8080/despesas-variaveis";
 
 export type DadosDespesaVariavel = Omit<DespesaVariavel, "idDespesaVariavel">;
 
@@ -24,7 +24,7 @@ async function obterMensagemErro(
 }
 
 export async function listarDespesasVariaveis(): Promise<DespesaVariavel[]> {
-  const response = await fetch(API_URL);
+  const response = await apiFetch("/despesas-variaveis");
 
   if (!response.ok) {
     const mensagem = await obterMensagemErro(
@@ -40,9 +40,8 @@ export async function listarDespesasVariaveis(): Promise<DespesaVariavel[]> {
 export async function cadastrarDespesaVariavel(
   dados: DadosDespesaVariavel
 ): Promise<DespesaVariavel> {
-  const response = await fetch(API_URL, {
+  const response = await apiFetch("/despesas-variaveis", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
 
@@ -61,9 +60,8 @@ export async function editarDespesaVariavel(
   idDespesaVariavel: number,
   dados: DadosDespesaVariavel
 ): Promise<DespesaVariavel> {
-  const response = await fetch(`${API_URL}/${idDespesaVariavel}`, {
+  const response = await apiFetch(`/despesas-variaveis/${idDespesaVariavel}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
 
@@ -81,7 +79,7 @@ export async function editarDespesaVariavel(
 export async function excluirDespesaVariavel(
   idDespesaVariavel: number
 ): Promise<void> {
-  const response = await fetch(`${API_URL}/${idDespesaVariavel}`, {
+  const response = await apiFetch(`/despesas-variaveis/${idDespesaVariavel}`, {
     method: "DELETE",
   });
 

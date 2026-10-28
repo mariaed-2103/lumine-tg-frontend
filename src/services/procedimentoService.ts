@@ -1,6 +1,5 @@
 import type { Procedimento } from "@/components/procedimentos/types";
-
-const API_URL = "http://localhost:8080/procedimentos";
+import { apiFetch } from "@/services/api";
 
 export type DadosProcedimento = {
   nome: string;
@@ -30,7 +29,7 @@ async function obterMensagemErro(
 }
 
 export async function listarProcedimentos(): Promise<Procedimento[]> {
-  const response = await fetch(API_URL);
+  const response = await apiFetch("/procedimentos");
 
   if (!response.ok) {
     throw new Error(
@@ -52,7 +51,7 @@ export async function listarProcedimentos(): Promise<Procedimento[]> {
 export async function buscarProcedimentoPorId(
   idProcedimento: number
 ): Promise<Procedimento> {
-  const response = await fetch(`${API_URL}/${idProcedimento}`);
+  const response = await apiFetch(`/procedimentos/${idProcedimento}`);
 
   if (!response.ok) {
     throw new Error(
@@ -74,11 +73,8 @@ export async function buscarProcedimentoPorId(
 export async function cadastrarProcedimento(
   dados: DadosProcedimento
 ): Promise<Procedimento> {
-  const response = await fetch(API_URL, {
+  const response = await apiFetch("/procedimentos", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(dados),
   });
 
@@ -103,11 +99,8 @@ export async function editarProcedimento(
   idProcedimento: number,
   dados: DadosProcedimento
 ): Promise<Procedimento> {
-  const response = await fetch(`${API_URL}/${idProcedimento}`, {
+  const response = await apiFetch(`/procedimentos/${idProcedimento}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(dados),
   });
 
@@ -131,7 +124,7 @@ export async function editarProcedimento(
 export async function excluirProcedimento(
   idProcedimento: number
 ): Promise<void> {
-  const response = await fetch(`${API_URL}/${idProcedimento}`, {
+  const response = await apiFetch(`/procedimentos/${idProcedimento}`, {
     method: "DELETE",
   });
 
@@ -148,8 +141,8 @@ export async function excluirProcedimento(
 export async function possuiFichaTecnica(
   idProcedimento: number
 ): Promise<boolean> {
-  const response = await fetch(
-    `${API_URL}/${idProcedimento}/possui-ficha-tecnica`
+  const response = await apiFetch(
+    `/procedimentos/${idProcedimento}/possui-ficha-tecnica`
   );
 
   if (!response.ok) {

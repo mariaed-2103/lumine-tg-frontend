@@ -94,6 +94,11 @@ function LoginPage() {
         usuario.email
       );
 
+
+      // Salva o token JWT para autenticacao nas chamadas protegidas
+      if (usuario.token) {
+        localStorage.setItem("tokenLumine", usuario.token);
+      }
       console.log("Usuário logado:", usuario);
       console.log(
         "ID salvo:",

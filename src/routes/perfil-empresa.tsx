@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import { z } from "zod";
+import { apiFetch } from "@/services/api";
 import {
   ArrowLeft,
   Camera,
@@ -227,8 +228,7 @@ function PerfilEmpresaPage() {
         setCarregandoPerfil(true);
         setApiError("");
 
-        const response = await fetch(
-          `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`
+        const response = await apiFetch(`/perfis-empresa/usuario/${idUsuario}`
         );
 
         if (response.status === 404) {
@@ -384,8 +384,7 @@ function PerfilEmpresaPage() {
       setCarregandoPerfil(true);
       setApiError("");
 
-      const response = await fetch(
-        `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`
+      const response = await apiFetch(`/perfis-empresa/usuario/${idUsuario}`
       );
 
       if (response.status === 404) {
@@ -494,8 +493,7 @@ function PerfilEmpresaPage() {
           "CADASTRANDO NOVO PERFIL DA EMPRESA..."
         );
 
-        const response = await fetch(
-          "http://localhost:8080/perfis-empresa",
+        const response = await apiFetch("/perfis-empresa",
           {
             method: "POST",
             headers: {
@@ -550,8 +548,7 @@ function PerfilEmpresaPage() {
         "ATUALIZANDO PERFIL DA EMPRESA..."
       );
 
-      const response = await fetch(
-        `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`,
+      const response = await apiFetch(`/perfis-empresa/usuario/${idUsuario}`,
         {
           method: "PUT",
           headers: {

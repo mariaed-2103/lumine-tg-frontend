@@ -1,11 +1,11 @@
 import type { CompraInsumo } from "@/components/financeiro/types";
+import { apiFetch } from "@/services/api";
 
 /**
  * ATENÇÃO: o endpoint "/compras" é uma convenção provisória seguindo
  * o padrão de nomenclatura em português já usado em "/procedimentos" e
  * "/insumos". Confirmar com o time de backend antes de subir para produção.
  */
-const API_URL = "http://localhost:8080/compras";
 
 export type DadosCompra = Omit<CompraInsumo, "idCompra">;
 
@@ -24,7 +24,7 @@ async function obterMensagemErro(
 }
 
 export async function listarCompras(): Promise<CompraInsumo[]> {
-  const response = await fetch(API_URL);
+  const response = await apiFetch("/compras");
 
   if (!response.ok) {
     const mensagem = await obterMensagemErro(
@@ -38,9 +38,8 @@ export async function listarCompras(): Promise<CompraInsumo[]> {
 }
 
 export async function cadastrarCompra(dados: DadosCompra): Promise<CompraInsumo> {
-  const response = await fetch(API_URL, {
+  const response = await apiFetch("/compras", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
 
@@ -59,9 +58,8 @@ export async function editarCompra(
   idCompra: number,
   dados: DadosCompra
 ): Promise<CompraInsumo> {
-  const response = await fetch(`${API_URL}/${idCompra}`, {
+  const response = await apiFetch(`/compras/${idCompra}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dados),
   });
 
@@ -77,7 +75,7 @@ export async function editarCompra(
 }
 
 export async function excluirCompra(idCompra: number): Promise<void> {
-  const response = await fetch(`${API_URL}/${idCompra}`, {
+  const response = await apiFetch(`/compras/${idCompra}`, {
     method: "DELETE",
   });
 

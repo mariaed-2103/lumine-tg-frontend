@@ -1,6 +1,5 @@
 import type { Insumo } from "@/components/insumos/types";
-
-const API_URL = "http://localhost:8080/insumos";
+import { apiFetch } from "@/services/api";
 
 export type DadosInsumo = Omit<Insumo, "idInsumo" | "dataCadastro">;
 
@@ -26,7 +25,7 @@ async function obterMensagemErro(
 }
 
 export async function listarInsumos(): Promise<Insumo[]> {
-  const response = await fetch(API_URL);
+  const response = await apiFetch("/insumos");
 
   if (!response.ok) {
     const mensagem = await obterMensagemErro(
@@ -43,7 +42,7 @@ export async function listarInsumos(): Promise<Insumo[]> {
 export async function buscarInsumoPorId(
   idInsumo: number
 ): Promise<Insumo> {
-  const response = await fetch(`${API_URL}/${idInsumo}`);
+  const response = await apiFetch(`/insumos/${idInsumo}`);
 
   if (!response.ok) {
     const mensagem = await obterMensagemErro(
@@ -60,11 +59,8 @@ export async function buscarInsumoPorId(
 export async function cadastrarInsumo(
   dados: DadosInsumo
 ): Promise<Insumo> {
-  const response = await fetch(API_URL, {
+  const response = await apiFetch("/insumos", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(dados),
   });
 
@@ -84,11 +80,8 @@ export async function editarInsumo(
   idInsumo: number,
   dados: DadosInsumo
 ): Promise<Insumo> {
-  const response = await fetch(`${API_URL}/${idInsumo}`, {
+  const response = await apiFetch(`/insumos/${idInsumo}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(dados),
   });
 
@@ -107,7 +100,7 @@ export async function editarInsumo(
 export async function excluirInsumo(
   idInsumo: number
 ): Promise<void> {
-  const response = await fetch(`${API_URL}/${idInsumo}`, {
+  const response = await apiFetch(`/insumos/${idInsumo}`, {
     method: "DELETE",
   });
 
@@ -125,8 +118,8 @@ export async function adicionarEstoque(
   idInsumo: number,
   quantidade: number
 ): Promise<Insumo> {
-  const response = await fetch(
-    `${API_URL}/${idInsumo}/estoque?quantidade=${quantidade}`,
+  const response = await apiFetch(
+    `/insumos/${idInsumo}/estoque?quantidade=${quantidade}`,
     {
       method: "PUT",
     }
@@ -147,8 +140,8 @@ export async function adicionarEstoque(
 export async function verificarEstoqueMinimo(
   idInsumo: number
 ): Promise<boolean> {
-  const response = await fetch(
-    `${API_URL}/${idInsumo}/estoque-minimo`
+  const response = await apiFetch(
+    `/insumos/${idInsumo}/estoque-minimo`
   );
 
   if (!response.ok) {
