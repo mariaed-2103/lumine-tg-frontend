@@ -23,11 +23,9 @@ async function obterMensagemErro(
 }
 
 export async function buscarConfiguracaoFinanceira(
-  idPerfilEmpresa: number
+  _idPerfilEmpresa?: number
 ): Promise<ConfiguracaoFinanceira> {
-  const response = await apiFetch(
-    `/configuracoes-financeiras/perfil/${idPerfilEmpresa}`
-  );
+  const response = await apiFetch("/configuracoes-financeiras");
 
   if (!response.ok) {
     const mensagem = await obterMensagemErro(
@@ -42,25 +40,21 @@ export async function buscarConfiguracaoFinanceira(
 }
 
 export async function salvarConfiguracaoFinanceira(
-  idPerfilEmpresa: number,
+  _idPerfilEmpresa: number,
   dados: ConfiguracaoFinanceira
 ): Promise<ConfiguracaoFinanceira> {
-  const metodo =
-    dados.idConfiguracao != null ? "PUT" : "POST";
+  const metodo = dados.idConfiguracao != null ? "PUT" : "POST";
 
-  const response = await apiFetch(
-    `/configuracoes-financeiras/perfil/${idPerfilEmpresa}`,
-    {
-      method: metodo,
-      body: JSON.stringify({
-        margemSeguranca: dados.margemSeguranca,
-        lucroDesejado: dados.lucroDesejado,
-        provisaoFeriasAtiva: dados.provisaoFeriasAtiva,
-        percentualProvisaoFerias:
-          dados.percentualProvisaoFerias,
-      }),
-    }
-  );
+  const response = await apiFetch("/configuracoes-financeiras", {
+    method: metodo,
+    body: JSON.stringify({
+      idConfiguracao: dados.idConfiguracao,
+      margemSeguranca: dados.margemSeguranca,
+      lucroDesejado: dados.lucroDesejado,
+      provisaoFeriasAtiva: dados.provisaoFeriasAtiva,
+      percentualProvisaoFerias: dados.percentualProvisaoFerias,
+    }),
+  });
 
   if (!response.ok) {
     const mensagem = await obterMensagemErro(
