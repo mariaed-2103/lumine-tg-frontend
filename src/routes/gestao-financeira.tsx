@@ -50,6 +50,7 @@ import {
   salvarConfiguracaoFinanceira,
 } from "@/services/configuracaoFinanceiraService";
 import { listarInsumos } from "@/services/insumoService";
+import { apiFetch } from "@/services/api";
 
 import { AppShell } from "@/components/layout/AppShell";
 
@@ -183,9 +184,7 @@ function GestaoFinanceiraPage() {
           );
         } else {
           try {
-            const perfilResponse = await fetch(
-              `http://localhost:8080/perfis-empresa/usuario/${idUsuario}`
-            );
+            const perfilResponse = await apiFetch(`/perfis-empresa/usuario/${idUsuario}`);
 
             if (perfilResponse.status === 404) {
               addToast(

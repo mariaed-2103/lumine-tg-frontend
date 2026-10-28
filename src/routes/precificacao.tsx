@@ -26,6 +26,7 @@ import { listarFichaTecnica } from "@/services/fichaTecnicaService";
 import { listarInsumos } from "@/services/insumoService";
 import { listarCompras } from "@/services/compraService";
 import { listarDespesasFixas } from "@/services/despesaFixaService";
+import { apiFetch } from "@/services/api";
 import {
   calcularCustoFixoPorMinuto,
   calcularCustoUnitarioInsumo,
@@ -152,7 +153,7 @@ function PrecificacaoPage() {
   async function fetchProfile(): Promise<Perfil> {
     const id = localStorage.getItem("idUsuario");
     if (!id) throw new Error("Usuário não identificado.");
-    const r = await fetch(`http://localhost:8080/perfis-empresa/usuario/${id}`);
+    const r = await apiFetch(`/perfis-empresa/usuario/${id}`);
     if (!r.ok) throw new Error("Não foi possível carregar o Perfil da Empresa.");
     return r.json();
   }
