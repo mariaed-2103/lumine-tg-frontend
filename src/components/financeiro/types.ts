@@ -98,8 +98,8 @@ export interface FormaPagamentoFormData {
 }
 
 export interface FormaPagamentoFormErrors {
-  nome?: string;
-  taxaPercentual?: string;
+  nome?: string | undefined;
+  taxaPercentual?: string | undefined;
 }
 
 // 5. Configuração Financeira (RF013 e RF015)
@@ -120,8 +120,8 @@ export interface ConfiguracaoFinanceiraFormData {
 }
 
 export interface ConfiguracaoFinanceiraFormErrors {
-  margemSeguranca?: string;
-  lucroDesejado?: string;
-  percentualProvisaoFerias?: string;
-  geral?: string;
+  margemSeguranca?: string | undefined;
+  lucroDesejado?: string | undefined;
+  percentualProvisaoFerias?: string | undefined;
+  geral?: string | undefined;
 }

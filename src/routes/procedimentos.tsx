@@ -39,6 +39,8 @@ import {
 import { listarInsumos } from "@/services/insumoService";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
+import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
 
 export const Route = createFileRoute("/procedimentos")({
   head: () => ({
@@ -97,6 +99,9 @@ function ProcedimentosPage() {
   // ================================
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // null = ainda verificando; false = usuário sem perfil da empresa
+  const [temPerfil, setTemPerfil] = useState<boolean | null>(null);
 
   const addToast = (
     message: string,
@@ -198,8 +203,21 @@ function ProcedimentosPage() {
       }
     }
 
-    void carregarProcedimentos();
-    void carregarInsumosDisponiveis();
+    async function carregarDados() {
+      const perfil = await buscarPerfilEmpresa();
+      setTemPerfil(!!perfil);
+
+      if (!perfil) {
+        // não tentar carregar dados sem perfil
+        setLoading(false);
+        return;
+      }
+
+      void carregarProcedimentos();
+      void carregarInsumosDisponiveis();
+    }
+
+    void carregarDados();
   }, []);
 
   // ================================
@@ -595,6 +613,7 @@ function ProcedimentosPage() {
 
   return (
     <AppShell mobileTitle="Procedimentos">
+      {temPerfil === false && <SemPerfilBanner />}
       {/* Cabeçalho */}
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight text-wine sm:text-4xl">

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Sparkles,
@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Building2,
   BadgeDollarSign,
+  LogOut,
 } from "lucide-react";
 
 import { listarInsumos } from "@/services/insumoService";
@@ -25,6 +26,8 @@ const linkInactiveClass = "text-wine hover:bg-pale/70 hover:text-wine";
 const linkActiveClass = "bg-berry text-white shadow-sm shadow-berry/25";
 
 export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
+  const navigate = useNavigate();
+
   // Contagens exibidas como badge — buscadas do backend real.
   // Se a chamada falhar (ex: backend fora do ar), o badge some silenciosamente
   // em vez de travar a navegação.
@@ -40,6 +43,14 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
       .then((lista) => setProcedimentosCount(lista.length))
       .catch(() => setProcedimentosCount(null));
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("tokenLumine");
+    localStorage.removeItem("idUsuario");
+    localStorage.removeItem("emailUsuario");
+    onCloseMobile?.();
+    void navigate({ to: "/login" });
+  };
 
   const navContent = (
     <div className="flex h-full flex-col">
@@ -211,8 +222,8 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
         </Link>
       </div>
 
-      {/* Rodapé: Perfil da Empresa */}
-      <div className="mt-auto border-t border-petal/30 pt-4">
+      {/* Rodapé: Perfil da Empresa e Sair */}
+      <div className="mt-auto space-y-2 border-t border-petal/30 pt-4">
         <Link
           to="/perfil-empresa"
           onClick={onCloseMobile}
@@ -261,6 +272,17 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
             </>
           )}
         </Link>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="group flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-2xl border border-petal/40 bg-white px-3.5 py-2.5 text-left text-xs font-bold text-wine/80 transition-all hover:border-berry/40 hover:bg-pale/70 hover:text-berry"
+        >
+          <div className="flex items-center gap-2.5">
+            <LogOut className="h-4 w-4 shrink-0 text-rose transition-colors group-hover:text-berry" />
+            <span>Sair da conta</span>
+          </div>
+        </button>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { Spark } from "@/components/lumine/Spark";
 import { PasswordStrengthIndicator } from "@/components/lumine/PasswordStrengthIndicator";
 import { FieldError } from "@/components/lumine/FieldError";
 import { validarNovaSenha, validarConfirmacaoSenha } from "@/lib/validation";
+import { apiPublicFetch } from "@/services/api";
 
 
 export const Route = createFileRoute("/redefinir-senha")({
@@ -27,17 +28,14 @@ export const Route = createFileRoute("/redefinir-senha")({
     ],
   }),
   validateSearch: z.object({
-    estado: z.enum(["form", "success", "invalid"]).optional(),
     token: z.string().optional(),
   }),
   component: RedefinirSenhaPage,
 });
 
 /**
- * Protótipo: sem backend real, o token só é usado para simular qual
- * estado a tela deve mostrar (RN pendente de validação real):
- * - sem token na URL, ou token contendo "expirado"/"invalido" → link inválido/expirado
- * - qualquer outro token → formulário de nova senha
+ * A validade e o uso único do token são confirmados pelo backend ao enviar
+ * a nova senha.
  */
 function resolveModeFromToken(token?: string): "form" | "invalid" {
   if (!token) return "invalid";
@@ -61,10 +59,7 @@ function RedefinirSenhaPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // "estado" continua disponível como atalho manual para QA/design;
-  // por padrão, o estado é derivado do token recebido na URL.
-  const mode =
-    search.estado ?? (submitted ? "success" : resolveModeFromToken(search.token));
+  const mode = submitted ? "success" : resolveModeFromToken(search.token);
 
   function setFieldError(
     field: "novaSenha" | "confirmarNovaSenha",
@@ -85,24 +80,23 @@ function RedefinirSenhaPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(
-        "http://localhost:8080/recuperacao-senha/redefinir",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: search.token, novaSenha }),
-        }
-      );
+      const response = await apiPublicFetch("/recuperacao-senha/redefinir", {
+        method: "POST",
+        body: JSON.stringify({ token: search.token, novaSenha }),
+      });
 
       if (!response.ok) {
-        throw new Error("Erro ao redefinir senha.");
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.mensagem ?? body?.message ?? "Não foi possível redefinir a senha. Verifique o link e tente novamente.");
       }
 
       setSubmitted(true);
-    } catch {
+    } catch (e) {
       setErrors((prev) => ({
         ...prev,
-        novaSenha: "Não foi possível redefinir a senha. Tente novamente.",
+        novaSenha: e instanceof Error && e.message !== "Failed to fetch"
+          ? e.message
+          : "Não foi possível conectar ao serviço. Tente novamente.",
       }));
     } finally {
       setLoading(false);

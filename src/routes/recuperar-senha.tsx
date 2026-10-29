@@ -5,6 +5,7 @@ import { Wordmark } from "@/components/lumine/Wordmark";
 import { Spark } from "@/components/lumine/Spark";
 import { FieldError } from "@/components/lumine/FieldError";
 import { validarEmail } from "@/lib/validation";
+import { apiPublicFetch } from "@/services/api";
 
 
 export const Route = createFileRoute("/recuperar-senha")({
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/recuperar-senha")({
 function RecuperarSenhaPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -42,18 +44,19 @@ function RecuperarSenhaPage() {
 
     // RN003: a tela sempre segue para a confirmação, exista ou não o e-mail.
     setLoading(true);
+    setRequestError(null);
     try {
-      await fetch("http://localhost:8080/recuperacao-senha/solicitar", {
+      const response = await apiPublicFetch("/recuperacao-senha/solicitar", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim() }),
       });
+      if (!response.ok) throw new Error("request-failed");
+      setSent(true);
     } catch {
-      // Erros de rede não são expostos ao usuário (anti-enumeração).
-      // A tela de confirmação é exibida de qualquer forma.
+      // Mantém a mesma mensagem genérica para não revelar se o e-mail existe.
+      setRequestError("Não foi possível processar a solicitação agora. Tente novamente.");
     } finally {
       setLoading(false);
-      setSent(true);
     }
   }
 
@@ -105,6 +108,7 @@ function RecuperarSenhaPage() {
                     className={`${inputBase} ${error ? "border-berry ring-4 ring-berry/15" : "border-petal"}`}
                   />
                   <FieldError message={error ?? undefined} />
+                  {requestError && <p role="alert" className="mt-2 text-sm text-berry">{requestError}</p>}
 
                 </div>
 

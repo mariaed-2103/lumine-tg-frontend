@@ -10,8 +10,20 @@ import {
   validarEmail,
   validarSenhaObrigatoria,
 } from "@/lib/validation";
+import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
+import { apiPublicFetch } from "@/services/api";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [
+      { title: "Entrar | Lumine" },
+      {
+        name: "description",
+        content:
+          "Acesse sua conta no Lumine — Gestão de custos e rentabilidade para profissionais de estética.",
+      },
+    ],
+  }),
   component: LoginPage,
 });
 
@@ -56,26 +68,20 @@ function LoginPage() {
       setLoading(true);
       setFormError(undefined);
 
-      const response = await fetch(
-        "http://localhost:8080/usuarios/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-            senha: senha,
-          }),
-        }
-      );
+      const response = await apiPublicFetch("/usuarios/login", {
+        method: "POST",
+        body: JSON.stringify({ email: email.trim(), senha }),
+      });
 
       const texto = await response.text();
 
       if (!response.ok) {
-        setFormError(
-          texto || "E-mail ou senha incorretos."
-        );
+        let mensagem = "Não foi possível entrar. Confira seu e-mail e senha e tente novamente.";
+        try {
+          const body = JSON.parse(texto);
+          mensagem = body.mensagem ?? body.message ?? mensagem;
+        } catch { /* resposta não estruturada */ }
+        setFormError(mensagem);
 
         return;
       }
@@ -105,9 +111,20 @@ function LoginPage() {
         usuario.idUsuario
       );
 
-      void navigate({
-        to: "/dashboard",
-      });
+      const perfil = await buscarPerfilEmpresa();
+
+      if (!perfil) {
+        // Primeiro acesso — redirecionar para o perfil com flag de onboarding
+        void navigate({
+          to: "/perfil-empresa",
+          search: { onboarding: true },
+        });
+      } else {
+        // Perfil já existe — ir para o dashboard normalmente
+        void navigate({
+          to: "/dashboard",
+        });
+      }
     } catch (error) {
       console.error(
         "Erro ao fazer login:",

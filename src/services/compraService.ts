@@ -9,6 +9,39 @@ import { apiFetch } from "@/services/api";
 
 export type DadosCompra = Omit<CompraInsumo, "idCompra">;
 
+// Formato que o backend espera no body do POST/PUT /compras
+interface CompraRequest {
+  insumo: { idInsumo: number };
+  dataCompra: string;
+  quantidadeComprada: number;
+  valorTotalCompra: number;
+  descricao?: string | undefined;
+}
+
+function montarCompraRequest(dados: DadosCompra): CompraRequest {
+  return {
+    insumo: { idInsumo: dados.idInsumo },
+    dataCompra: dados.dataCompra,
+    quantidadeComprada: dados.quantidadeComprada,
+    valorTotalCompra: dados.valorTotalCompra,
+    descricao: dados.descricao,
+  };
+}
+
+// O backend retorna a entidade Compra com o insumo aninhado
+// ({ insumo: { idInsumo } }); o frontend usa idInsumo na raiz.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapearCompra(raw: any): CompraInsumo {
+  return {
+    idCompra: raw.idCompra,
+    idInsumo: raw.insumo?.idInsumo ?? raw.idInsumo,
+    dataCompra: raw.dataCompra,
+    quantidadeComprada: raw.quantidadeComprada,
+    valorTotalCompra: raw.valorTotalCompra,
+    descricao: raw.descricao,
+  };
+}
+
 async function obterMensagemErro(
   response: Response,
   mensagemPadrao: string
@@ -34,13 +67,16 @@ export async function listarCompras(): Promise<CompraInsumo[]> {
     throw new Error(mensagem);
   }
 
-  return response.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return ((await response.json()) as any[]).map(mapearCompra);
 }
 
 export async function cadastrarCompra(dados: DadosCompra): Promise<CompraInsumo> {
+  const body: CompraRequest = montarCompraRequest(dados);
+
   const response = await apiFetch("/compras", {
     method: "POST",
-    body: JSON.stringify(dados),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -51,16 +87,18 @@ export async function cadastrarCompra(dados: DadosCompra): Promise<CompraInsumo>
     throw new Error(mensagem);
   }
 
-  return response.json();
+  return mapearCompra(await response.json());
 }
 
 export async function editarCompra(
   idCompra: number,
   dados: DadosCompra
 ): Promise<CompraInsumo> {
+  const body: CompraRequest = montarCompraRequest(dados);
+
   const response = await apiFetch(`/compras/${idCompra}`, {
     method: "PUT",
-    body: JSON.stringify(dados),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -71,7 +109,7 @@ export async function editarCompra(
     throw new Error(mensagem);
   }
 
-  return response.json();
+  return mapearCompra(await response.json());
 }
 
 export async function excluirCompra(idCompra: number): Promise<void> {

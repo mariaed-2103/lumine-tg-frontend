@@ -53,6 +53,8 @@ import { listarInsumos } from "@/services/insumoService";
 import { apiFetch } from "@/services/api";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
+import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
 
 export const Route = createFileRoute("/gestao-financeira")({
   head: () => ({
@@ -119,6 +121,8 @@ function GestaoFinanceiraPage() {
 
   const [loading, setLoading] = useState(true);
   const [idPerfilEmpresa, setIdPerfilEmpresa] = useState<number | null>(null);
+  // null = ainda verificando; false = usuário sem perfil da empresa
+  const [temPerfil, setTemPerfil] = useState<boolean | null>(null);
 
   // ================================
   // Modal de exclusão genérico
@@ -150,6 +154,11 @@ function GestaoFinanceiraPage() {
     async function carregarDados() {
       setLoading(true);
       try {
+        const perfilEmpresa = await buscarPerfilEmpresa();
+        setTemPerfil(!!perfilEmpresa);
+
+        if (!perfilEmpresa) return; // não tentar carregar dados sem perfil
+
         const [fixas, variaveis, comprasData, formas, insumosData] =
           await Promise.allSettled([
             listarDespesasFixas(),
@@ -187,10 +196,8 @@ function GestaoFinanceiraPage() {
             const perfilResponse = await apiFetch(`/perfis-empresa/usuario/${idUsuario}`);
 
             if (perfilResponse.status === 404) {
-              addToast(
-                "Você ainda não possui um perfil de empresa. Cadastre seu perfil antes de configurar os dados financeiros.",
-                "info"
-              );
+              // Sem perfil: o SemPerfilBanner já orienta o usuário (sem toast).
+              setTemPerfil(false);
             } else if (!perfilResponse.ok) {
               throw new Error("Não foi possível identificar o perfil da empresa.");
             } else {
@@ -207,16 +214,14 @@ function GestaoFinanceiraPage() {
                 const config = await buscarConfiguracaoFinanceira(
                   perfil.idPerfilEmpresa
                 );
-                setConfiguracao(config);
+                if (config) setConfiguracao(config);
               } catch (error) {
-                // Se ainda não existe configuração, mantém os valores padrão.
-                console.info(
-                  "Não foi possível carregar a configuração financeira; os valores padrão serão exibidos.",
-                  error
-                );
+                console.error("Não foi possível carregar a configuração financeira:", error);
                 addToast(
-                  "Configuração financeira não encontrada. Confira os valores e salve para cadastrá-la.",
-                  "info"
+                  error instanceof Error
+                    ? error.message
+                    : "Não foi possível carregar a configuração financeira.",
+                  "error"
                 );
               }
             }
@@ -542,6 +547,7 @@ function GestaoFinanceiraPage() {
 
   return (
     <AppShell mobileTitle="Gestão Financeira">
+      {temPerfil === false && <SemPerfilBanner />}
       {/* Cabeçalho */}
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight text-wine sm:text-4xl">

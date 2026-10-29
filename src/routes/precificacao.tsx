@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Tag,
+  TrendingUp,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
+import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
+import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
 import type {
   ConfiguracaoFinanceira,
   DespesaFixa,
@@ -21,19 +29,40 @@ import {
   editarFormaPagamento,
   excluirFormaPagamento,
 } from "@/services/formaPagamentoService";
-import { listarProcedimentos, editarProcedimento } from "@/services/procedimentoService";
+import { listarProcedimentos } from "@/services/procedimentoService";
 import { listarFichaTecnica } from "@/services/fichaTecnicaService";
 import { listarInsumos } from "@/services/insumoService";
 import { listarCompras } from "@/services/compraService";
 import { listarDespesasFixas } from "@/services/despesaFixaService";
 import { apiFetch } from "@/services/api";
 import {
+  definirPrecoPadrao,
+  simularPreco,
+  type SimulacaoPrecoResponse,
+} from "@/services/simulacaoPrecoService";
+import {
   calcularCustoFixoPorMinuto,
   calcularCustoUnitarioInsumo,
   calcularSimulacao,
 } from "@/lib/calcularSimulacao";
+import { ConfiguracaoFinanceiraTab } from "@/components/financeiro/ConfiguracaoFinanceiraTab";
+import { FormasPagamentoTab } from "@/components/financeiro/FormasPagamentoTab";
+import { FinanceiroDeleteModal } from "@/components/financeiro/FinanceiroDeleteModal";
 
-export const Route = createFileRoute("/precificacao")({ component: PrecificacaoPage });
+export const Route = createFileRoute("/precificacao")({
+  head: () => ({
+    meta: [
+      { title: "Precificação | Lumine" },
+      {
+        name: "description",
+        content:
+          "Defina os parâmetros financeiros e simule o preço dos seus procedimentos no Lumine.",
+      },
+    ],
+  }),
+  component: PrecificacaoPage,
+});
+
 type Aba = "configuracao" | "pagamentos" | "simulacao";
 type Perfil = {
   idPerfilEmpresa: number;
@@ -41,36 +70,35 @@ type Perfil = {
   horasDisponiveisDia?: number;
 };
 type ItemFicha = { idInsumo: number; quantidadeUtilizada: number };
-const input =
-  "w-full rounded-md border border-petal bg-white px-3 py-2 text-sm text-ink outline-none focus:border-berry";
-const card = "rounded-lg border border-petal bg-white p-5";
-const dinheiro = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const CONFIGURACAO_PADRAO: ConfiguracaoFinanceira = {
+  margemSeguranca: 10,
+  lucroDesejado: 20,
+  provisaoFeriasAtiva: false,
+  percentualProvisaoFerias: null,
+};
+
+const dinheiro = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const percentual = (n: number) => `${n.toFixed(2).replace(".", ",")}%`;
-const numero = (v: string) =>
-  Number(v.trim().includes(",") ? v.trim().replace(/\./g, "").replace(",", ".") : v.trim());
 
 function PrecificacaoPage() {
+  const [competencia, setCompetencia] = useState(() => {
+    const hoje = new Date();
+    return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [aba, setAba] = useState<Aba>("configuracao");
   const [loading, setLoading] = useState(true);
   const [errorsLoad, setErrorsLoad] = useState<string[]>([]);
   const [config, setConfig] = useState<ConfiguracaoFinanceira | null>(null);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [temPerfil, setTemPerfil] = useState<boolean | null>(null);
   const [procedimentos, setProcedimentos] = useState<Procedimento[]>([]);
   const [formas, setFormas] = useState<FormaPagamento[]>([]);
   const [compras, setCompras] = useState<CompraInsumo[]>([]);
   const [despesas, setDespesas] = useState<DespesaFixa[]>([]);
   const [insumos, setInsumos] = useState<Insumo[]>([]);
-  const [margem, setMargem] = useState("");
-  const [lucro, setLucro] = useState("");
-  const [editConfig, setEditConfig] = useState(false);
-  const [savingConfig, setSavingConfig] = useState(false);
-  const [filter, setFilter] = useState("");
-  const [formaEdit, setFormaEdit] = useState<FormaPagamento | null>(null);
-  const [formaNome, setFormaNome] = useState("");
-  const [formaTaxa, setFormaTaxa] = useState("");
-  const [formaError, setFormaError] = useState("");
-  const [formaModalOpen, setFormaModalOpen] = useState(false);
-  const [savingForma, setSavingForma] = useState(false);
+
   const [deleteForma, setDeleteForma] = useState<FormaPagamento | null>(null);
   const [selected, setSelected] = useState("");
   const [ficha, setFicha] = useState<ItemFicha[]>([]);
@@ -78,10 +106,18 @@ function PrecificacaoPage() {
   const [fichaError, setFichaError] = useState("");
   const [confirmPrice, setConfirmPrice] = useState(false);
   const [savingPrice, setSavingPrice] = useState(false);
+  const [simulacaoBackend, setSimulacaoBackend] =
+    useState<SimulacaoPrecoResponse | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setErrorsLoad([]);
+    const perfilEmpresa = await buscarPerfilEmpresa();
+    setTemPerfil(!!perfilEmpresa);
+    if (!perfilEmpresa) {
+      setLoading(false);
+      return;
+    }
     const jobs = await Promise.allSettled([
       fetchProfile(),
       listarProcedimentos(),
@@ -97,8 +133,6 @@ function PrecificacaoPage() {
       try {
         const c = await buscarConfiguracaoFinanceira(p.idPerfilEmpresa);
         setConfig(c);
-        setMargem(String(c.margemSeguranca).replace(".", ","));
-        setLucro(String(c.lucroDesejado).replace(".", ","));
       } catch {
         setConfig(null);
       }
@@ -106,46 +140,47 @@ function PrecificacaoPage() {
       errs.push(
         jobs[0].reason instanceof Error
           ? jobs[0].reason.message
-          : "Perfil da empresa indisponível.",
+          : "Perfil da empresa indisponível."
       );
     if (jobs[1].status === "fulfilled") setProcedimentos(jobs[1].value);
     else
       errs.push(
         jobs[1].reason instanceof Error
           ? jobs[1].reason.message
-          : "Não foi possível carregar procedimentos.",
+          : "Não foi possível carregar procedimentos."
       );
     if (jobs[2].status === "fulfilled") setFormas(jobs[2].value);
     else
       errs.push(
         jobs[2].reason instanceof Error
           ? jobs[2].reason.message
-          : "Não foi possível carregar formas de pagamento.",
+          : "Não foi possível carregar formas de pagamento."
       );
     if (jobs[3].status === "fulfilled") setCompras(jobs[3].value);
     else
       errs.push(
         jobs[3].reason instanceof Error
           ? jobs[3].reason.message
-          : "Não foi possível carregar compras.",
+          : "Não foi possível carregar compras."
       );
     if (jobs[4].status === "fulfilled") setDespesas(jobs[4].value);
     else
       errs.push(
         jobs[4].reason instanceof Error
           ? jobs[4].reason.message
-          : "Não foi possível carregar despesas fixas.",
+          : "Não foi possível carregar despesas fixas."
       );
     if (jobs[5].status === "fulfilled") setInsumos(jobs[5].value);
     else
       errs.push(
         jobs[5].reason instanceof Error
           ? jobs[5].reason.message
-          : "Não foi possível carregar insumos.",
+          : "Não foi possível carregar insumos."
       );
     setErrorsLoad(errs);
     setLoading(false);
   }, []);
+
   useEffect(() => {
     void load();
   }, [load]);
@@ -158,7 +193,17 @@ function PrecificacaoPage() {
     return r.json();
   }
 
-  const procedimento = procedimentos.find((p) => p.idProcedimento === Number(selected));
+  const procedimento = procedimentos.find(
+    (p) => p.idProcedimento === Number(selected)
+  );
+
+  const parts = competencia.split("-").map(Number);
+  const anoCompetencia = parts[0] ?? new Date().getFullYear();
+  const mesCompetencia = parts[1] ?? new Date().getMonth() + 1;
+  const diasNoMes = new Date(anoCompetencia, mesCompetencia, 0).getDate();
+  const inicioCompetencia = `${competencia}-01`;
+  const fimCompetencia = `${competencia}-${String(diasNoMes).padStart(2, "0")}`;
+
   useEffect(() => {
     if (!selected) {
       setFicha([]);
@@ -170,48 +215,72 @@ function PrecificacaoPage() {
       .then(setFicha)
       .catch((e) =>
         setFichaError(
-          e instanceof Error ? e.message : "Não foi possível carregar a ficha técnica.",
-        ),
+          e instanceof Error
+            ? e.message
+            : "Não foi possível carregar a ficha técnica."
+        )
       )
       .finally(() => setFichaLoading(false));
   }, [selected]);
 
+  useEffect(() => {
+    setSimulacaoBackend(null);
+    if (!selected || !competencia) return;
+    simularPreco(Number(selected), mesCompetencia, anoCompetencia)
+      .then(setSimulacaoBackend)
+      .catch((e) =>
+        toast.error(
+          e instanceof Error ? e.message : "Não foi possível calcular a simulação."
+        )
+      );
+  }, [selected, competencia, mesCompetencia, anoCompetencia]);
+
   const linhas = ficha.map((f) => {
     const insumo = insumos.find((i) => i.idInsumo === f.idInsumo);
-    const compra = compras
-      .filter((c) => c.idInsumo === f.idInsumo)
-      .sort((a, b) => b.dataCompra.localeCompare(a.dataCompra))[0];
+    const comprasDoInsumo = compras.filter(
+      (c) =>
+        c.idInsumo === f.idInsumo &&
+        c.dataCompra >= inicioCompetencia &&
+        c.dataCompra <= fimCompetencia
+    );
     const custoUnitario = calcularCustoUnitarioInsumo(
       insumo?.quantidadePorEmbalagem ?? 0,
-      compra ?? null,
+      comprasDoInsumo
     );
     return {
       f,
       insumo,
       custoUnitario,
-      custo: custoUnitario === null ? null : custoUnitario * f.quantidadeUtilizada,
+      custo:
+        custoUnitario === null ? null : custoUnitario * f.quantidadeUtilizada,
     };
   });
+
   const custoInsumos = linhas.reduce((sum, x) => sum + (x.custo ?? 0), 0);
-  const now = new Date();
   const despesasAtivasMes = despesas.filter(
     (d) =>
-      d.dataInicio <=
-        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}` &&
-      (!d.dataFim ||
-        d.dataFim >= `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`),
+      d.dataInicio <= fimCompetencia &&
+      (!d.dataFim || d.dataFim >= inicioCompetencia)
   );
   const despesasMes = despesasAtivasMes.reduce((sum, d) => sum + d.valor, 0);
   const valorProLabore = despesasAtivasMes
-    .filter((d) => d.categoria.toLocaleLowerCase("pt-BR").includes("pró-labore"))
+    .filter((d) =>
+      d.categoria
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase("pt-BR")
+        .includes("pro-labore")
+    )
     .reduce((sum, d) => sum + d.valor, 0);
+
   const fixoMin = calcularCustoFixoPorMinuto(
     despesasMes,
     valorProLabore,
     perfil?.diasTrabalhadosMes,
     perfil?.horasDisponiveisDia,
-    config?.provisaoFeriasAtiva ? (config.percentualProvisaoFerias ?? 0) : 0,
+    config?.provisaoFeriasAtiva ? (config.percentualProvisaoFerias ?? 0) : 0
   );
+
   const simulation =
     procedimento &&
     config &&
@@ -226,108 +295,103 @@ function PrecificacaoPage() {
           lucroDesejado: config.lucroDesejado,
         })
       : null;
-  const totalPercent =
-    (Number(margem.replace(",", ".")) || 0) + (Number(lucro.replace(",", ".")) || 0);
 
-  async function saveConfig(e: React.FormEvent) {
-    e.preventDefault();
+  const precoSugerido =
+    simulacaoBackend?.precoSugerido ?? simulation?.precoSugerido;
+
+  async function handleSaveConfiguracao(
+    novaConfig: Omit<ConfiguracaoFinanceira, "idConfiguracao" | "dataAtualizacao">
+  ) {
     if (!perfil) return;
-    const m = numero(margem),
-      l = numero(lucro);
-    if (!margem.trim() || !Number.isFinite(m)) {
-      toast.error("Informe a margem de segurança.");
-      return;
-    }
-    if (!lucro.trim() || !Number.isFinite(l)) {
-      toast.error("Informe o lucro desejado.");
-      return;
-    }
-    if (m < 0 || l < 0) {
-      toast.error("O valor deve ser maior ou igual a 0%.");
-      return;
-    }
-    if (m + l >= 100) {
-      toast.error("A soma da margem de segurança com o lucro desejado deve ser menor que 100%.");
-      return;
-    }
-    setSavingConfig(true);
     try {
-      const saved = await salvarConfiguracaoFinanceira(perfil.idPerfilEmpresa, {
-        ...(config ?? { provisaoFeriasAtiva: false, percentualProvisaoFerias: null }),
-        margemSeguranca: m,
-        lucroDesejado: l,
-      });
+      const saved = await salvarConfiguracaoFinanceira(
+        perfil.idPerfilEmpresa,
+        novaConfig
+      );
       setConfig(saved);
-      setEditConfig(false);
-      toast.success("Configuração salva.");
+      toast.success("Configuração financeira salva com sucesso!");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Não foi possível salvar.");
-    } finally {
-      setSavingConfig(false);
+      toast.error(
+        e instanceof Error ? e.message : "Não foi possível salvar a configuração."
+      );
+      throw e;
     }
   }
 
-  async function saveForma(e: React.FormEvent) {
-    e.preventDefault();
-    setFormaError("");
-    const taxa = numero(formaTaxa);
-    if (!formaNome.trim()) {
-      setFormaError("Informe o nome da forma de pagamento.");
-      return;
-    }
-    if (!formaTaxa.trim() || !Number.isFinite(taxa)) {
-      setFormaError("Informe o percentual da taxa.");
-      return;
-    }
-    if (taxa < 0) {
-      setFormaError("A taxa não pode ser negativa.");
-      return;
-    }
-    if (taxa > 100) {
-      setFormaError("A taxa não pode ser maior que 100%.");
-      return;
-    }
-    setSavingForma(true);
+  async function handleAddForma(
+    novaForma: Omit<FormaPagamento, "idFormaPagamento">
+  ) {
     try {
-      const dados = { nome: formaNome.trim(), taxaPercentual: taxa };
-      const saved = formaEdit
-        ? await editarFormaPagamento(formaEdit.idFormaPagamento, dados)
-        : await cadastrarFormaPagamento(dados);
-      setFormas((old) =>
-        formaEdit
-          ? old.map((f) => (f.idFormaPagamento === saved.idFormaPagamento ? saved : f))
-          : [...old, saved],
-      );
-      setFormaEdit(null);
-      setFormaNome("");
-      setFormaTaxa("");
-      setFormaModalOpen(false);
-      toast.success("Forma de pagamento salva.");
+      await cadastrarFormaPagamento(novaForma);
+      setFormas(await listarFormasPagamento());
+      toast.success("Forma de pagamento cadastrada com sucesso!");
     } catch (e) {
-      setFormaError(
-        e instanceof Error ? e.message : "Não foi possível salvar a forma de pagamento.",
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível cadastrar a forma de pagamento."
       );
-    } finally {
-      setSavingForma(false);
+      throw e;
+    }
+  }
+
+  async function handleUpdateForma(
+    id: number,
+    forma: Omit<FormaPagamento, "idFormaPagamento">
+  ) {
+    try {
+      await editarFormaPagamento(id, forma);
+      setFormas(await listarFormasPagamento());
+      toast.success("Forma de pagamento atualizada com sucesso!");
+    } catch (e) {
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível atualizar a forma de pagamento."
+      );
+      throw e;
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteForma) return;
+    try {
+      await excluirFormaPagamento(deleteForma.idFormaPagamento);
+      setFormas(await listarFormasPagamento());
+      setDeleteForma(null);
+      toast.success("Forma de pagamento excluída com sucesso.");
+    } catch (e) {
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível excluir a forma de pagamento."
+      );
     }
   }
 
   async function setDefaultPrice() {
-    if (!procedimento || !simulation) return;
+    if (!procedimento || precoSugerido == null) return;
     setSavingPrice(true);
     try {
-      const updated = await editarProcedimento(procedimento.idProcedimento, {
-        nome: procedimento.nome,
-        duracaoMinutos: procedimento.duracaoMinutos,
-        precoPadrao: Number(simulation.precoSugerido.toFixed(2)),
-      });
+      await definirPrecoPadrao(
+        procedimento.idProcedimento,
+        Number(precoSugerido.toFixed(2))
+      );
       setProcedimentos((old) =>
-        old.map((p) => (p.idProcedimento === updated.idProcedimento ? updated : p)),
+        old.map((p) =>
+          p.idProcedimento === procedimento.idProcedimento
+            ? { ...p, precoPadrao: Number(precoSugerido.toFixed(2)) }
+            : p
+        )
       );
       setConfirmPrice(false);
-      toast.success("Preço padrão atualizado");
+      toast.success("Preço padrão definido com sucesso.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Não foi possível atualizar o preço padrão.");
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : "Não foi possível atualizar o preço padrão."
+      );
     } finally {
       setSavingPrice(false);
     }
@@ -338,542 +402,467 @@ function PrecificacaoPage() {
     { id: "pagamentos", label: "Formas de pagamento" },
     { id: "simulacao", label: "Simulação de preço" },
   ];
-  const fieldLabel = "mb-1 block text-sm font-medium text-wine";
+
   return (
     <AppShell mobileTitle="Precificação">
-      <div className="space-y-5">
+      {temPerfil === false && <SemPerfilBanner />}
+      <div className="space-y-6">
         <header>
-          <h1 className="font-display text-[22px] font-semibold text-wine">Precificação</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="font-display text-2xl font-bold text-wine">Precificação</h1>
+          <p className="mt-1 text-xs sm:text-sm text-wine/70 font-medium">
             Defina os parâmetros financeiros e simule o preço dos seus procedimentos
           </p>
         </header>
-        <section className={card}>
-          <div className="mb-5 border-b border-petal pb-4">
-            <div className="hidden gap-2 sm:flex">
-              {abas.map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => setAba(a.id)}
-                  className={`rounded-md px-4 py-2 text-sm ${aba === a.id ? "bg-berry text-white" : "text-wine hover:bg-pale"}`}
-                >
-                  {a.label}
-                </button>
-              ))}
-            </div>
-            <select
-              className={`${input} sm:hidden`}
-              value={aba}
-              onChange={(e) => setAba(e.target.value as Aba)}
-            >
-              {abas.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.label}
-                </option>
-              ))}
-            </select>
+
+        <section className="rounded-2xl border border-petal/40 bg-white p-5 sm:p-7 shadow-xs">
+          {/* Abas com visual de pílula idêntico ao padrão do sistema */}
+          <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-petal/30 pb-4">
+            {abas.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => setAba(a.id)}
+                className={`rounded-full px-5 py-2.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                  aba === a.id
+                    ? "bg-berry text-white shadow-md shadow-berry/20"
+                    : "text-wine/80 hover:text-wine hover:bg-cream border border-transparent hover:border-petal/40"
+                }`}
+              >
+                {a.label}
+              </button>
+            ))}
           </div>
+
           {loading ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">Carregando dados...</p>
+            <div className="py-12 text-center text-xs sm:text-sm text-wine/70 font-medium">
+              Carregando dados de precificação...
+            </div>
           ) : (
             <>
               {errorsLoad.length > 0 && (
-                <div className="mb-4 flex items-center justify-between rounded-md border border-petal bg-pale p-3 text-sm text-wine">
+                <div className="mb-5 flex items-center justify-between rounded-2xl border border-petal/60 bg-pale/70 p-4 text-xs font-medium text-wine">
                   <span>{errorsLoad[0]}</span>
-                  <button className="underline" onClick={() => void load()}>
+                  <button
+                    className="font-bold underline hover:text-berry transition-colors cursor-pointer"
+                    onClick={() => void load()}
+                  >
                     Tentar novamente
                   </button>
                 </div>
               )}
+
+              {/* ABA 1: CONFIGURAÇÃO DE PRECIFICAÇÃO */}
               {aba === "configuracao" && (
-                <div className={card}>
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="font-display text-lg font-semibold text-wine">
-                      Configuração da precificação
-                    </h2>
-                    {config && !editConfig && (
-                      <button
-                        onClick={() => setEditConfig(true)}
-                        className="inline-flex items-center gap-2 rounded-md border border-petal px-3 py-2 text-sm text-wine"
-                      >
-                        <Pencil size={16} />
-                        Editar configuração
-                      </button>
-                    )}
-                  </div>
-                  {!config && !editConfig ? (
-                    <div className="py-8 text-center">
-                      <p className="mb-4 text-sm">Nenhuma configuração cadastrada</p>
-                      <button
-                        onClick={() => setEditConfig(true)}
-                        className="rounded-md bg-berry px-4 py-2 text-sm text-white"
-                      >
-                        Configurar agora
-                      </button>
-                    </div>
-                  ) : editConfig ? (
-                    <form onSubmit={saveConfig} className="mt-5 max-w-xl space-y-4">
-                      <label className={fieldLabel}>
-                        Margem de segurança (%)
-                        <input
-                          className={input}
-                          name="margemSeguranca"
-                          type="text"
-                          inputMode="decimal"
-                          value={margem}
-                          onChange={(e) => setMargem(e.target.value)}
-                        />
-                      </label>
-                      <label className={fieldLabel}>
-                        Lucro desejado (%)
-                        <input
-                          className={input}
-                          name="lucroDesejado"
-                          type="text"
-                          inputMode="decimal"
-                          value={lucro}
-                          onChange={(e) => setLucro(e.target.value)}
-                        />
-                      </label>
-                      <p
-                        className={`text-sm ${totalPercent >= 100 ? "text-red-600" : "text-muted-foreground"}`}
-                      >
-                        Soma dos percentuais: {percentual(totalPercent)}
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          disabled={savingConfig}
-                          className="rounded-md bg-berry px-4 py-2 text-sm text-white disabled:opacity-60"
-                        >
-                          {savingConfig ? "Salvando..." : "Salvar"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditConfig(false)}
-                          className="rounded-md border border-petal px-4 py-2 text-sm"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <dl className="mt-5 grid max-w-2xl grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                      <dt>Margem de segurança</dt>
-                      <dd className="tabular-nums">{percentual(config!.margemSeguranca)}</dd>
-                      <dt>Lucro desejado</dt>
-                      <dd className="tabular-nums">{percentual(config!.lucroDesejado)}</dd>
-                      <dt>Soma dos percentuais</dt>
-                      <dd className="tabular-nums">
-                        {percentual(config!.margemSeguranca + config!.lucroDesejado)}
-                      </dd>
-                      <dt>Última atualização</dt>
-                      <dd>
-                        {config!.dataAtualizacao
-                          ? new Date(config!.dataAtualizacao).toLocaleString("pt-BR")
-                          : "—"}
-                      </dd>
-                    </dl>
-                  )}
-                  <p className="mt-5 rounded-md bg-pale p-3 text-sm text-wine">
-                    Esses parâmetros são usados na simulação de preço de cada procedimento.
-                  </p>
-                </div>
+                <ConfiguracaoFinanceiraTab
+                  configuracao={config ?? CONFIGURACAO_PADRAO}
+                  onSaveConfiguracao={handleSaveConfiguracao}
+                />
               )}
 
+              {/* ABA 2: FORMAS DE PAGAMENTO E TAXAS */}
               {aba === "pagamentos" && (
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <label className="relative flex-1">
-                      <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
-                      <input
-                        className={`${input} pl-9`}
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                        placeholder="Buscar por nome"
-                      />
-                    </label>
-                    <button
-                      onClick={() => {
-                        setFormaEdit(null);
-                        setFormaNome("");
-                        setFormaTaxa("");
-                        setFormaError("");
-                        setFormaModalOpen(true);
-                      }}
-                      className="inline-flex items-center justify-center gap-2 rounded-md bg-berry px-4 py-2 text-sm text-white"
-                    >
-                      <Plus size={16} />
-                      Nova forma de pagamento
-                    </button>
-                  </div>
-                  {formas.filter((f) => f.nome.toLowerCase().includes(filter.toLowerCase()))
-                    .length === 0 ? (
-                    <div className="py-10 text-center text-sm">
-                      Nenhuma forma de pagamento cadastrada{" "}
-                      <button
-                        className="ml-2 text-berry underline"
-                        onClick={() => {
-                          setFormaEdit(null);
-                          setFormaNome("");
-                          setFormaTaxa("");
-                          setFormaError("");
-                          setFormaModalOpen(true);
-                        }}
-                      >
-                        Cadastrar
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto rounded-md border border-petal">
-                      <table className="w-full min-w-[480px] text-sm">
-                        <thead className="bg-pale text-wine">
-                          <tr>
-                            <th className="px-4 py-3 text-left font-medium">Nome</th>
-                            <th className="px-4 py-3 text-right font-medium">Taxa (%)</th>
-                            <th className="px-4 py-3 text-right font-medium">Ações</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {formas
-                            .filter((f) => f.nome.toLowerCase().includes(filter.toLowerCase()))
-                            .map((f) => (
-                              <tr
-                                key={f.idFormaPagamento}
-                                className="border-t border-petal/60 hover:bg-cream"
-                              >
-                                <td className="px-4 py-3">{f.nome}</td>
-                                <td className="px-4 py-3 text-right tabular-nums">
-                                  {percentual(f.taxaPercentual)}
-                                </td>
-                                <td className="px-4 py-3 text-right">
-                                  <button
-                                    title="Editar"
-                                    onClick={() => {
-                                      setFormaEdit(f);
-                                      setFormaNome(f.nome);
-                                      setFormaTaxa(String(f.taxaPercentual).replace(".", ","));
-                                      setFormaError("");
-                                      setFormaModalOpen(true);
-                                    }}
-                                    className="rounded p-1 text-wine hover:text-berry"
-                                  >
-                                    <Pencil size={16} />
-                                  </button>
-                                  <button
-                                    title="Excluir"
-                                    onClick={() => setDeleteForma(f)}
-                                    className="rounded p-1 text-wine hover:text-red-600"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
+                <FormasPagamentoTab
+                  formasPagamento={formas}
+                  onAddForma={handleAddForma}
+                  onUpdateForma={handleUpdateForma}
+                  onDeleteRequest={(forma) => setDeleteForma(forma)}
+                />
               )}
 
+              {/* ABA 3: SIMULAÇÃO DE PREÇO */}
               {aba === "simulacao" && (
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className={`${card} space-y-4`}>
-                    <h2 className="font-display text-lg font-semibold text-wine">Procedimento</h2>
-                    <label className={fieldLabel}>
-                      Procedimento
-                      <select
-                        className={input}
-                        value={selected}
-                        onChange={(e) => setSelected(e.target.value)}
-                      >
-                        <option value="">Selecione</option>
-                        {procedimentos.map((p) => (
-                          <option key={p.idProcedimento} value={p.idProcedimento}>
-                            {p.nome} · {p.duracaoMinutos} min
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                <div className="space-y-6">
+                  {/* Filtros de Competência e Procedimento */}
+                  <div className="rounded-2xl bg-cream/50 border border-petal/40 p-4 sm:p-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          htmlFor="competencia-sim"
+                          className="block text-xs font-bold text-wine mb-1.5"
+                        >
+                          Mês de Competência
+                        </label>
+                        <input
+                          id="competencia-sim"
+                          type="month"
+                          value={competencia}
+                          onChange={(e) => setCompetencia(e.target.value)}
+                          className="w-full rounded-xl border border-petal/50 bg-white px-3.5 py-2.5 text-xs font-medium text-ink outline-none transition focus:border-berry focus:ring-1 focus:ring-berry"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="procedimento-sim"
+                          className="block text-xs font-bold text-wine mb-1.5"
+                        >
+                          Procedimento para Simulação
+                        </label>
+                        <select
+                          id="procedimento-sim"
+                          value={selected}
+                          onChange={(e) => setSelected(e.target.value)}
+                          className="w-full rounded-xl border border-petal/50 bg-white px-3.5 py-2.5 text-xs font-medium text-ink outline-none transition focus:border-berry focus:ring-1 focus:ring-berry cursor-pointer"
+                        >
+                          <option value="">Selecione um procedimento</option>
+                          {procedimentos.map((p) => (
+                            <option key={p.idProcedimento} value={p.idProcedimento}>
+                              {p.nome} · {p.duracaoMinutos} min
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                     {procedimentos.length === 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        Cadastre um procedimento para simular o preço.
+                      <p className="mt-3 text-xs text-wine/70 font-medium">
+                        Nenhum procedimento cadastrado. Cadastre procedimentos no menu para simular preços.
                       </p>
                     )}
-                    {procedimento && (
-                      <>
-                        <div className="rounded-md bg-cream p-3 text-sm">
-                          <strong>{procedimento.nome}</strong>
-                          <div>Duração: {procedimento.duracaoMinutos} min</div>
+                  </div>
+
+                  {!selected ? (
+                    <div className="py-12 px-4 text-center max-w-md mx-auto">
+                      <div className="mx-auto w-16 h-16 rounded-2xl bg-pale flex items-center justify-center mb-4 border border-petal/40 text-berry">
+                        <TrendingUp className="w-8 h-8" />
+                      </div>
+                      <h3 className="font-display font-bold text-lg text-wine mb-1">
+                        Selecione um procedimento
+                      </h3>
+                      <p className="text-xs text-wine/70 leading-relaxed font-sans">
+                        Escolha um procedimento acima para analisar a ficha técnica, custos fixos calculados e obter a sugestão de preço ideal.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      {/* Coluna da esquerda (Espaçosa para a tabela de insumos) */}
+                      <div className="lg:col-span-7 xl:col-span-7 space-y-5">
+                        {procedimento && (
+                          <div className="rounded-2xl bg-white border border-petal/40 p-5 shadow-xs space-y-4">
+                            {/* Destaque do procedimento */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-petal/30">
+                              <div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-berry block">
+                                  Procedimento Selecionado
+                                </span>
+                                <h3 className="font-display font-bold text-lg text-wine">
+                                  {procedimento.nome}
+                                </h3>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <div className="inline-flex items-center gap-1.5 text-xs bg-cream px-3 py-1.5 rounded-full border border-petal/50 text-wine font-medium">
+                                  <Clock className="w-3.5 h-3.5 text-rose" />
+                                  <span>{procedimento.duracaoMinutos} min</span>
+                                </div>
+                                <div className="inline-flex items-center gap-1.5 text-xs bg-cream px-3 py-1.5 rounded-full border border-petal/50 text-wine font-medium">
+                                  <Tag className="w-3.5 h-3.5 text-berry" />
+                                  <span>
+                                    Preço padrão:{" "}
+                                    <strong className="text-wine">
+                                      {procedimento.precoPadrao == null
+                                        ? "Não definido"
+                                        : dinheiro(procedimento.precoPadrao)}
+                                    </strong>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Título e resumo de insumos */}
+                            <div className="flex items-center justify-between pt-1">
+                              <div>
+                                <h4 className="font-display font-bold text-sm text-wine">
+                                  Insumos da Ficha Técnica
+                                </h4>
+                                <p className="text-[11px] text-wine/70 font-medium">
+                                  Custos calculados com base nas compras desta competência
+                                </p>
+                              </div>
+                              {ficha.length > 0 && (
+                                <span className="text-xs font-bold text-wine bg-cream px-3 py-1 rounded-full border border-petal/40">
+                                  Total: <strong className="text-berry">{dinheiro(custoInsumos)}</strong>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Tabela estilizada no padrão de design do Lumine */}
+                            {fichaLoading ? (
+                              <div className="py-8 text-center text-xs text-wine/70">
+                                Carregando insumos da ficha técnica...
+                              </div>
+                            ) : fichaError ? (
+                              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                                {fichaError}
+                              </div>
+                            ) : ficha.length === 0 ? (
+                              <div className="p-6 text-center rounded-2xl bg-cream border border-petal/40 text-xs text-wine/80">
+                                Este procedimento não possui insumos na ficha técnica. Cadastre ao menos um insumo para simular o preço com precisão.
+                              </div>
+                            ) : (
+                              <div className="overflow-hidden rounded-2xl border border-petal/40 bg-white shadow-2xs">
+                                <table className="w-full text-left border-collapse">
+                                  <thead>
+                                    <tr className="bg-cream border-b border-petal/40 text-wine font-display font-bold text-[11px] uppercase tracking-wider">
+                                      <th className="py-3.5 px-4">Insumo</th>
+                                      <th className="py-3.5 px-3 text-center">Quantidade Utilizada</th>
+                                      <th className="py-3.5 px-3 text-right">Custo Unitário</th>
+                                      <th className="py-3.5 px-4 text-right">Custo Total</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-petal/20 text-xs text-ink font-medium">
+                                    {linhas.map((x) => (
+                                      <tr
+                                        key={x.f.idInsumo}
+                                        className="hover:bg-cream/40 transition-colors"
+                                      >
+                                        <td className="py-3.5 px-4 font-bold text-wine">
+                                          {x.insumo?.nome ?? "—"}
+                                        </td>
+                                        <td className="py-3.5 px-3 text-center">
+                                          <span className="inline-flex items-center text-xs bg-cream px-2.5 py-0.5 rounded-full border border-petal/40 text-wine tabular-nums">
+                                            {x.f.quantidadeUtilizada} {x.insumo?.unidadeMedida ?? ""}
+                                          </span>
+                                        </td>
+                                        <td className="py-3.5 px-3 text-right tabular-nums text-wine/80">
+                                          {x.custoUnitario === null ? "—" : dinheiro(x.custoUnitario)}
+                                        </td>
+                                        <td className="py-3.5 px-4 text-right tabular-nums font-bold text-wine">
+                                          {x.custo === null ? "—" : dinheiro(x.custo)}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                  <tfoot>
+                                    <tr className="bg-cream/50 border-t-2 border-petal/50 font-display font-bold text-xs sm:text-sm text-wine">
+                                      <td colSpan={3} className="py-3.5 px-4">
+                                        Total de Insumos
+                                      </td>
+                                      <td className="py-3.5 px-4 text-right tabular-nums text-berry text-sm sm:text-base font-bold">
+                                        {dinheiro(custoInsumos)}
+                                      </td>
+                                    </tr>
+                                  </tfoot>
+                                </table>
+                              </div>
+                            )}
+
+                            {linhas.some((x) => x.custo === null) && (
+                              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                                <span>Há insumos sem compras registradas no período. Custo unitário considerado zerado no cálculo.</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {!config && (
+                          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                            <span>Configure a margem de segurança e o lucro desejado na aba Configuração para habilitar o cálculo ideal.</span>
+                          </div>
+                        )}
+
+                        {fixoMin === null && (
+                          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                            <span>Informe os dias trabalhados e horas disponíveis no Perfil da Empresa para cálculo do custo fixo por minuto.</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Coluna da direita: Composição do Preço (Fixa e Elegante) */}
+                      <div className="lg:col-span-5 xl:col-span-5 rounded-2xl border border-petal/40 bg-white p-5 sm:p-6 shadow-xs space-y-4 lg:sticky lg:top-6">
+                        <div className="flex items-center gap-2.5 pb-2 border-b border-petal/30">
+                          <div className="w-9 h-9 rounded-xl bg-pale border border-petal/40 flex items-center justify-center text-berry shrink-0">
+                            <TrendingUp className="w-4 h-4" />
+                          </div>
                           <div>
-                            Preço padrão atual:{" "}
-                            {procedimento.precoPadrao == null
-                              ? "Não definido"
-                              : dinheiro(procedimento.precoPadrao)}
+                            <h3 className="font-display font-bold text-base text-wine">Composição do Preço</h3>
+                            <p className="text-[11px] text-wine/70 font-medium">Detalhamento dos custos e margens</p>
                           </div>
                         </div>
-                        <h3 className="font-medium text-wine">Insumos da ficha técnica</h3>
-                        {fichaLoading ? (
-                          <p className="text-sm">Carregando ficha técnica...</p>
-                        ) : fichaError ? (
-                          <p className="text-sm text-red-600">{fichaError}</p>
-                        ) : ficha.length === 0 ? (
-                          <p className="text-sm text-wine">
-                            Este procedimento não possui insumos na ficha técnica. Cadastre ao menos
-                            um insumo para simular o preço.
+
+                        <div className="space-y-2.5 text-xs">
+                          <div className="flex justify-between gap-3 text-wine">
+                            <span>Custo dos insumos</span>
+                            <span className="tabular-nums font-semibold">
+                              {simulacaoBackend
+                                ? dinheiro(simulacaoBackend.custoInsumos)
+                                : simulation
+                                ? dinheiro(custoInsumos)
+                                : "—"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 text-wine">
+                            <span>Custo fixo por minuto</span>
+                            <span className="tabular-nums font-semibold">
+                              {simulacaoBackend
+                                ? `${dinheiro(simulacaoBackend.custoFixoPorMinuto)} × ${simulacaoBackend.duracaoMinutos} min`
+                                : fixoMin === null
+                                ? "—"
+                                : `${dinheiro(fixoMin)} × ${procedimento?.duracaoMinutos ?? "—"} min`}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 text-wine">
+                            <span>Custo fixo do procedimento</span>
+                            <span className="tabular-nums font-semibold">
+                              {simulacaoBackend
+                                ? dinheiro(simulacaoBackend.custoFixoProcedimento)
+                                : simulation
+                                ? dinheiro(simulation.custoFixoProcedimento)
+                                : "—"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 border-t border-petal/40 pt-2.5 font-bold text-wine text-xs sm:text-sm">
+                            <span>Custo do procedimento</span>
+                            <span className="tabular-nums">
+                              {simulacaoBackend
+                                ? dinheiro(simulacaoBackend.custoProcedimento)
+                                : simulation
+                                ? dinheiro(simulation.custoProcedimento)
+                                : "—"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 text-wine">
+                            <span>Margem de segurança</span>
+                            <span className="tabular-nums font-semibold">
+                              {simulacaoBackend
+                                ? percentual(simulacaoBackend.margemSeguranca)
+                                : simulation
+                                ? `${dinheiro(simulation.valorMargem)} (${percentual(config?.margemSeguranca ?? 0)})`
+                                : "—"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3 text-wine">
+                            <span>Lucro desejado</span>
+                            <span className="tabular-nums font-semibold">
+                              {simulacaoBackend
+                                ? percentual(simulacaoBackend.lucroDesejado)
+                                : simulation
+                                ? `${dinheiro(simulation.valorLucro)} (${percentual(config?.lucroDesejado ?? 0)})`
+                                : "—"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl bg-gradient-to-br from-pale to-cream/80 border border-petal/60 p-4 sm:p-5 text-center sm:text-left">
+                          <span className="text-[11px] font-bold text-wine/80 uppercase tracking-wider block mb-1 font-display">
+                            Preço Sugerido
+                          </span>
+                          <p className="font-display text-3xl font-bold tabular-nums text-wine">
+                            {precoSugerido != null ? dinheiro(precoSugerido) : "—"}
                           </p>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full min-w-[460px] text-sm">
-                              <thead className="bg-pale">
-                                <tr>
-                                  <th className="p-2 text-left">Insumo</th>
-                                  <th className="p-2 text-right">Quantidade utilizada</th>
-                                  <th className="p-2 text-right">Custo unitário</th>
-                                  <th className="p-2 text-right">Custo</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {linhas.map((x) => (
-                                  <tr key={x.f.idInsumo} className="border-t border-petal/50">
-                                    <td className="p-2">{x.insumo?.nome ?? "—"}</td>
-                                    <td className="p-2 text-right tabular-nums">
-                                      {x.f.quantidadeUtilizada} {x.insumo?.unidadeMedida}
-                                    </td>
-                                    <td className="p-2 text-right tabular-nums">
-                                      {x.custoUnitario === null ? "—" : dinheiro(x.custoUnitario)}
-                                    </td>
-                                    <td className="p-2 text-right tabular-nums">
-                                      {x.custo === null ? "—" : dinheiro(x.custo)}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                              <tfoot>
-                                <tr className="border-t border-petal font-semibold">
-                                  <td colSpan={3} className="p-2">
-                                    Total de insumos
-                                  </td>
-                                  <td className="p-2 text-right tabular-nums">
-                                    {dinheiro(custoInsumos)}
-                                  </td>
-                                </tr>
-                              </tfoot>
-                            </table>
+                          <p className="text-[10px] text-wine/60 mt-1 leading-snug font-sans">
+                            Preço sugerido = custo do procedimento ÷ (1 − margem de segurança − lucro desejado)
+                          </p>
+                        </div>
+
+                        {procedimento?.precoPadrao != null && precoSugerido != null && (
+                          <div className="rounded-xl bg-cream/60 border border-petal/40 p-3 text-xs text-wine space-y-1">
+                            <div className="flex justify-between">
+                              <span className="text-wine/70">Preço padrão atual:</span>
+                              <strong className="tabular-nums">{dinheiro(procedimento.precoPadrao)}</strong>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-wine/70">Diferença sugerida:</span>
+                              <strong
+                                className={`tabular-nums ${
+                                  precoSugerido - procedimento.precoPadrao >= 0
+                                    ? "text-emerald-700"
+                                    : "text-amber-800"
+                                }`}
+                              >
+                                {precoSugerido - procedimento.precoPadrao >= 0 ? "+" : ""}
+                                {dinheiro(precoSugerido - procedimento.precoPadrao)} (
+                                {percentual(
+                                  ((precoSugerido - procedimento.precoPadrao) /
+                                    procedimento.precoPadrao) *
+                                    100
+                                )}
+                                )
+                              </strong>
+                            </div>
                           </div>
                         )}
-                        {linhas.some((x) => x.custo === null) && (
-                          <p className="text-sm text-amber-800">
-                            Insumo sem compra registrada: não é possível calcular o custo.
-                          </p>
-                        )}
-                      </>
-                    )}
-                    {!config && (
-                      <p className="text-sm text-wine">
-                        Configure a margem de segurança e o lucro desejado na aba Configuração.
-                      </p>
-                    )}
-                    {fixoMin === null && (
-                      <p className="text-sm text-wine">
-                        Informe os dias trabalhados e as horas disponíveis no Perfil da Empresa.
-                      </p>
-                    )}
-                  </div>
-                  <div className={`${card} space-y-3`}>
-                    <h2 className="font-display text-lg font-semibold text-wine">
-                      Composição do preço
-                    </h2>
-                    {[
-                      ["Custo dos insumos", simulation ? dinheiro(custoInsumos) : "—"],
-                      [
-                        "Custo fixo por minuto",
-                        fixoMin === null
-                          ? "—"
-                          : `${dinheiro(fixoMin)} × ${procedimento?.duracaoMinutos ?? "—"} min`,
-                      ],
-                      [
-                        "Custo fixo do procedimento",
-                        simulation ? dinheiro(simulation.custoFixoProcedimento) : "—",
-                      ],
-                      [
-                        "Custo do procedimento",
-                        simulation ? dinheiro(simulation.custoProcedimento) : "—",
-                      ],
-                      [
-                        "Margem de segurança",
-                        simulation
-                          ? `${dinheiro(simulation.valorMargem)} (${percentual(config?.margemSeguranca ?? 0)})`
-                          : "—",
-                      ],
-                      [
-                        "Lucro desejado",
-                        simulation
-                          ? `${dinheiro(simulation.valorLucro)} (${percentual(config?.lucroDesejado ?? 0)})`
-                          : "—",
-                      ],
-                    ].map(([label, value], i) => (
-                      <div
-                        key={label}
-                        className={`flex justify-between gap-3 text-sm ${i === 3 ? "border-t border-petal pt-3 font-semibold" : ""}`}
-                      >
-                        <span>{label}</span>
-                        <span className="tabular-nums text-right">{value}</span>
+
+                        <button
+                          type="button"
+                          disabled={precoSugerido == null}
+                          onClick={() => setConfirmPrice(true)}
+                          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-berry hover:bg-wine text-white font-bold text-xs py-3 px-4 transition-all duration-200 shadow-md shadow-berry/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Definir como preço padrão</span>
+                        </button>
                       </div>
-                    ))}
-                    <div className="rounded-md bg-pale p-4">
-                      <span className="text-sm text-wine">Preço sugerido</span>
-                      <p className="font-display text-2xl font-semibold tabular-nums text-wine">
-                        {simulation ? dinheiro(simulation.precoSugerido) : "—"}
-                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Preço sugerido = custo do procedimento ÷ (1 − margem de segurança − lucro
-                      desejado)
-                    </p>
-                    {procedimento?.precoPadrao != null && simulation && (
-                      <p className="text-sm">
-                        Preço padrão atual: {dinheiro(procedimento.precoPadrao)} · Diferença:{" "}
-                        {dinheiro(simulation.precoSugerido - procedimento.precoPadrao)} (
-                        {percentual(
-                          ((simulation.precoSugerido - procedimento.precoPadrao) /
-                            procedimento.precoPadrao) *
-                            100,
-                        )}
-                        )
-                      </p>
-                    )}
-                    <button
-                      disabled={!simulation}
-                      onClick={() => setConfirmPrice(true)}
-                      className="w-full rounded-md bg-berry px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Definir como preço padrão
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
             </>
           )}
         </section>
-        {formaModalOpen && (
+
+        {/* Modal de confirmação do preço padrão */}
+        {confirmPrice && procedimento && precoSugerido != null && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
             onClick={() => {
-              if (!savingForma) setFormaModalOpen(false);
+              if (!savingPrice) setConfirmPrice(false);
             }}
           >
-            <form
-              onSubmit={saveForma}
+            <div
+              className="bg-white w-full max-w-md rounded-[32px] border border-petal/40 shadow-2xl p-6 sm:p-7 relative animate-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
-              className={`${card} w-full max-w-md space-y-4`}
             >
-              <h2 className="font-display text-lg font-semibold">
-                {formaEdit ? "Editar forma de pagamento" : "Nova forma de pagamento"}
-              </h2>
-              <label className={fieldLabel}>
-                Nome
-                <input
-                  className={input}
-                  name="nome"
-                  maxLength={100}
-                  value={formaNome}
-                  onChange={(e) => setFormaNome(e.target.value)}
-                />
-              </label>
-              <label className={fieldLabel}>
-                Taxa percentual (%)
-                <input
-                  className={input}
-                  name="taxaPercentual"
-                  inputMode="decimal"
-                  value={formaTaxa}
-                  onChange={(e) => setFormaTaxa(e.target.value)}
-                />
-              </label>
-              {formaError && <p className="text-sm text-red-600">{formaError}</p>}
-              <div className="flex justify-end gap-2">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-pale border border-petal/40 flex items-center justify-center text-berry shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-lg text-wine">
+                    Confirmar Preço Padrão
+                  </h3>
+                  <p className="text-xs text-wine/70 font-medium">
+                    Atualização do valor de referência
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-wine/80 leading-relaxed font-sans mb-6">
+                Deseja definir <strong>{dinheiro(precoSugerido)}</strong> como o preço padrão do procedimento <strong>{procedimento.nome}</strong>?
+              </p>
+
+              <div className="flex justify-end items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormaModalOpen(false)}
-                  className="rounded-md border border-petal px-4 py-2 text-sm"
-                >
-                  Cancelar
-                </button>
-                <button
-                  disabled={savingForma}
-                  className="rounded-md bg-berry px-4 py-2 text-sm text-white"
-                >
-                  {savingForma ? "Salvando..." : "Salvar"}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-        {deleteForma && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
-            <div className={`${card} w-full max-w-md`}>
-              <div className="mb-3 flex items-center gap-2 text-wine">
-                <AlertCircle size={18} />
-                <h2 className="font-display text-lg font-semibold">Excluir {deleteForma.nome}?</h2>
-              </div>
-              <p className="text-sm">Essa ação não pode ser desfeita.</p>
-              <div className="mt-5 flex justify-end gap-2">
-                <button
-                  onClick={() => setDeleteForma(null)}
-                  className="rounded-md border border-petal px-4 py-2 text-sm"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={async () => {
-                    try {
-                      await excluirFormaPagamento(deleteForma.idFormaPagamento);
-                      setFormas((old) =>
-                        old.filter((f) => f.idFormaPagamento !== deleteForma.idFormaPagamento),
-                      );
-                      setDeleteForma(null);
-                      toast.success("Forma de pagamento excluída.");
-                    } catch (e) {
-                      toast.error(e instanceof Error ? e.message : "Não foi possível excluir.");
-                    }
-                  }}
-                  className="rounded-md bg-red-600 px-4 py-2 text-sm text-white"
-                >
-                  Excluir
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        {confirmPrice && procedimento && simulation && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
-            <div className={`${card} w-full max-w-md`}>
-              <h2 className="font-display text-lg font-semibold text-wine">
-                Confirmar preço padrão
-              </h2>
-              <p className="mt-3 text-sm">
-                Definir {dinheiro(simulation.precoSugerido)} como preço padrão de{" "}
-                {procedimento.nome}?
-              </p>
-              <div className="mt-5 flex justify-end gap-2">
-                <button
                   disabled={savingPrice}
                   onClick={() => setConfirmPrice(false)}
-                  className="rounded-md border border-petal px-4 py-2 text-sm"
+                  className="rounded-full border border-petal/60 hover:bg-cream text-wine font-bold px-5 py-2.5 text-xs transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
+                  type="button"
                   disabled={savingPrice}
                   onClick={() => void setDefaultPrice()}
-                  className="rounded-md bg-berry px-4 py-2 text-sm text-white"
+                  className="rounded-full bg-berry hover:bg-wine text-white font-bold px-6 py-2.5 text-xs transition-all shadow-md shadow-berry/20 cursor-pointer disabled:opacity-50"
                 >
-                  {savingPrice ? "Salvando..." : "Confirmar"}
+                  {savingPrice ? "Salvando..." : "Confirmar Preço"}
                 </button>
               </div>
             </div>
           </div>
+        )}
+
+        {/* Modal de confirmação de exclusão da forma de pagamento */}
+        {deleteForma && (
+          <FinanceiroDeleteModal
+            isOpen={!!deleteForma}
+            title="Excluir Forma de Pagamento"
+            itemName={deleteForma.nome}
+            itemTypeLabel="a forma de pagamento"
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setDeleteForma(null)}
+          />
         )}
       </div>
     </AppShell>

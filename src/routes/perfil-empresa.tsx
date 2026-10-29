@@ -6,7 +6,6 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { z } from "zod";
 import { apiFetch } from "@/services/api";
 import {
   ArrowLeft,
@@ -17,6 +16,7 @@ import {
   Upload,
   Pencil,
   AlertCircle,
+  LogOut,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -61,8 +61,15 @@ export const Route = createFileRoute("/perfil-empresa")({
     ],
   }),
 
-  validateSearch: z.object({
-    onboarding: z.boolean().optional(),
+  // O TanStack Router converte ?onboarding=true em boolean ao ler a URL;
+  // aceitamos também a string "true" por segurança.
+  validateSearch: (
+    search: Record<string, unknown>
+  ): { onboarding?: boolean | undefined } => ({
+    onboarding:
+      search["onboarding"] === true || search["onboarding"] === "true"
+        ? true
+        : undefined,
   }),
 
   component: PerfilEmpresaPage,
@@ -159,6 +166,8 @@ function converterPerfilParaFormulario(
 
 function PerfilEmpresaPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
+  const isOnboarding = search?.onboarding === true;
 
   const [form, setForm] = useState<FormData>({
     ...PERFIL_VAZIO,
@@ -647,6 +656,13 @@ function PerfilEmpresaPage() {
     </div>
   );
 
+  function handleLogout() {
+    localStorage.removeItem("tokenLumine");
+    localStorage.removeItem("idUsuario");
+    localStorage.removeItem("emailUsuario");
+    void navigate({ to: "/login" });
+  }
+
   if (carregandoPerfil) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-cream px-4">
@@ -666,29 +682,51 @@ function PerfilEmpresaPage() {
 
   return (
     <AppShell mobileTitle="Perfil da Empresa">
+      {isOnboarding && !perfilExiste && (
+        <div className="mx-auto max-w-3xl">
+          <div className="flex items-center gap-3 rounded-lg border border-petal bg-pale px-4 py-3 text-sm text-wine mb-6">
+            <span>
+              Bem-vinda ao Lumine! Complete o perfil da sua empresa para
+              começar a usar todos os módulos.
+            </span>
+          </div>
+        </div>
+      )}
+
       <header className="mx-auto max-w-3xl">
-        <div className="mb-5 flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                void navigate({
+                  to: "/dashboard",
+                })
+              }
+              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition hover:bg-pale cursor-pointer"
+              aria-label="Voltar para o dashboard"
+            >
+              <ArrowLeft size={16} />
+              Voltar
+            </button>
+
+            <span className="text-petal">
+              /
+            </span>
+
+            <span className="font-medium text-wine">
+              Perfil da Empresa
+            </span>
+          </div>
+
           <button
             type="button"
-            onClick={() =>
-              void navigate({
-                to: "/dashboard",
-              })
-            }
-            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition hover:bg-pale"
-            aria-label="Voltar para o dashboard"
+            onClick={handleLogout}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-petal/60 bg-white px-4 py-2 text-xs font-bold text-wine shadow-2xs transition hover:border-berry/40 hover:bg-pale hover:text-berry"
           >
-            <ArrowLeft size={16} />
-            Voltar
+            <LogOut size={15} className="text-berry" />
+            <span>Sair da conta</span>
           </button>
-
-          <span className="text-petal">
-            /
-          </span>
-
-          <span className="font-medium text-wine">
-            Perfil da Empresa
-          </span>
         </div>
 
         <h1 className="font-display text-3xl font-semibold text-wine">
@@ -1105,7 +1143,17 @@ function PerfilEmpresaPage() {
 
           {/* BOTÕES */}
 
-          <div className="mt-8 flex flex-col-reverse gap-3 pb-4 sm:flex-row sm:items-center sm:justify-end">
+          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-petal/30 pt-6 pb-2 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border border-petal/60 bg-cream/60 px-5 py-3 font-sans text-sm font-bold text-wine transition hover:border-berry/40 hover:bg-pale hover:text-berry sm:w-auto"
+            >
+              <LogOut size={16} className="text-berry" />
+              Sair da conta
+            </button>
+
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
             {perfilExiste && (
               <button
                 type="button"
@@ -1142,6 +1190,7 @@ function PerfilEmpresaPage() {
                 </>
               )}
             </button>
+            </div>
           </div>
         </form>
       </section>

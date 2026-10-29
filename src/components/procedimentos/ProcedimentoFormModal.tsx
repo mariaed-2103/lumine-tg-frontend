@@ -457,7 +457,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                       Nenhum insumo adicionado ainda
                     </p>
                     <p className="text-[11px] text-berry mt-1 font-semibold">
-                      (Atenção: RN006 exige ao menos 1 insumo vinculado para simulação de preço)
+                      Vincule pelo menos um insumo para habilitar a simulação de preço.
                     </p>
                   </div>
                 ) : (

@@ -106,7 +106,7 @@ export const ProcedimentoTable: React.FC<ProcedimentoTableProps> = ({
                     {hasNoInsumos ? (
                       <div
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-berry/10 text-berry border border-berry/30"
-                        title="RN006: Necessário vincular ao menos 1 insumo para simulação de preço"
+                        title="Vincule ao menos um insumo para habilitar a simulação de preço"
                       >
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-berry" />
                         <span>0 insumos vinculados</span>

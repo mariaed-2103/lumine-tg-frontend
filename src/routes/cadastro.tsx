@@ -5,6 +5,7 @@ import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { Wordmark } from "@/components/lumine/Wordmark";
 import { Spark } from "@/components/lumine/Spark";
 import { FieldError } from "@/components/lumine/FieldError";
+import { apiPublicFetch } from "@/services/api";
 
 import {
   validarEmail,
@@ -13,6 +14,15 @@ import {
 } from "@/lib/validation";
 
 export const Route = createFileRoute("/cadastro")({
+  head: () => ({
+    meta: [
+      { title: "Criar Conta | Lumine" },
+      {
+        name: "description",
+        content: "Crie sua conta no Lumine e organize os custos e rentabilidade do seu negócio de estética.",
+      },
+    ],
+  }),
   component: CadastroPage,
 });
 
@@ -34,11 +44,13 @@ function CadastroPage() {
     useState<string | undefined>();
 
   const [formError, setFormError] = useState<string | undefined>();
+  const [isEmailCadastrado, setIsEmailCadastrado] = useState(false);
 
   function handleEmailChange(value: string) {
     setEmail(value);
     setEmailError(undefined);
     setFormError(undefined);
+    setIsEmailCadastrado(false);
   }
 
   function handleSenhaChange(value: string) {
@@ -59,6 +71,7 @@ function CadastroPage() {
     event.preventDefault();
 
     setFormError(undefined);
+    setIsEmailCadastrado(false);
 
     const erroEmail = validarEmail(email);
     const erroSenha = validarNovaSenha(senha);
@@ -84,19 +97,13 @@ function CadastroPage() {
 
       console.log("CADASTRO INICIADO");
 
-      const response = await fetch(
-        "http://localhost:8080/usuarios",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-            senha: senha,
-          }),
-        }
-      );
+      const response = await apiPublicFetch("/usuarios", {
+        method: "POST",
+        body: JSON.stringify({
+          email: email.trim(),
+          senha: senha,
+        }),
+      });
 
       const texto = await response.text();
 
@@ -111,9 +118,41 @@ function CadastroPage() {
       );
 
       if (!response.ok) {
-        setFormError(
-          texto || "Não foi possível realizar o cadastro."
-        );
+        let mensagemAmigavel = "Não foi possível realizar o cadastro. Tente novamente.";
+        let emailJaExiste = false;
+
+        try {
+          const body = JSON.parse(texto);
+          const rawMsg = body.mensagem ?? body.message ?? body.erro ?? body.error;
+          if (rawMsg) {
+            const rawLower = String(rawMsg).toLowerCase();
+            if (rawLower.includes("já cadastrado") || rawLower.includes("ja cadastrado")) {
+              mensagemAmigavel = "Este e-mail já está cadastrado.";
+              emailJaExiste = true;
+            } else {
+              mensagemAmigavel = String(rawMsg);
+            }
+          }
+        } catch {
+          if (texto && !texto.startsWith("{") && !texto.startsWith("<")) {
+            mensagemAmigavel = texto;
+          }
+        }
+
+        if (
+          response.status === 409 ||
+          (response.status === 400 && texto.toLowerCase().includes("cadastrado"))
+        ) {
+          emailJaExiste = true;
+          mensagemAmigavel = "Este e-mail já está cadastrado.";
+        }
+
+        setIsEmailCadastrado(emailJaExiste);
+        setFormError(mensagemAmigavel);
+
+        if (emailJaExiste) {
+          setEmailError("Este e-mail já está em uso.");
+        }
 
         return;
       }
@@ -157,11 +196,8 @@ function CadastroPage() {
       } else {
         // Caso contrário, faz login automático para gerar e salvar o token JWT
         try {
-          const loginResp = await fetch("http://localhost:8080/usuarios/login", {
+          const loginResp = await apiPublicFetch("/usuarios/login", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify({
               email: email.trim(),
               senha: senha,
@@ -247,16 +283,39 @@ function CadastroPage() {
           {formError && (
             <div
               role="alert"
-              className="mt-6 flex items-start gap-2.5 rounded-2xl border border-berry/40 bg-berry/5 p-3.5"
+              className="mt-6 rounded-2xl border border-berry/30 bg-berry/5 p-4 transition-all"
             >
-              <AlertCircle
-                size={18}
-                className="mt-0.5 shrink-0 text-berry"
-              />
-
-              <p className="font-sans text-[13px] font-semibold text-berry">
-                {formError}
-              </p>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-berry/15 text-berry">
+                  <AlertCircle size={16} />
+                </div>
+                <div className="flex-1 text-[13px]">
+                  <p className="font-semibold text-wine">
+                    {isEmailCadastrado ? "E-mail já cadastrado" : "Não foi possível cadastrar"}
+                  </p>
+                  <p className="mt-0.5 text-wine/80 leading-relaxed font-sans">
+                    {isEmailCadastrado
+                      ? "Já existe uma conta com este endereço de e-mail no Lumine."
+                      : formError}
+                  </p>
+                  {isEmailCadastrado && (
+                    <div className="mt-2.5 flex flex-wrap items-center gap-3">
+                      <Link
+                        to="/login"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-berry hover:text-wine underline underline-offset-2 transition-colors"
+                      >
+                        Entrar com minha conta &rarr;
+                      </Link>
+                      <Link
+                        to="/recuperar-senha"
+                        className="text-xs text-wine/70 hover:text-wine transition-colors"
+                      >
+                        Esqueceu a senha?
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -285,11 +344,13 @@ function CadastroPage() {
                     event.target.value
                   )
                 }
-                onBlur={() =>
-                  setEmailError(
-                    validarEmail(email)
-                  )
-                }
+                onBlur={() => {
+                  if (!isEmailCadastrado) {
+                    setEmailError(
+                      validarEmail(email)
+                    );
+                  }
+                }}
                 aria-invalid={Boolean(emailError)}
                 className={`${inputBase} ${
                   emailError

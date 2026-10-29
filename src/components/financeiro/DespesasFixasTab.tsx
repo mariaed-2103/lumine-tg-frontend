@@ -6,7 +6,6 @@ import {
   Building,
   Calendar,
   AlertCircle,
-  HelpCircle,
   X,
   Check,
 } from "lucide-react";
@@ -606,16 +605,6 @@ export const DespesasFixasTab: React.FC<DespesasFixasTabProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
-
-              {/* RN007 Business Rule Note */}
-              <div className="bg-cream p-3 rounded-2xl border border-petal/40 flex items-start gap-2.5">
-                <HelpCircle className="w-4 h-4 text-berry shrink-0 mt-0.5" />
-                <p className="text-[11px] text-wine/80 leading-relaxed">
-                  <strong>Regra de competência (RN007):</strong> Alterações se
-                  aplicam a partir do mês atual — competências anteriores não
-                  são afetadas.
-                </p>
               </div>
 
               {/* Action Buttons */}

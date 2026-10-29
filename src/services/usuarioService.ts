@@ -1,3 +1,5 @@
+import { apiPublicFetch } from "@/services/api";
+
 export interface UsuarioCadastro {
   email: string;
   senha: string;
@@ -26,7 +28,6 @@ export async function cadastrarUsuario(
 
   return response.json();
 }
-
 export interface UsuarioLogin {
   email: string;
   senha: string;
@@ -35,7 +36,7 @@ export interface UsuarioLogin {
 export async function loginUsuario(
   dados: UsuarioLogin
 ): Promise<UsuarioResponse> {
-  const response = await fetch("http://localhost:8080/usuarios/login", {
+  const response = await apiPublicFetch("/usuarios/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -45,10 +46,13 @@ export async function loginUsuario(
 
   if (!response.ok) {
     const mensagem = await response.text();
+    let mensagemUsuario = "Não foi possível entrar. Confira seu e-mail e senha e tente novamente.";
+    try {
+      const body = JSON.parse(mensagem);
+      mensagemUsuario = body.mensagem ?? body.message ?? mensagemUsuario;
+    } catch { /* usa mensagem padrão */ }
 
-    throw new Error(
-      mensagem || "E-mail ou senha incorretos."
-    );
+    throw new Error(mensagemUsuario);
   }
 
   return response.json();

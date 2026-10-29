@@ -92,7 +92,7 @@ export const ProcedimentoCardList: React.FC<ProcedimentoCardListProps> = ({
               {hasNoInsumos ? (
                 <div className="inline-flex items-center gap-1.5 text-xs text-berry font-semibold bg-berry/10 px-2.5 py-1 rounded-full border border-berry/30">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                  <span>0 insumos (RN006: requer insumo)</span>
+                  <span>0 insumos</span>
                 </div>
               ) : (
                 <button

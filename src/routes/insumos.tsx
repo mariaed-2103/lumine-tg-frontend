@@ -31,6 +31,8 @@ import {
 } from "@/services/insumoService";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
+import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
 
 export const Route = createFileRoute("/insumos")({
   head: () => ({
@@ -88,6 +90,9 @@ function InsumosPage() {
   const [toasts, setToasts] =
     useState<ToastMessage[]>([]);
 
+  // null = ainda verificando; false = usuário sem perfil da empresa
+  const [temPerfil, setTemPerfil] = useState<boolean | null>(null);
+
   const addToast = (
     message: string,
     type: "success" | "info" | "error" = "success"
@@ -120,6 +125,11 @@ function InsumosPage() {
     async function carregarInsumos() {
       try {
         setLoading(true);
+
+        const perfil = await buscarPerfilEmpresa();
+        setTemPerfil(!!perfil);
+
+        if (!perfil) return; // não tentar carregar dados sem perfil
 
         const dados = await listarInsumos();
 
@@ -405,6 +415,7 @@ function InsumosPage() {
 
   return (
     <AppShell mobileTitle="Insumos">
+          {temPerfil === false && <SemPerfilBanner />}
 
           {/* Título */}
           <div className="mb-6">
