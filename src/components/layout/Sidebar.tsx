@@ -8,9 +8,11 @@ import {
   ChevronRight,
   Building2,
   BadgeDollarSign,
+  CalendarCheck,
   LogOut,
 } from "lucide-react";
 
+import { listarAtendimentos } from "@/services/atendimentoService";
 import { listarInsumos } from "@/services/insumoService";
 import { listarProcedimentos } from "@/services/procedimentoService";
 
@@ -33,6 +35,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
   // em vez de travar a navegação.
   const [insumosCount, setInsumosCount] = useState<number | null>(null);
   const [procedimentosCount, setProcedimentosCount] = useState<number | null>(null);
+  const [atendimentosCount, setAtendimentosCount] = useState<number | null>(null);
 
   useEffect(() => {
     listarInsumos()
@@ -42,6 +45,10 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
     listarProcedimentos()
       .then((lista) => setProcedimentosCount(lista.length))
       .catch(() => setProcedimentosCount(null));
+
+    listarAtendimentos()
+      .then((lista) => setAtendimentosCount(lista.length))
+      .catch(() => setAtendimentosCount(null));
   }, []);
 
   const handleLogout = () => {
@@ -156,6 +163,45 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                     }`}
                   >
                     {procedimentosCount}
+                  </span>
+                )}
+                <ChevronRight
+                  className={`h-3.5 w-3.5 transition-transform ${
+                    isActive
+                      ? "translate-x-0.5 text-white"
+                      : "text-wine/30 group-hover:translate-x-0.5 group-hover:text-wine/60"
+                  }`}
+                />
+              </div>
+            </>
+          )}
+        </Link>
+
+        <Link
+          to="/atendimentos"
+          onClick={onCloseMobile}
+          className={linkBaseClass}
+          activeProps={{ className: `${linkBaseClass} ${linkActiveClass}` }}
+          inactiveProps={{ className: `${linkBaseClass} ${linkInactiveClass}` }}
+        >
+          {({ isActive }) => (
+            <>
+              <div className="flex items-center gap-2.5 truncate">
+                <CalendarCheck
+                  className={`h-4 w-4 shrink-0 transition-colors ${
+                    isActive ? "text-white" : "text-rose group-hover:text-berry"
+                  }`}
+                />
+                <span className="truncate">Atendimentos</span>
+              </div>
+              <div className="ml-2 flex shrink-0 items-center gap-1">
+                {atendimentosCount !== null && (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      isActive ? "bg-white/20 text-white" : "bg-pale text-wine group-hover:bg-white"
+                    }`}
+                  >
+                    {atendimentosCount}
                   </span>
                 )}
                 <ChevronRight

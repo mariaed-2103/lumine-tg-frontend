@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AtendimentosRouteImport } from './routes/atendimentos'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as GestaoFinanceiraRouteImport } from './routes/gestao-financeira'
@@ -24,6 +25,11 @@ import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtendimentosRoute = AtendimentosRouteImport.update({
+  id: '/atendimentos',
+  path: '/atendimentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastroRoute = CadastroRouteImport.update({
@@ -79,6 +85,7 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/atendimentos': typeof AtendimentosRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
   '/gestao-financeira': typeof GestaoFinanceiraRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/atendimentos': typeof AtendimentosRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
   '/gestao-financeira': typeof GestaoFinanceiraRoute
@@ -106,6 +114,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/atendimentos': typeof AtendimentosRoute
   '/cadastro': typeof CadastroRoute
   '/dashboard': typeof DashboardRoute
   '/gestao-financeira': typeof GestaoFinanceiraRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/atendimentos'
     | '/cadastro'
     | '/dashboard'
     | '/gestao-financeira'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/atendimentos'
     | '/cadastro'
     | '/dashboard'
     | '/gestao-financeira'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/atendimentos'
     | '/cadastro'
     | '/dashboard'
     | '/gestao-financeira'
@@ -161,6 +173,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AtendimentosRoute: typeof AtendimentosRoute
   CadastroRoute: typeof CadastroRoute
   DashboardRoute: typeof DashboardRoute
   GestaoFinanceiraRoute: typeof GestaoFinanceiraRoute
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atendimentos': {
+      id: '/atendimentos'
+      path: '/atendimentos'
+      fullPath: '/atendimentos'
+      preLoaderRoute: typeof AtendimentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastro': {
@@ -257,6 +277,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AtendimentosRoute: AtendimentosRoute,
   CadastroRoute: CadastroRoute,
   DashboardRoute: DashboardRoute,
   GestaoFinanceiraRoute: GestaoFinanceiraRoute,

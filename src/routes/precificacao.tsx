@@ -47,6 +47,7 @@ import {
 } from "@/lib/calcularSimulacao";
 import { ConfiguracaoFinanceiraTab } from "@/components/financeiro/ConfiguracaoFinanceiraTab";
 import { FormasPagamentoTab } from "@/components/financeiro/FormasPagamentoTab";
+import { FinanceiroTabs, type FinanceiroTabId } from "@/components/financeiro/FinanceiroTabs";
 import { FinanceiroDeleteModal } from "@/components/financeiro/FinanceiroDeleteModal";
 
 export const Route = createFileRoute("/precificacao")({
@@ -63,7 +64,6 @@ export const Route = createFileRoute("/precificacao")({
   component: PrecificacaoPage,
 });
 
-type Aba = "configuracao" | "pagamentos" | "simulacao";
 type Perfil = {
   idPerfilEmpresa: number;
   diasTrabalhadosMes?: number;
@@ -82,12 +82,12 @@ const dinheiro = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const percentual = (n: number) => `${n.toFixed(2).replace(".", ",")}%`;
 
-function PrecificacaoPage() {
+export function PrecificacaoPage() {
   const [competencia, setCompetencia] = useState(() => {
     const hoje = new Date();
     return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
   });
-  const [aba, setAba] = useState<Aba>("configuracao");
+  const [aba, setAba] = useState<FinanceiroTabId>("configuracao");
   const [loading, setLoading] = useState(true);
   const [errorsLoad, setErrorsLoad] = useState<string[]>([]);
   const [config, setConfig] = useState<ConfiguracaoFinanceira | null>(null);
@@ -397,12 +397,6 @@ function PrecificacaoPage() {
     }
   }
 
-  const abas: { id: Aba; label: string }[] = [
-    { id: "configuracao", label: "Configuração" },
-    { id: "pagamentos", label: "Formas de pagamento" },
-    { id: "simulacao", label: "Simulação de preço" },
-  ];
-
   return (
     <AppShell mobileTitle="Precificação">
       {temPerfil === false && <SemPerfilBanner />}
@@ -416,23 +410,13 @@ function PrecificacaoPage() {
 
         <section className="rounded-2xl border border-petal/40 bg-white p-5 sm:p-7 shadow-xs">
           {/* Abas com visual de pílula idêntico ao padrão do sistema */}
-          <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-petal/30 pb-4">
-            {abas.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => setAba(a.id)}
-                className={`rounded-full px-5 py-2.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
-                  aba === a.id
-                    ? "bg-berry text-white shadow-md shadow-berry/20"
-                    : "text-wine/80 hover:text-wine hover:bg-cream border border-transparent hover:border-petal/40"
-                }`}
-              >
-                {a.label}
-              </button>
-            ))}
-          </div>
+          <FinanceiroTabs value={aba} onChange={setAba} />
 
+          <div
+            id="painel-precificacao"
+            role="tabpanel"
+            aria-labelledby={`tab-${aba}`}
+          >
           {loading ? (
             <div className="py-12 text-center text-xs sm:text-sm text-wine/70 font-medium">
               Carregando dados de precificação...
@@ -799,6 +783,7 @@ function PrecificacaoPage() {
               )}
             </>
           )}
+          </div>
         </section>
 
         {/* Modal de confirmação do preço padrão */}
