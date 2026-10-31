@@ -16,7 +16,7 @@ export function SemPerfilBanner({ loading }: Props) {
       </span>
       <Link
         to="/perfil-empresa"
-        className="shrink-0 font-semibold text-berry underline underline-offset-2 hover:text-rose"
+        className="relative z-10 shrink-0 rounded-sm bg-pale px-1 font-semibold text-berry underline underline-offset-2 hover:text-rose"
       >
         Completar agora →
       </Link>

@@ -1,6 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
 
 import type {
   Atendimento,
@@ -18,7 +17,9 @@ import { Toast, type ToastMessage } from "@/components/insumos/Toast";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
+import { GlassCalendar } from "@/components/decor/GlassCalendar";
 import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
+import { ArrowLeftIcon, PlusIcon } from "@/components/icons/lumine";
 
 import {
   listarAtendimentos,
@@ -295,96 +296,106 @@ export function AtendimentosPage() {
 
   return (
     <AppShell mobileTitle="Atendimentos">
-      {temPerfil === false && <SemPerfilBanner />}
-      {/* Cabeçalho da página */}
-      <div>
-        <nav aria-label="Navegação" className="mb-3 flex items-center gap-2 text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => router.history.back()}
-            className="inline-flex cursor-pointer items-center gap-1 text-wine/70 transition-colors hover:text-berry"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Voltar</span>
-          </button>
-          <span className="text-wine/40">/</span>
-          <span className="text-wine" aria-current="page">
-            Atendimentos
-          </span>
-        </nav>
-
-        <h1 className="font-display text-3xl font-bold tracking-tight text-wine sm:text-4xl">
-          Atendimentos
-        </h1>
-
-        <p className="mt-1 text-xs font-medium text-wine/80 sm:text-sm">
-          Registre e acompanhe os atendimentos realizados com suas clientes
-        </p>
-      </div>
-
-      {/* Card branco principal */}
-      <div className="mt-6 w-full rounded-[32px] border border-petal/40 bg-white p-6 shadow-sm transition-all sm:p-8">
-        {/* Cabeçalho da listagem */}
-        <div className="flex flex-col gap-4 border-b border-petal/20 pb-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-display text-base font-bold text-wine sm:text-lg">
+      <div className="atendimentos-page min-w-0 pb-24 md:pb-0">
+        {temPerfil === false && <SemPerfilBanner />}
+        {/* Cabeçalho da página */}
+        <div className="relative mb-6">
+          <nav aria-label="Navegação" className="mb-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => router.history.back()}
+              className="group inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-white/80 bg-white/50 px-3 text-xs font-semibold text-ink/60 transition-colors hover:bg-pale hover:text-wine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5]"
+            >
+              <ArrowLeftIcon className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+              <span>Voltar</span>
+            </button>
+            <span className="h-1 w-1 rounded-full bg-petal" aria-hidden="true" />
+            <span className="text-xs font-bold text-wine" aria-current="page">
               Atendimentos
             </span>
-            <span className="rounded-full border border-petal/40 bg-cream px-2.5 py-0.5 text-sm font-semibold text-wine/70">
-              {total}
-            </span>
-          </div>
+          </nav>
 
-          <button
-            type="button"
-            id="btn-novo-atendimento"
-            onClick={handleOpenCreateModal}
-            className="inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-berry px-4 py-2 text-xs font-bold text-white shadow-md shadow-berry/20 transition-all hover:bg-wine active:scale-95 sm:px-5 sm:text-sm"
+          <h1 className="font-display text-4xl font-bold tracking-tight text-wine sm:text-[40px]">
+            Atendimentos
+          </h1>
+
+          <p className="mt-1.5 max-w-[600px] text-pretty text-sm font-medium text-ink/65 sm:text-[15px]">
+            Registre e acompanhe os atendimentos realizados com suas clientes
+          </p>
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-8 z-0 hidden h-[88px] w-[92px] select-none lg:block 2xl:h-[98px] 2xl:w-[104px]"
           >
-            <Plus className="h-4 w-4" />
-            <span>Novo Atendimento</span>
-          </button>
+            <GlassCalendar className="h-full w-full" size={190} />
+          </div>
         </div>
 
-        {/* Corpo do card */}
-        {total === 0 ? (
-          <EmptyState onNewAtendimento={handleOpenCreateModal} />
-        ) : (
-          <div className="pt-5">
-            <AtendimentoTable
-              atendimentos={atendimentosOrdenados}
-              onEdit={handleOpenEditModal}
-              onDelete={handleOpenDeleteModal}
-            />
-            <AtendimentoCardList
-              atendimentos={atendimentosOrdenados}
-              onEdit={handleOpenEditModal}
-              onDelete={handleOpenDeleteModal}
-            />
+        {/* Card branco principal */}
+        <div className="glass-strong glass-border-iridescent w-full rounded-[32px] p-6 transition-all sm:p-8">
+          {/* Cabeçalho da listagem */}
+          <div className="relative flex flex-col gap-4 pb-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-petal/60 to-transparent" />
+            <div className="flex items-center gap-2">
+              <span className="font-display text-base font-bold text-wine sm:text-lg">
+                Atendimentos
+              </span>
+              <span className="rounded-full bg-pale px-2.5 py-1 text-xs font-bold tabular-nums text-wine">
+                {total}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              id="btn-novo-atendimento"
+              onClick={handleOpenCreateModal}
+              className="group shine inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] sm:w-auto"
+            >
+              <PlusIcon className="h-4 w-4 transition-transform group-hover:rotate-90" />
+              <span>Novo Atendimento</span>
+            </button>
           </div>
-        )}
+
+          {/* Corpo do card */}
+          {total === 0 ? (
+            <EmptyState onNewAtendimento={handleOpenCreateModal} />
+          ) : (
+            <div className="pt-5">
+              <AtendimentoTable
+                atendimentos={atendimentosOrdenados}
+                onEdit={handleOpenEditModal}
+                onDelete={handleOpenDeleteModal}
+              />
+              <AtendimentoCardList
+                atendimentos={atendimentosOrdenados}
+                onEdit={handleOpenEditModal}
+                onDelete={handleOpenDeleteModal}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Modal: Novo / Editar atendimento */}
+        <AtendimentoFormModal
+          isOpen={isFormModalOpen}
+          editingAtendimento={editingAtendimento}
+          procedimentos={procedimentos}
+          formasPagamento={formasPagamento}
+          onSave={handleSaveAtendimento}
+          onClose={handleCloseFormModal}
+        />
+
+        {/* Modal: Confirmação de exclusão */}
+        <DeleteConfirmModal
+          isOpen={isDeleteModalOpen}
+          atendimento={deletingAtendimento}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCloseDeleteModal}
+        />
+
+        {/* Toasts */}
+        <Toast toasts={toasts} onDismiss={removeToast} />
       </div>
-
-      {/* Modal: Novo / Editar atendimento */}
-      <AtendimentoFormModal
-        isOpen={isFormModalOpen}
-        editingAtendimento={editingAtendimento}
-        procedimentos={procedimentos}
-        formasPagamento={formasPagamento}
-        onSave={handleSaveAtendimento}
-        onClose={handleCloseFormModal}
-      />
-
-      {/* Modal: Confirmação de exclusão */}
-      <DeleteConfirmModal
-        isOpen={isDeleteModalOpen}
-        atendimento={deletingAtendimento}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCloseDeleteModal}
-      />
-
-      {/* Toasts */}
-      <Toast toasts={toasts} onDismiss={removeToast} />
     </AppShell>
   );
 }

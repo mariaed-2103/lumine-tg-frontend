@@ -30,7 +30,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   return (
     <div
       id="modal-delete-atendimento-backdrop"
-      className="fixed inset-0 z-50 flex animate-in items-center justify-center bg-ink/50 p-4 backdrop-blur-xs transition-opacity duration-200 fade-in"
+      className="at-modal-backdrop fixed inset-0 z-50 flex animate-in items-center justify-center bg-[#2E0F18]/30 p-4 backdrop-blur-sm transition-opacity duration-200 fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
@@ -40,7 +40,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-delete-atendimento-title"
-        className="relative w-full max-w-md animate-in overflow-hidden rounded-[32px] border border-petal/40 bg-white p-6 shadow-2xl duration-200 zoom-in-95 sm:p-8"
+        className="at-modal-surface relative w-full max-w-md animate-in overflow-hidden rounded-[28px] border border-petal/40 bg-white p-6 shadow-2xl duration-200 zoom-in-95 sm:p-8"
       >
         <button
           type="button"
@@ -72,7 +72,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           </div>
         </div>
 
-        <div className="mt-7 flex items-center justify-center gap-3">
+        <div className="mt-7 flex items-center justify-end gap-3">
           <button
             type="button"
             id="btn-cancel-delete-atendimento"

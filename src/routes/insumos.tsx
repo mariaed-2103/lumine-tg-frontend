@@ -435,9 +435,9 @@ function InsumosPage() {
 
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -top-12 right-6 z-10 hidden select-none lg:block xl:right-10"
+              className="pointer-events-none absolute right-0 top-0 z-0 hidden h-[78px] w-[84px] select-none xl:block 2xl:h-[88px] 2xl:w-[94px]"
             >
-              <GlassBottle size={140} />
+              <GlassBottle className="h-full w-full" />
             </div>
           </div>
 

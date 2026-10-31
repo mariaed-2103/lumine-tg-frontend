@@ -216,7 +216,7 @@ export const AtendimentoFormModal: React.FC<AtendimentoFormModalProps> = ({
   return (
     <div
       id="modal-atendimento-backdrop"
-      className="fixed inset-0 z-50 flex animate-in items-center justify-center overflow-y-auto bg-ink/50 p-3 backdrop-blur-xs duration-200 fade-in sm:p-6"
+      className="at-modal-backdrop fixed inset-0 z-50 flex animate-in items-center justify-center overflow-y-auto bg-[#2E0F18]/30 p-3 backdrop-blur-sm duration-200 fade-in sm:p-6"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
@@ -226,7 +226,7 @@ export const AtendimentoFormModal: React.FC<AtendimentoFormModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-atendimento-title"
-        className="relative my-auto flex max-h-[90vh] w-full max-w-2xl animate-in flex-col rounded-[32px] border border-petal/40 bg-white p-6 shadow-2xl duration-200 zoom-in-95 sm:p-8"
+        className="at-modal-surface relative my-auto flex max-h-[90vh] w-full max-w-2xl animate-in flex-col rounded-[28px] border border-petal/40 bg-white p-6 shadow-2xl duration-200 zoom-in-95 sm:p-8"
       >
         {/* Cabeçalho */}
         <div className="flex shrink-0 items-start justify-between border-b border-petal/20 pb-4">
@@ -258,7 +258,7 @@ export const AtendimentoFormModal: React.FC<AtendimentoFormModalProps> = ({
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="flex-1 space-y-6 overflow-y-auto py-5 pr-1"
+          className="min-w-0 flex-1 space-y-6 overflow-y-auto px-1 py-5"
         >
           <div className="space-y-4">
             {/* Data + Cliente */}

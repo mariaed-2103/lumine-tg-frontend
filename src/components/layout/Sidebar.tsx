@@ -206,13 +206,13 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
         >
           {({ isActive }) => (
             <>
-              <div className="flex items-center gap-2.5 truncate">
+              <div className="flex min-w-0 items-center gap-2.5">
                 <CalendarCheck
                   className={`h-4 w-4 shrink-0 transition-colors ${
                     isActive ? "text-white" : "text-rose group-hover:text-berry"
                   }`}
                 />
-                <span className="truncate">Atendimentos</span>
+                <span className="min-w-0 whitespace-nowrap">Atendimentos</span>
               </div>
               <div className="ml-2 flex shrink-0 items-center gap-1">
                 {atendimentosCount !== null && (
@@ -224,13 +224,6 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                     {atendimentosCount}
                   </span>
                 )}
-                <ChevronRight
-                  className={`h-3.5 w-3.5 transition-transform ${
-                    isActive
-                      ? "translate-x-0.5 text-white"
-                      : "hidden"
-                  }`}
-                />
               </div>
             </>
           )}

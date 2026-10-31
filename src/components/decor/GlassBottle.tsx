@@ -17,7 +17,7 @@ export function GlassBottle({ className, size = 190 }: GlassBottleProps) {
       style={{
         pointerEvents: "none",
         overflow: "visible",
-        filter: "drop-shadow(0 14px 22px rgba(107,21,48,0.18))",
+        filter: "drop-shadow(0 4px 10px rgba(107,21,48,0.09))",
       }}
     >
       <defs>
@@ -32,13 +32,13 @@ export function GlassBottle({ className, size = 190 }: GlassBottleProps) {
           <stop offset="1" stopColor="#FFFFFF" stopOpacity="0.7" />
         </linearGradient>
         <linearGradient id="gb-liquid" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#F5A8BC" stopOpacity="0.95" />
-          <stop offset="0.55" stopColor="#E8698A" stopOpacity="0.92" />
-          <stop offset="1" stopColor="#C5325A" stopOpacity="0.88" />
+          <stop offset="0" stopColor="#F5A8BC" stopOpacity="0.72" />
+          <stop offset="0.55" stopColor="#E8698A" stopOpacity="0.62" />
+          <stop offset="1" stopColor="#C5325A" stopOpacity="0.52" />
         </linearGradient>
         <linearGradient id="gb-cap" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#E8698A" />
-          <stop offset="1" stopColor="#C5325A" />
+          <stop offset="0" stopColor="#F5A8BC" />
+          <stop offset="1" stopColor="#E8698A" />
         </linearGradient>
         <radialGradient id="gb-drop" cx="0.35" cy="0.3" r="0.8">
           <stop offset="0" stopColor="#FFF8F5" />
@@ -89,8 +89,8 @@ export function GlassBottle({ className, size = 190 }: GlassBottleProps) {
         }
       `}</style>
 
-      <ellipse cx="100" cy="194" rx="62" ry="8" fill="#6B1530" opacity="0.14" filter="url(#gb-blur)" />
-      <ellipse cx="170" cy="176" rx="18" ry="4" fill="#6B1530" opacity="0.08" filter="url(#gb-blur)" />
+      <ellipse cx="100" cy="194" rx="62" ry="8" fill="#6B1530" opacity="0.06" filter="url(#gb-blur)" />
+      <ellipse cx="170" cy="176" rx="18" ry="4" fill="#6B1530" opacity="0.04" filter="url(#gb-blur)" />
 
       <g className="gb-float">
         <rect x="82" y="38" width="28" height="28" rx="5" fill="url(#gb-glass)" stroke="url(#gb-rim)" strokeWidth="1.4" />

@@ -67,6 +67,14 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M19 12H5m7 7-7-7 7-7" />
+    </Icon>
+  );
+}
+
 export function EditIcon(props: IconProps) {
   return (
     <Icon {...props}>
@@ -104,4 +112,62 @@ export function ProcedureIcon(props: IconProps) {
       <path d="M12 3.5c.8 4.5 2.5 6.2 8.5 8.5-6 2.2-7.7 4-8.5 8.5-.8-4.5-2.5-6.3-8.5-8.5 6-2.3 7.7-4 8.5-8.5Z" />
     </Icon>
   );
+}
+
+export function PixIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3.5 20.5 12 12 20.5 3.5 12Z" />
+      <path d="M12 8.2 15.8 12 12 15.8 8.2 12Z" fill="#F5A8BC" fillOpacity=".35" stroke="none" />
+    </Icon>
+  );
+}
+
+export function CardIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path
+        d="M3 10V9a3.5 3.5 0 0 1 3.5-3.5h11A3.5 3.5 0 0 1 21 9v1Z"
+        fill="#F5A8BC"
+        fillOpacity=".35"
+        stroke="none"
+      />
+      <rect x="3" y="5.5" width="18" height="13" rx="3.5" />
+      <path d="M3 10h18M7 15h3.5" />
+    </Icon>
+  );
+}
+
+export function CashIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="2.5" y="6.5" width="19" height="11" rx="3" />
+      <circle cx="12" cy="12" r="2.6" fill="#F5A8BC" fillOpacity=".35" />
+      <path d="M6 12h.01M18 12h.01" strokeWidth="2.2" />
+    </Icon>
+  );
+}
+
+export function UnexpectedIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path
+        d="M12 3C12 3 5.5 10 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 10 12 3 12 3Z"
+        fill="currentColor"
+        fillOpacity=".22"
+      />
+      <path d="M12 11v3.5M12 17.4h.01" />
+    </Icon>
+  );
+}
+
+export function PaymentMiniIcon({ label }: { label: string }) {
+  const normalizedLabel = (label ?? "").toLowerCase();
+  const className = "shrink-0 text-[#E8698A]";
+
+  if (normalizedLabel.includes("pix")) return <PixIcon className={className} size={14} />;
+  if (normalizedLabel.includes("cart")) return <CardIcon className={className} size={14} />;
+  if (normalizedLabel.includes("dinheiro")) return <CashIcon className={className} size={14} />;
+
+  return <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#E8698A]" />;
 }

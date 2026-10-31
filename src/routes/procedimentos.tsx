@@ -631,7 +631,7 @@ function ProcedimentosPage() {
           consome
         </p>
 
-        <GlassLayers className="pointer-events-none absolute -right-8 top-0 z-20 hidden h-[166px] w-[174px] select-none lg:block xl:-right-12 2xl:-right-16 2xl:h-[190px] 2xl:w-[198px]" />
+        <GlassLayers className="pointer-events-none absolute right-0 top-0 z-0 hidden h-[88px] w-[92px] select-none xl:block 2xl:h-[98px] 2xl:w-[104px]" />
       </div>
 
       {/* Card branco principal */}
@@ -680,7 +680,7 @@ function ProcedimentosPage() {
             <button
               type="button"
               onClick={handleOpenCreateModal}
-              className="group shine glass-border-iridescent inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5]"
+              className="group shine inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5]"
             >
               <PlusIcon className="h-4 w-4 transition-transform group-hover:rotate-90" />
               <span>Novo Procedimento</span>

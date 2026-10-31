@@ -238,6 +238,201 @@
   @supports not (backdrop-filter: blur(1px)) { .glass,.glass-strong { background:rgba(255,255,255,.94); } }
 }
 
+@layer components {
+  .atendimentos-page {
+    --at-gap: 10px;
+    --at-pad: 14px;
+    --at-cols: 84px minmax(0, 1fr) minmax(0, 1.2fr) 104px 142px 108px 76px;
+  }
+
+  .at-scroll {
+    display: none;
+    overflow: visible;
+  }
+
+  .at-mobile-list {
+    display: flex;
+  }
+
+  .at-list {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--at-gap);
+  }
+
+  .at-grid {
+    display: grid;
+    grid-template-columns: var(--at-cols);
+    column-gap: var(--at-gap);
+    align-items: center;
+  }
+
+  .at-grid > div {
+    min-width: 0;
+  }
+
+  .at-column-heading {
+    color: rgba(107, 21, 48, 0.55);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.25;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .lumine-row {
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 12px -4px rgba(107, 21, 48, 0.1);
+    transition:
+      transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .at-mobile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .lumine-row:hover {
+    transform: translateY(-2px);
+    border-color: rgba(245, 168, 188, 0.55);
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 10px 24px -8px rgba(107, 21, 48, 0.18);
+  }
+
+  .lumine-row .row-actions {
+    opacity: 0.7;
+    transition: opacity 200ms ease;
+  }
+
+  .lumine-row:hover .row-actions,
+  .lumine-row .row-actions:focus-within {
+    opacity: 1;
+  }
+
+  .at-action-edit:hover {
+    background: #fce1e8;
+    color: #c5325a;
+  }
+
+  .at-action-delete:hover {
+    transform: rotate(2deg);
+    background: rgba(197, 50, 90, 0.12);
+    color: #c5325a;
+    animation: at-delete-shake 260ms ease-in-out;
+  }
+
+  .at-modal-backdrop {
+    animation: at-fade-in 250ms ease-out both;
+  }
+
+  .at-modal-surface {
+    animation: at-surface-in 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .at-modal-surface input {
+    height: 44px;
+    border-color: rgba(245, 168, 188, 0.75);
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.7);
+    transition:
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  .at-modal-surface input:focus-visible,
+  .at-modal-surface button[id="idProcedimento"]:focus-visible,
+  .at-modal-surface button[id="idFormaPagamento"]:focus-visible {
+    border-color: #c5325a;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(197, 50, 90, 0.15);
+  }
+
+  .at-modal-surface button:focus-visible {
+    outline: 2px solid rgba(197, 50, 90, 0.4);
+    outline-offset: 2px;
+  }
+
+  .at-modal-surface button[id="idProcedimento"],
+  .at-modal-surface button[id="idFormaPagamento"] {
+    height: 44px;
+    border-color: rgba(245, 168, 188, 0.75);
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  @keyframes at-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes at-surface-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes at-delete-shake {
+    0%, 100% { transform: rotate(0deg); }
+    35% { transform: rotate(-2deg); }
+    70% { transform: rotate(2deg); }
+  }
+
+  @media (min-width: 1600px) {
+    .atendimentos-page {
+      --at-gap: 12px;
+      --at-pad: 16px;
+      --at-cols: 96px minmax(0, 1.3fr) minmax(0, 1.5fr) 112px 152px 120px 80px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .at-scroll {
+      display: block;
+    }
+
+    .at-mobile-list {
+      display: none;
+    }
+  }
+
+  @media (hover: none) {
+    .lumine-row .row-actions {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lumine-row,
+    .lumine-row:hover {
+      transition: none;
+    }
+
+    .lumine-row .row-actions,
+    .at-action-delete:hover {
+      animation: none;
+      transition: none;
+    }
+
+    .at-action-delete:hover {
+      transform: none;
+    }
+
+    .at-modal-backdrop,
+    .at-modal-surface {
+      animation: none;
+    }
+  }
+}
+
 #procedimentos-table-container {
   --proc-cols: minmax(220px, 2.4fr) 112px 128px 140px 88px;
   --proc-gap: 16px;
@@ -375,6 +570,111 @@
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.025em;
+}
+
+@layer utilities {
+  @media (max-width: 767px) {
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div::-webkit-scrollbar,
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2)::-webkit-scrollbar {
+      display: none;
+    }
+
+    .lumine-bg:has(.atendimentos-page) > header {
+      display: none !important;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar {
+      position: fixed !important;
+      z-index: 40;
+      top: auto;
+      right: 1rem;
+      bottom: 1rem;
+      left: 1rem;
+      display: flex !important;
+      width: auto;
+      height: 64px;
+      min-height: 0;
+      flex-direction: row;
+      align-items: center;
+      align-self: auto;
+      padding: 6px;
+      border-radius: 999px;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div {
+      height: 100%;
+      width: 100%;
+      min-width: 0;
+      flex: 1;
+      flex-direction: row !important;
+      align-items: center;
+      overflow: visible;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:first-child,
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(3) {
+      display: none !important;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2) {
+      display: flex;
+      width: 100%;
+      min-width: 0;
+      flex: 1;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0;
+      scrollbar-width: none;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2) > span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2) > a {
+      display: flex;
+      width: auto !important;
+      min-width: 0;
+      height: 48px;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 8px 4px;
+      border-radius: 999px;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2) > a > div:first-child {
+      justify-content: center;
+      gap: 0;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2) > a > div:first-child > span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2) > a > div:nth-child(2),
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2) > a > svg {
+      display: none;
+    }
+
+    .lumine-bg:has(.atendimentos-page) .lumine-sidebar > div > div:nth-child(2) > a > div:first-child > svg {
+      height: 20px;
+      width: 20px;
+    }
+  }
 }
 
 .auth-primary {
