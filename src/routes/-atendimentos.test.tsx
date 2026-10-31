@@ -133,7 +133,9 @@ describe("Tela de Atendimentos (RF019 / RF020)", () => {
 
     // Seleciona procedimento e verifica auto-preenchimento do valorCobrado (180)
     const selectProcedimento = screen.getByLabelText(/Procedimento/i);
-    await user.selectOptions(selectProcedimento, "1");
+    await user.click(selectProcedimento);
+    await user.keyboard("{ArrowDown}");
+    await user.click(await screen.findByRole("option", { name: "Limpeza de Pele" }));
 
     const inputValor = screen.getByLabelText(/Valor Cobrado/i) as HTMLInputElement;
     expect(inputValor.value).toBe("180");
@@ -143,7 +145,10 @@ describe("Tela de Atendimentos (RF019 / RF020)", () => {
     await user.type(inputValor, "195.50");
 
     // Seleciona forma de pagamento
-    await user.selectOptions(screen.getByLabelText(/Forma de Pagamento/i), "1");
+    const selectFormaPagamento = screen.getByLabelText(/Forma de Pagamento/i);
+    await user.click(selectFormaPagamento);
+    await user.keyboard("{ArrowDown}");
+    await user.click(await screen.findByRole("option", { name: "Pix" }));
 
     // Preenche imprevistos (tempo adicional e desperdício)
     await user.type(screen.getByLabelText(/Tempo adicional/i), "20");
@@ -199,8 +204,14 @@ describe("Tela de Atendimentos (RF019 / RF020)", () => {
 
     await user.click(screen.getByRole("button", { name: /Novo Atendimento/i }));
     await user.type(screen.getByLabelText(/Nome da Cliente/i), "Clara Nunes");
-    await user.selectOptions(screen.getByLabelText(/Procedimento/i), "1");
-    await user.selectOptions(screen.getByLabelText(/Forma de Pagamento/i), "2");
+    const selectProcedimento = screen.getByLabelText(/Procedimento/i);
+    await user.click(selectProcedimento);
+    await user.keyboard("{ArrowDown}");
+    await user.click(await screen.findByRole("option", { name: "Limpeza de Pele" }));
+    const selectFormaPagamento = screen.getByLabelText(/Forma de Pagamento/i);
+    await user.click(selectFormaPagamento);
+    await user.keyboard("{ArrowDown}");
+    await user.click(await screen.findByRole("option", { name: "Cartão de Crédito" }));
     await user.click(screen.getByRole("button", { name: /Salvar Atendimento/i }));
 
     expect(

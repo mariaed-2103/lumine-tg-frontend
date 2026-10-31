@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  Sparkles,
   Package,
   Wallet,
   X,
@@ -16,6 +15,7 @@ import {
 import { listarAtendimentos } from "@/services/atendimentoService";
 import { listarInsumos } from "@/services/insumoService";
 import { listarProcedimentos } from "@/services/procedimentoService";
+import { ClipboardIcon } from "@/components/icons/lumine";
 
 interface SidebarProps {
   isMobileOpen?: boolean;
@@ -23,10 +23,11 @@ interface SidebarProps {
 }
 
 const linkBaseClass =
-  "w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl font-bold text-xs transition-all cursor-pointer group";
+  "w-full flex items-center justify-between px-3.5 py-3 rounded-2xl border border-transparent font-semibold text-sm transition-all duration-200 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-berry/40 focus-visible:ring-offset-2 focus-visible:ring-offset-cream";
 
-const linkInactiveClass = "text-wine hover:bg-pale/70 hover:text-wine";
-const linkActiveClass = "bg-berry text-white shadow-sm shadow-berry/25";
+const linkInactiveClass = "text-ink hover:bg-pale/60 hover:text-wine";
+const linkActiveClass =
+  "border border-white/40 bg-gradient-to-br from-berry to-rose text-white shadow-[0_3px_10px_-4px_rgba(107,21,48,0.28)]";
 
 export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
           <img
             src="/avatar-simbolo-berry.svg"
             alt="Lumine Gestão Estética"
-            className="h-10 w-10 shrink-0 rounded-2xl shadow-xs"
+            className="h-10 w-10 shrink-0 rounded-full shadow-[inset_0_1px_3px_rgba(255,255,255,.65),0_5px_12px_rgba(107,21,48,.2)]"
           />
           <div>
             <span className="block font-display text-xl font-bold leading-none tracking-tight text-wine">
@@ -93,7 +94,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
       </div>
 
       {/* Lista de navegação */}
-      <div className="flex-1 space-y-1.5 overflow-y-auto pr-1">
+      <div className="flex-1 space-y-1.5 overflow-y-auto px-1 py-1 pr-2">
         <span className="mb-2 block px-3 font-display text-[11px] font-bold uppercase tracking-wider text-wine/60">
           Módulos do Sistema
         </span>
@@ -111,7 +112,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                 <LayoutDashboard className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-rose group-hover:text-berry"}`} />
                 <span className="truncate">Dashboard</span>
               </div>
-              <ChevronRight className={`h-3.5 w-3.5 ${isActive ? "text-white" : "text-wine/30"}`} />
+              <ChevronRight className={`h-3.5 w-3.5 ${isActive ? "text-white" : "hidden"}`} />
             </>
           )}
         </Link>
@@ -137,7 +138,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
               <div className="ml-2 flex shrink-0 items-center gap-1">
                 {insumosCount !== null && (
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                       isActive ? "bg-white/20 text-white" : "bg-pale text-wine group-hover:bg-white"
                     }`}
                   >
@@ -148,7 +149,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                   className={`h-3.5 w-3.5 transition-transform ${
                     isActive
                       ? "translate-x-0.5 text-white"
-                      : "text-wine/30 group-hover:translate-x-0.5 group-hover:text-wine/60"
+                      : "hidden"
                   }`}
                 />
               </div>
@@ -166,7 +167,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
           {({ isActive }) => (
             <>
               <div className="flex items-center gap-2.5 truncate">
-                <Sparkles
+                <ClipboardIcon
                   className={`h-4 w-4 shrink-0 transition-colors ${
                     isActive ? "text-white" : "text-rose group-hover:text-berry"
                   }`}
@@ -177,7 +178,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
               <div className="ml-2 flex shrink-0 items-center gap-1">
                 {procedimentosCount !== null && (
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                       isActive ? "bg-white/20 text-white" : "bg-pale text-wine group-hover:bg-white"
                     }`}
                   >
@@ -188,7 +189,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                   className={`h-3.5 w-3.5 transition-transform ${
                     isActive
                       ? "translate-x-0.5 text-white"
-                      : "text-wine/30 group-hover:translate-x-0.5 group-hover:text-wine/60"
+                      : "hidden"
                   }`}
                 />
               </div>
@@ -216,7 +217,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
               <div className="ml-2 flex shrink-0 items-center gap-1">
                 {atendimentosCount !== null && (
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                       isActive ? "bg-white/20 text-white" : "bg-pale text-wine group-hover:bg-white"
                     }`}
                   >
@@ -227,7 +228,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                   className={`h-3.5 w-3.5 transition-transform ${
                     isActive
                       ? "translate-x-0.5 text-white"
-                      : "text-wine/30 group-hover:translate-x-0.5 group-hover:text-wine/60"
+                      : "hidden"
                   }`}
                 />
               </div>
@@ -250,7 +251,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                 />
                 <span className="truncate">Precificação</span>
               </div>
-              <ChevronRight className={`h-3.5 w-3.5 ${isActive ? "text-white" : "text-wine/30"}`} />
+              <ChevronRight className={`h-3.5 w-3.5 ${isActive ? "text-white" : "hidden"}`} />
             </>
           )}
         </Link>
@@ -278,7 +279,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
                   className={`h-3.5 w-3.5 transition-transform ${
                     isActive
                       ? "translate-x-0.5 text-white"
-                      : "text-wine/30 group-hover:translate-x-0.5 group-hover:text-wine/60"
+                      : "hidden"
                   }`}
                 />
               </div>
@@ -355,7 +356,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
   return (
     <>
       {/* Sidebar fixa (desktop) */}
-      <aside className="sticky top-6 hidden min-h-[500px] w-64 shrink-0 self-start rounded-[32px] border border-petal/40 bg-white p-5 shadow-sm lg:flex lg:flex-col">
+      <aside className="lumine-sidebar glass glass-border-iridescent sticky top-6 hidden min-h-[500px] w-16 shrink-0 self-start rounded-[28px] p-2 md:flex md:flex-col lg:w-64 lg:p-5">
         {navContent}
       </aside>
 
@@ -366,7 +367,7 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
           onClick={onCloseMobile}
         >
           <div
-            className="flex h-full w-72 max-w-[85vw] animate-in slide-in-from-left flex-col border-r border-petal/40 bg-white p-6 shadow-2xl duration-200"
+            className="glass flex h-full w-72 max-w-[85vw] animate-in slide-in-from-left flex-col border-r border-petal/40 p-6 shadow-2xl duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {navContent}

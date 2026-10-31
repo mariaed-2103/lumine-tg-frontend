@@ -140,10 +140,10 @@ function LoginPage() {
   }
 
   const inputBase =
-    "w-full rounded-2xl border bg-white px-4 py-3 font-sans text-ink placeholder:text-muted-foreground/70 transition outline-none focus:border-berry focus:ring-4 focus:ring-rose/25";
+    "auth-input w-full rounded-full border bg-white px-4 py-3 font-sans text-ink placeholder:text-muted-foreground/70 transition outline-none focus:border-berry focus:ring-4 focus:ring-berry/15";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-12">
+    <main className="auth-page relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-12">
       <Spark
         className="pointer-events-none absolute -left-10 top-16 h-40 w-40 text-petal/30"
       />
@@ -160,12 +160,12 @@ function LoginPage() {
         <header className="mb-8 text-center">
           <Wordmark />
 
-          <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-3 max-w-sm text-balance text-sm leading-relaxed text-muted-foreground">
             Gestão de custos e rentabilidade para profissionais de estética
           </p>
         </header>
 
-        <section className="rounded-[28px] border border-petal/40 bg-white p-7 shadow-[0_20px_60px_-25px_rgba(107,21,48,0.35)] sm:p-9">
+        <section className="auth-card-refine rounded-[28px] border border-petal/40 bg-white p-7 sm:p-9">
           <h1 className="font-display text-2xl font-semibold text-wine">
             Bem-vinda de volta
           </h1>
@@ -198,7 +198,7 @@ function LoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="mb-1.5 block text-sm font-semibold text-wine"
+                className="auth-label mb-1.5 block text-xs font-bold tracking-wide text-wine"
               >
                 E-mail
               </label>
@@ -230,7 +230,7 @@ function LoginPage() {
             <div>
               <label
                 htmlFor="senha"
-                className="mb-1.5 block text-sm font-semibold text-wine"
+                className="auth-label mb-1.5 block text-xs font-bold tracking-wide text-wine"
               >
                 Senha
               </label>
@@ -284,7 +284,7 @@ function LoginPage() {
               <div className="mt-2 text-right">
                 <Link
                   to="/recuperar-senha"
-                  className="text-sm font-semibold text-berry transition hover:text-rose hover:underline"
+                  className="auth-link text-sm font-semibold text-berry transition hover:text-wine"
                 >
                   Esqueci minha senha
                 </Link>
@@ -294,7 +294,7 @@ function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-berry px-4 py-3.5 font-sans text-sm font-bold text-white shadow-lg shadow-berry/25 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80"
+              className="auth-primary flex w-full items-center justify-center gap-2 rounded-full bg-berry px-4 py-3.5 font-sans text-sm font-bold text-white transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80"
             >
               {loading ? (
                 <>
@@ -315,7 +315,7 @@ function LoginPage() {
 
             <Link
               to="/cadastro"
-              className="font-semibold text-berry transition hover:text-rose hover:underline"
+              className="auth-link font-semibold text-berry transition hover:text-wine"
             >
               Cadastre-se
             </Link>

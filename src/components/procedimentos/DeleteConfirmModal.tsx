@@ -31,7 +31,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   return (
     <div
       id="modal-delete-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/30 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
@@ -41,7 +41,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-delete-title"
-        className="bg-white w-full max-w-md rounded-[32px] border border-petal/40 shadow-2xl overflow-hidden p-6 sm:p-8 relative transition-all transform animate-in zoom-in-95 duration-200"
+        className="procedure-modal relative w-full max-w-md overflow-hidden rounded-[28px] border border-petal/40 bg-white p-6 shadow-2xl transition-all transform animate-in zoom-in-95 duration-250 sm:p-8"
       >
         {/* Close button */}
         <button

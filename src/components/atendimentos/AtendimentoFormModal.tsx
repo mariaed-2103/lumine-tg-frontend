@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { AlertCircle, ChevronDown, Loader2, X } from "lucide-react";
+import { AlertCircle, Loader2, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   hojeISO,
@@ -98,7 +105,7 @@ export const AtendimentoFormModal: React.FC<AtendimentoFormModalProps> = ({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -106,8 +113,8 @@ export const AtendimentoFormModal: React.FC<AtendimentoFormModalProps> = ({
   };
 
   // Ao escolher o procedimento, preenche o valor com o preço padrão (editável depois)
-  const handleProcedimentoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { value } = e.target;
+  const handleProcedimentoChange = (selectedValue: string) => {
+    const value = selectedValue === "__empty__" ? "" : selectedValue;
     const procedimento = procedimentos.find((p) => String(p.idProcedimento) === value);
 
     setFormData((prev) => ({
@@ -296,35 +303,43 @@ export const AtendimentoFormModal: React.FC<AtendimentoFormModalProps> = ({
               <label htmlFor="idProcedimento" className={labelClass}>
                 Procedimento <span className="text-berry">*</span>
               </label>
-              <div className="relative">
-                <select
+              <Select
+                value={formData.idProcedimento}
+                onValueChange={handleProcedimentoChange}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger
                   id="idProcedimento"
-                  name="idProcedimento"
-                  value={formData.idProcedimento}
-                  onChange={handleProcedimentoChange}
-                  disabled={isSubmitting}
-                  className={`${inputBase} cursor-pointer appearance-none py-2.5 pl-4 pr-10 ${
+                  className={`${inputBase} h-11 cursor-pointer px-4 ${
                     errors.idProcedimento ? inputErro : inputOk
                   }`}
                 >
-                  <option value="">
+                  <SelectValue
+                    placeholder={
+                      procedimentos.length === 0 && !procedimentoOrfao
+                        ? "Nenhum procedimento disponível"
+                        : "Selecione um procedimento..."
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__empty__">
                     {procedimentos.length === 0 && !procedimentoOrfao
                       ? "Nenhum procedimento disponível"
                       : "Selecione um procedimento..."}
-                  </option>
+                  </SelectItem>
                   {procedimentoOrfao && editingAtendimento && (
-                    <option value={editingAtendimento.idProcedimento}>
+                    <SelectItem value={String(editingAtendimento.idProcedimento)}>
                       {editingAtendimento.nomeProcedimento}
-                    </option>
+                    </SelectItem>
                   )}
                   {procedimentos.map((p) => (
-                    <option key={p.idProcedimento} value={p.idProcedimento}>
+                    <SelectItem key={p.idProcedimento} value={String(p.idProcedimento)}>
                       {p.nome}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-berry" />
-              </div>
+                </SelectContent>
+              </Select>
               <FieldError message={errors.idProcedimento} />
             </div>
 
@@ -358,35 +373,49 @@ export const AtendimentoFormModal: React.FC<AtendimentoFormModalProps> = ({
                 <label htmlFor="idFormaPagamento" className={labelClass}>
                   Forma de Pagamento <span className="text-berry">*</span>
                 </label>
-                <div className="relative">
-                  <select
+                <Select
+                  value={formData.idFormaPagamento}
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      idFormaPagamento: value === "__empty__" ? "" : value,
+                    }));
+                    clearError("idFormaPagamento");
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger
                     id="idFormaPagamento"
-                    name="idFormaPagamento"
-                    value={formData.idFormaPagamento}
-                    onChange={handleChange}
-                    disabled={isSubmitting}
-                    className={`${inputBase} cursor-pointer appearance-none py-2.5 pl-4 pr-10 ${
+                    className={`${inputBase} h-11 cursor-pointer px-4 ${
                       errors.idFormaPagamento ? inputErro : inputOk
                     }`}
                   >
-                    <option value="">
+                    <SelectValue
+                      placeholder={
+                        formasPagamento.length === 0 && !formaOrfa
+                          ? "Nenhuma forma disponível"
+                          : "Selecione..."
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__empty__">
                       {formasPagamento.length === 0 && !formaOrfa
                         ? "Nenhuma forma disponível"
                         : "Selecione..."}
-                    </option>
+                    </SelectItem>
                     {formaOrfa && editingAtendimento && (
-                      <option value={editingAtendimento.idFormaPagamento}>
+                      <SelectItem value={String(editingAtendimento.idFormaPagamento)}>
                         {editingAtendimento.nomeFormaPagamento}
-                      </option>
+                      </SelectItem>
                     )}
                     {formasPagamento.map((f) => (
-                      <option key={f.idFormaPagamento} value={f.idFormaPagamento}>
+                      <SelectItem key={f.idFormaPagamento} value={String(f.idFormaPagamento)}>
                         {f.nome}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-berry" />
-                </div>
+                  </SelectContent>
+                </Select>
                 <FieldError message={errors.idFormaPagamento} />
               </div>
             </div>

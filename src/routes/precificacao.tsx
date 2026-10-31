@@ -49,6 +49,13 @@ import { ConfiguracaoFinanceiraTab } from "@/components/financeiro/ConfiguracaoF
 import { FormasPagamentoTab } from "@/components/financeiro/FormasPagamentoTab";
 import { FinanceiroTabs, type FinanceiroTabId } from "@/components/financeiro/FinanceiroTabs";
 import { FinanceiroDeleteModal } from "@/components/financeiro/FinanceiroDeleteModal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/precificacao")({
   head: () => ({
@@ -481,19 +488,27 @@ export function PrecificacaoPage() {
                         >
                           Procedimento para Simulação
                         </label>
-                        <select
-                          id="procedimento-sim"
+                        <Select
                           value={selected}
-                          onChange={(e) => setSelected(e.target.value)}
-                          className="w-full rounded-xl border border-petal/50 bg-white px-3.5 py-2.5 text-xs font-medium text-ink outline-none transition focus:border-berry focus:ring-1 focus:ring-berry cursor-pointer"
+                          onValueChange={(value) =>
+                            setSelected(value === "__empty__" ? "" : value)
+                          }
                         >
-                          <option value="">Selecione um procedimento</option>
-                          {procedimentos.map((p) => (
-                            <option key={p.idProcedimento} value={p.idProcedimento}>
-                              {p.nome} · {p.duracaoMinutos} min
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger
+                            id="procedimento-sim"
+                            className="h-11 w-full rounded-xl border-petal/50 bg-white px-3.5 text-xs font-medium text-ink"
+                          >
+                            <SelectValue placeholder="Selecione um procedimento" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__empty__">Selecione um procedimento</SelectItem>
+                            {procedimentos.map((p) => (
+                              <SelectItem key={p.idProcedimento} value={String(p.idProcedimento)}>
+                                {p.nome} · {p.duracaoMinutos} min
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     {procedimentos.length === 0 && (

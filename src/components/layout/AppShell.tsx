@@ -13,9 +13,9 @@ export function AppShell({ mobileTitle, children }: AppShellProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen flex-col bg-pale p-3 font-sans antialiased selection:bg-petal selection:text-wine sm:p-6 lg:p-8">
+    <div className="lumine-bg flex min-h-screen flex-col p-4 font-sans antialiased selection:bg-petal selection:text-wine sm:p-6 lg:p-10">
       {/* Barra superior mobile, com botão de abrir o menu */}
-      <header className="mb-4 flex items-center justify-between rounded-2xl border border-petal/40 bg-white px-4 py-3 shadow-xs lg:hidden">
+      <header className="glass mb-4 flex items-center justify-between rounded-2xl px-4 py-3 lg:hidden">
         <button
           type="button"
           onClick={() => setIsMobileNavOpen(true)}
@@ -39,7 +39,7 @@ export function AppShell({ mobileTitle, children }: AppShellProps) {
         />
       </header>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-start gap-6 lg:flex-row">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-start gap-6 lg:flex-row lg:gap-8">
         <Sidebar
           isMobileOpen={isMobileNavOpen}
           onCloseMobile={() => setIsMobileNavOpen(false)}

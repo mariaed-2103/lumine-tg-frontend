@@ -3,11 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Search,
-  AlertTriangle,
   Package,
   X,
   RefreshCw,
-  SlidersHorizontal,
 } from "lucide-react";
 
 import type {
@@ -33,6 +31,14 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
 import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
+import { GlassBottle } from "@/components/decor/GlassBottle";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/insumos")({
   head: () => ({
@@ -418,21 +424,29 @@ function InsumosPage() {
           {temPerfil === false && <SemPerfilBanner />}
 
           {/* Título */}
-          <div className="mb-6">
-            <h1 className="font-display font-bold text-3xl sm:text-4xl text-wine tracking-tight">
+          <div className="relative mb-6">
+            <h1 className="font-display font-bold text-4xl sm:text-[40px] text-wine tracking-tight">
               Insumos
             </h1>
 
-            <p className="text-xs sm:text-sm text-wine/80 mt-1 font-medium">
+            <p className="mt-1.5 max-w-[560px] text-sm font-medium text-ink/70 sm:text-[15px] lg:max-w-[410px] xl:max-w-[560px]">
               Gerencie os produtos que você utiliza nos seus procedimentos
             </p>
+
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-12 right-6 z-10 hidden select-none lg:block xl:right-10"
+            >
+              <GlassBottle size={140} />
+            </div>
           </div>
 
           {/* Card principal */}
-          <div className="bg-white rounded-[32px] p-6 sm:p-8 shadow-sm border border-petal/40 w-full transition-all">
+          <div className="glass-strong glass-border-iridescent rounded-[32px] p-6 shadow-sm w-full transition-all sm:p-8">
 
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-petal/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 relative">
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-petal/70 to-transparent" />
 
               {/* Contador */}
               <div className="flex items-center gap-2">
@@ -440,7 +454,7 @@ function InsumosPage() {
                   Seus insumos
                 </span>
 
-                <span className="text-sm font-medium text-wine/60">
+                <span className="rounded-full bg-pale px-2.5 py-1 text-xs font-bold text-wine tabular-nums">
                   {totalInsumos}
                 </span>
               </div>
@@ -461,7 +475,7 @@ function InsumosPage() {
                         e.target.value
                       )
                     }
-                    className="pl-9 pr-8 py-2 bg-white rounded-full border border-petal text-xs text-ink placeholder-petal focus:outline-none focus:ring-2 focus:ring-rose/20 transition-all w-44 sm:w-56"
+                    className="h-11 w-full rounded-full border border-petal/70 bg-white/65 pl-10 pr-8 text-sm text-ink placeholder-ink/40 outline-none transition-all duration-250 focus:border-berry focus:ring-4 focus:ring-berry/15 sm:w-60 sm:focus:w-64"
                   />
 
                   {searchTerm && (
@@ -484,7 +498,7 @@ function InsumosPage() {
                   onClick={
                     handleOpenCreateModal
                   }
-                  className="inline-flex items-center justify-center gap-1.5 bg-berry hover:bg-wine text-white font-bold px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm transition-all shadow-md shadow-berry/20 active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="shine inline-flex items-center justify-center gap-1.5 rounded-full border border-white/45 bg-gradient-to-br from-[#D13E66] to-berry px-4 py-2.5 text-xs font-bold text-white shadow-[0_4px_12px_-5px_rgba(107,21,48,0.32)] transition-all hover:from-wine hover:to-wine active:scale-[0.98] cursor-pointer whitespace-nowrap sm:px-5 sm:text-sm"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Novo Insumo</span>
@@ -517,7 +531,7 @@ function InsumosPage() {
               <div className="space-y-4 pt-5">
 
                 {/* Filtros e ordenação */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-cream p-3 rounded-2xl border border-petal/40">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/45 p-2 rounded-full border border-white/80 shadow-inner shadow-wine/5">
 
                   {/* Filtros */}
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
@@ -529,7 +543,7 @@ function InsumosPage() {
                           "todos"
                         )
                       }
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      className={`px-4 py-2 rounded-full text-[13px] font-bold transition-all whitespace-nowrap cursor-pointer ${
                         activeFilter ===
                         "todos"
                           ? "bg-berry text-white shadow-xs"
@@ -555,7 +569,7 @@ function InsumosPage() {
                           : "bg-white text-wine border border-petal/60 hover:bg-pale"
                       }`}
                     >
-                      <AlertTriangle className="w-3 h-3" />
+                      <span aria-hidden="true" className={`h-2 w-2 rounded-full ${activeFilter === "estoque_baixo" ? "bg-white" : "bg-berry animate-pulse"}`} />
 
                       <span>
                         Estoque baixo (
@@ -615,37 +629,23 @@ function InsumosPage() {
 
                   {/* Ordenação */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <div className="relative">
-                      <select
+                    <Select
+                      value={sortBy}
+                      onValueChange={(value) => setSortBy(value as SortOption)}
+                    >
+                      <SelectTrigger
                         id="select-sort"
-                        value={sortBy}
-                        onChange={(e) =>
-                          setSortBy(
-                            e.target
-                              .value as SortOption
-                          )
-                        }
-                        className="bg-white border border-petal text-xs font-bold text-wine rounded-full px-3 py-1.5 pr-7 outline-none focus:ring-2 focus:ring-rose/20 cursor-pointer appearance-none"
+                        className="h-9 w-auto rounded-full border-petal bg-white px-3 text-xs font-bold"
                       >
-                        <option value="nome_asc">
-                          Nome (A - Z)
-                        </option>
-
-                        <option value="nome_desc">
-                          Nome (Z - A)
-                        </option>
-
-                        <option value="estoque_asc">
-                          Menor Estoque
-                        </option>
-
-                        <option value="estoque_desc">
-                          Maior Estoque
-                        </option>
-                      </select>
-
-                      <SlidersHorizontal className="w-3 h-3 text-berry absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nome_asc">Nome (A - Z)</SelectItem>
+                        <SelectItem value="nome_desc">Nome (Z - A)</SelectItem>
+                        <SelectItem value="estoque_asc">Menor Estoque</SelectItem>
+                        <SelectItem value="estoque_desc">Maior Estoque</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

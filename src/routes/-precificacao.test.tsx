@@ -102,7 +102,10 @@ describe("atualização dos dados na tela de precificação", () => {
     render(<PrecificacaoPage />);
 
     await user.click(await screen.findByRole("tab", { name: "Simulação de preço" }));
-    await user.selectOptions(screen.getByLabelText("Procedimento para Simulação"), "2");
+    const selectProcedimento = screen.getByLabelText("Procedimento para Simulação");
+    await user.click(selectProcedimento);
+    await user.keyboard("{ArrowDown}");
+    await user.click(await screen.findByRole("option", { name: /Limpeza de pele/i }));
     await user.click(await screen.findByRole("button", { name: "Definir como preço padrão" }));
     await user.click(screen.getByRole("button", { name: "Confirmar Preço" }));
 

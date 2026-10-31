@@ -196,7 +196,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-insumo-title"
-        className="w-full max-w-[480px] bg-white rounded-[32px] shadow-2xl p-6 sm:p-8 border border-petal/40 overflow-visible my-auto relative animate-in zoom-in-95 duration-200"
+        className="relative my-auto w-full max-w-[480px] overflow-visible rounded-[32px] border border-petal/40 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200 sm:p-8"
       >
         {/* Header matching Image 3 & 4 */}
         <div className="flex items-start justify-between mb-5">
@@ -225,7 +225,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 px-1 py-1">
           
           {/* 1. Nome */}
           <div>

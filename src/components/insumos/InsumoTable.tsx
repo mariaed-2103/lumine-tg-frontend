@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { Insumo } from './types';
 
 interface InsumoTableProps {
@@ -22,12 +22,20 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
   };
 
   return (
-    <div className="hidden md:block w-full overflow-hidden rounded-2xl bg-cream border border-petal/50 shadow-xs">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+    <div className="hidden w-full bg-transparent xl:block">
+      <div className="w-full overflow-visible px-1 py-3">
+        <table className="w-full table-fixed border-separate border-spacing-y-2.5 text-left">
+          <colgroup>
+            <col className="w-[26%]" />
+            <col className="w-[17%]" />
+            <col className="w-[17%]" />
+            <col className="w-[15%]" />
+            <col className="w-[13%]" />
+            <col className="w-[12%]" />
+          </colgroup>
           {/* Table Header */}
           <thead>
-            <tr className="border-b border-petal/40 bg-pale/60 text-xs uppercase tracking-wider text-wine font-bold">
+            <tr className="text-[10px] uppercase tracking-[0.12em] text-wine/65 font-bold">
               <th scope="col" className="py-3.5 px-5 font-bold">
                 Insumo / Unidade
               </th>
@@ -50,7 +58,7 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
           </thead>
 
           {/* Table Body */}
-          <tbody className="divide-y divide-petal/30 text-sm">
+          <tbody className="text-sm">
             {insumos.map((item) => {
               const isLowStock = item.estoqueAtual <= item.estoqueMinimo;
 
@@ -58,46 +66,46 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
                 <tr
                   key={item.idInsumo}
                   id={`row-insumo-${item.idInsumo}`}
-                  className={`group transition-colors ${
+                  className={`insumo-row group ${
                     isLowStock
-                      ? 'bg-pale/30 hover:bg-pale/60 border-l-4 border-l-berry'
-                      : 'hover:bg-pale/20 border-l-4 border-l-transparent'
+                      ? 'bg-gradient-to-r from-pale/80 via-white/65 to-white/60'
+                      : 'bg-white/65 hover:bg-white/90'
                   }`}
                 >
                   {/* Nome & Unidade */}
-                  <td className="py-4 px-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="font-bold text-ink group-hover:text-wine transition-colors leading-snug">
+                  <td className="rounded-l-2xl border-y border-l border-petal/55 px-3 py-3.5">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className="min-w-0 break-words font-bold leading-snug text-ink transition-colors group-hover:text-wine">
                         {item.nome}
                       </span>
-                      <span className="inline-flex items-center self-start px-2 py-0.5 rounded-full text-xs font-semibold bg-pale text-wine border border-petal/60">
+                      <span className="inline-flex shrink-0 items-center rounded-full border border-petal/60 bg-pale px-2 py-0.5 text-xs font-semibold text-wine">
                         {item.unidadeMedida}
                       </span>
                     </div>
                   </td>
 
                   {/* Quantidade por Embalagem */}
-                  <td className="py-4 px-4 text-center font-medium text-ink">
-                    <span className="bg-white/80 px-2.5 py-1 rounded-lg border border-petal/30 text-xs font-semibold text-wine">
+                  <td className="whitespace-nowrap border-y border-petal/55 px-2 py-3.5 text-center font-medium text-ink">
+                    <span className="rounded-full border border-petal/40 bg-white/75 px-2 py-1.5 text-xs font-semibold text-wine tabular-nums">
                       {formatNumber(item.quantidadePorEmbalagem)} {item.unidadeMedida}
                     </span>
                   </td>
 
                   {/* Estoque Atual */}
-                  <td className="py-4 px-4 text-center">
+                  <td className="whitespace-nowrap border-y border-petal/55 px-2 py-3.5 text-center">
                     <div className="inline-flex flex-col items-center">
                       <span
-                        className={`text-sm font-bold ${
+                        className={`text-[15px] font-extrabold tabular-nums ${
                           isLowStock ? 'text-berry' : 'text-ink'
                         }`}
                       >
                         {formatNumber(item.estoqueAtual)} {item.unidadeMedida}
                       </span>
                       {/* Sub-bar indicator */}
-                      <div className="w-20 h-1.5 bg-petal/30 rounded-full mt-1.5 overflow-hidden">
+                      <div className="mt-1.5 h-2 w-20 overflow-hidden rounded-full bg-petal/25 shadow-inner shadow-wine/10">
                         <div
-                          className={`h-full rounded-full ${
-                            isLowStock ? 'bg-berry' : 'bg-rose'
+                          className={`h-full rounded-full shadow-[inset_0_1px_rgba(255,255,255,.75)] ${
+                            isLowStock ? 'bg-gradient-to-r from-rose to-berry' : 'bg-gradient-to-r from-petal to-rose'
                           }`}
                           style={{
                             width: `${Math.min(
@@ -114,40 +122,40 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
                   </td>
 
                   {/* Estoque Mínimo (referência discreta) */}
-                  <td className="py-4 px-4 text-center">
-                    <span className="text-xs font-medium text-wine/70">
+                  <td className="whitespace-nowrap border-y border-petal/55 px-2 py-3.5 text-center">
+                    <span className="text-[13px] font-medium text-ink/60 tabular-nums">
                       {formatNumber(item.estoqueMinimo)} {item.unidadeMedida}
                     </span>
                   </td>
 
                   {/* Status / Alerta de Estoque Baixo */}
-                  <td className="py-4 px-4 text-center">
+                  <td className="whitespace-nowrap border-y border-petal/55 px-2 py-3.5 text-center">
                     {isLowStock ? (
                       <span
                         id={`badge-low-stock-${item.idInsumo}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-berry text-white shadow-2xs animate-pulse"
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-rose to-berry px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-berry/20"
                       >
-                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                         <span>Estoque baixo</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-pale text-wine border border-petal/50">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-rose" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-petal/50 bg-pale/60 px-2.5 py-1 text-xs font-semibold text-wine">
+                        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-rose" />
                         <span>Normal</span>
                       </span>
                     )}
                   </td>
 
                   {/* Ações: Editar e Excluir */}
-                  <td className="py-4 px-5 text-right">
-                    <div className="inline-flex items-center gap-1.5 justify-end">
+                  <td className="rounded-r-2xl border-y border-r border-petal/55 px-2 py-3.5 text-right">
+                    <div className="inline-flex items-center justify-end gap-1">
                       <button
                         type="button"
                         id={`btn-edit-insumo-${item.idInsumo}`}
                         onClick={() => onEdit(item)}
                         title="Editar insumo"
                         aria-label={`Editar ${item.nome}`}
-                        className="p-2 text-wine/70 hover:text-wine hover:bg-pale rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white bg-white/55 text-wine/70 transition-all hover:bg-pale hover:text-berry active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-berry/40"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -158,7 +166,7 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
                         onClick={() => onDelete(item)}
                         title="Excluir insumo"
                         aria-label={`Excluir ${item.nome}`}
-                        className="p-2 text-berry/70 hover:text-berry hover:bg-pale rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white bg-white/55 text-berry/70 transition-all hover:bg-berry/10 hover:text-berry active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-berry/40"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

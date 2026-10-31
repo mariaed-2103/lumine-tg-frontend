@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, AlertTriangle, CheckCircle2, Box } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { Insumo } from './types';
 
 interface InsumoCardListProps {
@@ -21,7 +21,7 @@ export const InsumoCardList: React.FC<InsumoCardListProps> = ({
   };
 
   return (
-    <div className="md:hidden space-y-3.5">
+    <div className="xl:hidden space-y-3.5 px-1 py-2">
       {insumos.map((item) => {
         const isLowStock = item.estoqueAtual <= item.estoqueMinimo;
 
@@ -29,20 +29,20 @@ export const InsumoCardList: React.FC<InsumoCardListProps> = ({
           <div
             key={item.idInsumo}
             id={`card-insumo-${item.idInsumo}`}
-            className={`rounded-3xl p-5 transition-all shadow-sm ${
+            className={`glass glass-border-iridescent rounded-[22px] border border-petal/45 p-5 shadow-sm transition-all ${
               isLowStock
-                ? 'bg-cream border-l-4 border-l-berry border-y border-r border-petal'
-                : 'bg-white border border-petal'
+                ? 'bg-gradient-to-r from-pale/80 to-white/65'
+                : 'bg-white/65'
             }`}
           >
             {/* Header: Title, Unit Badge & Low Stock Warning */}
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <h4 className="font-display font-bold text-base text-wine leading-tight">
+                  <h4 className="font-sans font-bold text-[15px] text-ink leading-tight">
                     {item.nome}
                   </h4>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-pale text-wine">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-pale text-wine border border-petal/50">
                     {item.unidadeMedida}
                   </span>
                 </div>
@@ -51,13 +51,13 @@ export const InsumoCardList: React.FC<InsumoCardListProps> = ({
               {/* Status Badge */}
               <div className="shrink-0">
                 {isLowStock ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-berry text-white uppercase tracking-tight">
-                    <AlertTriangle className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-rose to-berry px-2.5 py-1 text-[10px] font-bold tracking-tight text-white">
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                     <span>Estoque baixo</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-pale text-wine">
-                    <CheckCircle2 className="w-3 h-3 text-rose" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-pale/60 text-wine border border-petal/50">
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-rose" />
                     <span>Normal</span>
                   </span>
                 )}
@@ -65,12 +65,12 @@ export const InsumoCardList: React.FC<InsumoCardListProps> = ({
             </div>
 
             {/* Metrics Grid */}
-            <div className="grid grid-cols-3 gap-2 py-3 px-3 bg-cream rounded-2xl border border-petal/40 text-center mb-3.5">
+            <div className="grid grid-cols-3 gap-2 py-3 px-3 bg-white/45 rounded-2xl border border-white/80 text-center mb-3.5">
               <div>
                 <span className="block text-[10px] font-bold text-wine/70 uppercase tracking-wider">
                   Embalagem
                 </span>
-                <span className="text-xs font-bold text-ink mt-0.5 block">
+                <span className="text-xs font-bold text-ink mt-0.5 block tabular-nums">
                   {formatNumber(item.quantidadePorEmbalagem)} {item.unidadeMedida}
                 </span>
               </div>
@@ -80,7 +80,7 @@ export const InsumoCardList: React.FC<InsumoCardListProps> = ({
                   Estoque Atual
                 </span>
                 <span
-                  className={`text-xs font-bold mt-0.5 block ${
+                  className={`text-xs font-bold mt-0.5 block tabular-nums ${
                     isLowStock ? 'text-berry' : 'text-ink'
                   }`}
                 >
@@ -92,7 +92,7 @@ export const InsumoCardList: React.FC<InsumoCardListProps> = ({
                 <span className="block text-[10px] font-bold text-wine/70 uppercase tracking-wider">
                   Estoque Mín.
                 </span>
-                <span className="text-xs font-medium text-petal mt-0.5 block">
+                <span className="text-xs font-medium text-ink/60 mt-0.5 block tabular-nums">
                   {formatNumber(item.estoqueMinimo)} {item.unidadeMedida}
                 </span>
               </div>
@@ -106,10 +106,10 @@ export const InsumoCardList: React.FC<InsumoCardListProps> = ({
                   {formatNumber(item.estoqueAtual)} / {formatNumber(item.quantidadePorEmbalagem)} {item.unidadeMedida}
                 </span>
               </div>
-              <div className="w-full h-2 bg-pale rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-petal/25 rounded-full overflow-hidden shadow-inner shadow-wine/10">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    isLowStock ? 'bg-berry' : 'bg-rose'
+                    isLowStock ? 'bg-gradient-to-r from-rose to-berry' : 'bg-gradient-to-r from-petal to-rose'
                   }`}
                   style={{
                     width: `${Math.min(

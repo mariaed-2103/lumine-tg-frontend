@@ -62,10 +62,10 @@ function RecuperarSenhaPage() {
 
 
   const inputBase =
-    "w-full rounded-2xl border bg-white px-4 py-3 font-sans text-ink placeholder:text-muted-foreground/70 transition outline-none focus:border-berry focus:ring-4 focus:ring-rose/25";
+    "auth-input w-full rounded-full border bg-white px-4 py-3 font-sans text-ink placeholder:text-muted-foreground/70 transition outline-none focus:border-berry focus:ring-4 focus:ring-berry/15";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-12">
+    <main className="auth-page relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-12">
       {/* decorative sparks */}
       <Spark className="pointer-events-none absolute -left-10 top-16 h-40 w-40 text-petal/30" />
       <Spark className="pointer-events-none absolute -right-12 bottom-10 h-56 w-56 text-petal/25" />
@@ -76,7 +76,7 @@ function RecuperarSenhaPage() {
           <Wordmark />
         </header>
 
-        <section className="rounded-[28px] border border-petal/40 bg-white p-7 shadow-[0_20px_60px_-25px_rgba(107,21,48,0.35)] sm:p-9">
+        <section className="auth-card-refine rounded-[28px] border border-petal/40 bg-white p-7 sm:p-9">
           {!sent ? (
             <>
               <h1 className="font-display text-2xl font-semibold text-wine">
@@ -88,7 +88,7 @@ function RecuperarSenhaPage() {
 
               <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-5">
                 <div>
-                  <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-wine">
+                  <label htmlFor="email" className="auth-label mb-1.5 block text-xs font-bold tracking-wide text-wine">
                     E-mail
                   </label>
                   <input
@@ -115,7 +115,7 @@ function RecuperarSenhaPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-berry px-4 py-3.5 font-sans text-sm font-bold text-white shadow-lg shadow-berry/25 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80"
+                  className="auth-primary flex w-full items-center justify-center gap-2 rounded-full bg-berry px-4 py-3.5 font-sans text-sm font-bold text-white transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80"
                 >
                   {loading ? (
                     <>
@@ -131,7 +131,7 @@ function RecuperarSenhaPage() {
               <div className="mt-6 text-center">
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-berry transition hover:text-rose hover:underline"
+                  className="auth-link inline-flex items-center gap-1.5 text-sm font-semibold text-berry transition hover:text-wine"
                 >
                   <ArrowLeft size={16} />
                   Voltar para o login
@@ -156,7 +156,7 @@ function RecuperarSenhaPage() {
                   setSent(false);
                   setLoading(false);
                 }}
-                className="mt-7 w-full rounded-2xl border border-berry bg-transparent px-4 py-3.5 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35"
+                className="auth-secondary mt-7 w-full rounded-full border border-berry bg-transparent px-4 py-3.5 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35"
               >
                 Reenviar e-mail
               </button>
@@ -164,7 +164,7 @@ function RecuperarSenhaPage() {
               <div className="mt-6 text-center">
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-berry transition hover:text-rose hover:underline"
+                  className="auth-link inline-flex items-center gap-1.5 text-sm font-semibold text-berry transition hover:text-wine"
                 >
                   <ArrowLeft size={16} />
                   Voltar para o login

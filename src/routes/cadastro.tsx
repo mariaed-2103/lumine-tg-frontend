@@ -246,10 +246,10 @@ function CadastroPage() {
   }
 
   const inputBase =
-    "w-full rounded-2xl border bg-white px-4 py-3 font-sans text-ink placeholder:text-muted-foreground/70 transition outline-none focus:border-berry focus:ring-4 focus:ring-rose/25";
+    "auth-input w-full rounded-full border bg-white px-4 py-3 font-sans text-ink placeholder:text-muted-foreground/70 transition outline-none focus:border-berry focus:ring-4 focus:ring-berry/15";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-12">
+    <main className="auth-page relative flex min-h-screen items-center justify-center overflow-hidden bg-cream px-4 py-12">
       <Spark
         className="pointer-events-none absolute -left-10 top-16 h-40 w-40 text-petal/30"
       />
@@ -266,12 +266,12 @@ function CadastroPage() {
         <header className="mb-8 text-center">
           <Wordmark />
 
-          <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-3 max-w-sm text-balance text-sm leading-relaxed text-muted-foreground">
             Gestão de custos e rentabilidade para profissionais de estética
           </p>
         </header>
 
-        <section className="rounded-[28px] border border-petal/40 bg-white p-7 shadow-[0_20px_60px_-25px_rgba(107,21,48,0.35)] sm:p-9">
+        <section className="auth-card-refine rounded-[28px] border border-petal/40 bg-white p-7 sm:p-9">
           <h1 className="font-display text-2xl font-semibold text-wine">
             Crie sua conta
           </h1>
@@ -302,7 +302,7 @@ function CadastroPage() {
                     <div className="mt-2.5 flex flex-wrap items-center gap-3">
                       <Link
                         to="/login"
-                        className="inline-flex items-center gap-1 text-xs font-bold text-berry hover:text-wine underline underline-offset-2 transition-colors"
+                        className="auth-link inline-flex items-center gap-1 text-xs font-bold text-berry hover:text-wine underline underline-offset-2 transition-colors"
                       >
                         Entrar com minha conta &rarr;
                       </Link>
@@ -327,7 +327,7 @@ function CadastroPage() {
             <div>
               <label
                 htmlFor="email"
-                className="mb-1.5 block text-sm font-semibold text-wine"
+                className="auth-label mb-1.5 block text-xs font-bold tracking-wide text-wine"
               >
                 E-mail
               </label>
@@ -365,7 +365,7 @@ function CadastroPage() {
             <div>
               <label
                 htmlFor="senha"
-                className="mb-1.5 block text-sm font-semibold text-wine"
+                className="auth-label mb-1.5 block text-xs font-bold tracking-wide text-wine"
               >
                 Senha
               </label>
@@ -428,7 +428,7 @@ function CadastroPage() {
             <div>
               <label
                 htmlFor="confirmarSenha"
-                className="mb-1.5 block text-sm font-semibold text-wine"
+                className="auth-label mb-1.5 block text-xs font-bold tracking-wide text-wine"
               >
                 Confirmar senha
               </label>
@@ -498,7 +498,7 @@ function CadastroPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-berry px-4 py-3.5 font-sans text-sm font-bold text-white shadow-lg shadow-berry/25 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80"
+              className="auth-primary flex w-full items-center justify-center gap-2 rounded-full bg-berry px-4 py-3.5 font-sans text-sm font-bold text-white transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80"
             >
               {loading ? (
                 <>
@@ -520,7 +520,7 @@ function CadastroPage() {
 
             <Link
               to="/login"
-              className="font-semibold text-berry transition hover:text-rose hover:underline"
+              className="auth-link font-semibold text-berry transition hover:text-wine"
             >
               Entrar
             </Link>

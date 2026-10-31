@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, AlertCircle, AlertTriangle, Loader2, Sparkles } from 'lucide-react';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Procedimento,
   InsumoDisponivel,
   ProcedimentoFormData,
@@ -245,7 +252,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
   return (
     <div
       id="modal-procedimento-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-ink/50 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-ink/30 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
@@ -255,7 +262,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-procedimento-title"
-        className="w-full max-w-2xl bg-white rounded-[32px] shadow-2xl p-6 sm:p-8 border border-petal/40 my-auto relative animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col"
+        className="procedure-modal relative my-auto flex max-h-[90vh] w-full max-w-2xl flex-col rounded-[28px] border border-petal/40 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-250 sm:p-8"
       >
         {/* Header */}
         <div className="flex items-start justify-between pb-4 border-b border-petal/20 shrink-0">
@@ -284,7 +291,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto py-5 pr-1 space-y-6 flex-1">
+        <form onSubmit={handleSubmit} className="min-w-0 flex-1 space-y-6 overflow-y-auto px-2 py-5">
           
           {/* SEÇÃO 1: Dados do Procedimento */}
           <div className="space-y-4">
@@ -313,7 +320,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                 className={`w-full px-4 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
                   errors.nome && touched.nome
                     ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
-                    : 'border-petal focus:border-rose focus:ring-2 focus:ring-rose/20'
+                    : 'border-petal bg-white/70 focus:border-berry focus:ring-4 focus:ring-berry/15'
                 }`}
               />
               {errors.nome && touched.nome && (
@@ -350,7 +357,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                     className={`w-full pl-4 pr-12 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
                       errors.duracaoMinutos && touched.duracaoMinutos
                         ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
-                        : 'border-petal focus:border-rose focus:ring-2 focus:ring-rose/20'
+                        : 'border-petal bg-white/70 focus:border-berry focus:ring-4 focus:ring-berry/15'
                     }`}
                   />
                   <span className="absolute inset-y-0 right-0 pr-4 flex items-center text-xs font-bold text-wine/70 pointer-events-none">
@@ -391,12 +398,12 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                     className={`w-full pl-11 pr-4 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
                       errors.precoPadrao && touched.precoPadrao
                         ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
-                        : 'border-petal focus:border-rose focus:ring-2 focus:ring-rose/20'
+                        : 'border-petal bg-white/70 focus:border-berry focus:ring-4 focus:ring-berry/15'
                     }`}
                   />
                 </div>
                 <p className="text-[11px] text-wine/70 mt-1 ml-2 leading-tight">
-                  Você também poderá definir esse valor automaticamente pelo simulador de preços (em breve)
+                  Simule o preço deste procedimento na tela de Precificação.
                 </p>
                 {errors.precoPadrao && touched.precoPadrao && (
                   <p className="flex items-center gap-1 text-xs text-berry font-semibold mt-1 ml-2 animate-in fade-in">
@@ -481,26 +488,36 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                               >
                                 Insumo #{index + 1}
                               </label>
-                              <select
-                                id={`select-insumo-${row.idTemp}`}
+                              <Select
                                 value={row.idInsumo}
-                                onChange={(e) =>
-                                  handleFichaRowChange(row.idTemp, 'idInsumo', e.target.value)
+                                onValueChange={(value) =>
+                                  handleFichaRowChange(
+                                    row.idTemp,
+                                    "idInsumo",
+                                    value === "__empty__" ? "" : value,
+                                  )
                                 }
                                 disabled={isSubmitting}
-                                className={`w-full px-3.5 py-2 bg-white border rounded-full text-xs text-ink font-medium outline-none transition-all cursor-pointer ${
-                                  rowError?.idInsumo
-                                    ? 'border-berry ring-1 ring-berry/30'
-                                    : 'border-petal focus:border-rose'
-                                }`}
                               >
-                                <option value="">Selecione um insumo...</option>
-                                {insumosDisponiveis.map((ins) => (
-                                  <option key={ins.idInsumo} value={ins.idInsumo}>
-                                    {ins.nome} ({ins.unidadeMedida})
-                                  </option>
-                                ))}
-                              </select>
+                                <SelectTrigger
+                                  id={`select-insumo-${row.idTemp}`}
+                                  className={`h-10 w-full rounded-full px-3.5 text-xs font-medium ${
+                                    rowError?.idInsumo
+                                      ? "border-berry ring-1 ring-berry/30"
+                                      : "border-petal bg-white focus:border-berry focus:ring-2 focus:ring-berry/15"
+                                  }`}
+                                >
+                                  <SelectValue placeholder="Selecione um insumo..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__empty__">Selecione um insumo...</SelectItem>
+                                  {insumosDisponiveis.map((ins) => (
+                                    <SelectItem key={ins.idInsumo} value={String(ins.idInsumo)}>
+                                      {ins.nome} ({ins.unidadeMedida})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                               {rowError?.idInsumo && (
                                 <span className="text-[11px] text-berry font-semibold ml-2 block mt-0.5">
                                   {rowError.idInsumo}
@@ -529,7 +546,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                                   className={`w-full pl-3.5 pr-14 py-2 bg-white border rounded-full text-xs text-ink placeholder-petal outline-none transition-all ${
                                     rowError?.quantidadeUtilizada
                                       ? 'border-berry ring-1 ring-berry/30'
-                                      : 'border-petal focus:border-rose'
+                                      : 'border-petal bg-white/70 focus:border-berry focus:ring-2 focus:ring-berry/15'
                                   }`}
                                 />
                                 <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-xs font-bold text-wine/70 pointer-events-none">

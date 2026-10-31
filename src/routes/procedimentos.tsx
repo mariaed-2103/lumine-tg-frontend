@@ -1,12 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Plus,
-  Search,
-  AlertTriangle,
   X,
   RefreshCw,
-  SlidersHorizontal,
 } from "lucide-react";
 
 import type {
@@ -41,6 +37,15 @@ import { listarInsumos } from "@/services/insumoService";
 import { AppShell } from "@/components/layout/AppShell";
 import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
 import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
+import { PlusIcon, SearchIcon } from "@/components/icons/lumine";
+import { GlassLayers } from "@/components/decor/GlassLayers";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/procedimentos")({
   head: () => ({
@@ -615,35 +620,38 @@ function ProcedimentosPage() {
     <AppShell mobileTitle="Procedimentos">
       {temPerfil === false && <SemPerfilBanner />}
       {/* Cabeçalho */}
-      <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-wine sm:text-4xl">
+      <div className="relative pt-2 mb-6">
+        <h1 className="font-display text-4xl font-bold tracking-tight text-wine sm:text-[40px]">
           Procedimentos
         </h1>
 
-        <p className="mt-1 text-xs font-medium text-wine/80 sm:text-sm">
+        <p className="mt-1.5 max-w-[600px] text-balance text-sm font-medium text-ink/65 sm:text-[15px]">
           Cadastre os procedimentos que você
           realiza e os insumos que cada um
           consome
         </p>
+
+        <GlassLayers className="pointer-events-none absolute -right-8 top-0 z-20 hidden h-[166px] w-[174px] select-none lg:block xl:-right-12 2xl:-right-16 2xl:h-[190px] 2xl:w-[198px]" />
       </div>
 
       {/* Card branco principal */}
-      <div className="mt-6 w-full rounded-[32px] border border-petal/40 bg-white p-6 shadow-sm transition-all sm:p-8">
+      <div className="glass-strong glass-border-iridescent w-full rounded-[32px] p-7 pb-8 shadow-sm transition-all sm:p-8">
         {/* Barra superior dentro do card */}
-        <div className="flex flex-col gap-4 border-b border-petal/20 pb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex flex-col gap-4 pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-petal/70 to-transparent" />
           <div className="flex items-center gap-2">
             <span className="font-display text-base font-bold text-wine sm:text-lg">
               Seus Procedimentos
             </span>
 
-            <span className="rounded-full border border-petal/40 bg-cream px-2.5 py-0.5 text-sm font-semibold text-wine/70">
+            <span className="rounded-full bg-pale px-2.5 py-1 text-xs font-bold text-wine tabular-nums">
               {totalProcedimentos}
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-petal" />
+          <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-auto">
+              <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-rose" />
 
               <input
                 type="text"
@@ -652,7 +660,7 @@ function ProcedimentosPage() {
                 onChange={(e) =>
                   setSearchTerm(e.target.value)
                 }
-                className="w-44 rounded-full border border-petal bg-white py-2 pl-9 pr-8 text-xs text-ink placeholder-petal outline-none transition-all focus:ring-2 focus:ring-rose/20 sm:w-56"
+                className="h-11 w-full rounded-full border border-petal/70 bg-white/65 pl-10 pr-8 text-sm text-ink placeholder-ink/40 outline-none transition-all duration-250 focus:border-berry focus:ring-4 focus:ring-berry/15 focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] sm:w-60 sm:focus:w-64"
               />
 
               {searchTerm && (
@@ -661,7 +669,7 @@ function ProcedimentosPage() {
                   onClick={() =>
                     setSearchTerm("")
                   }
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-petal hover:text-wine"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-petal hover:text-wine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40"
                   aria-label="Limpar busca"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -672,9 +680,9 @@ function ProcedimentosPage() {
             <button
               type="button"
               onClick={handleOpenCreateModal}
-              className="inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-berry px-4 py-2 text-xs font-bold text-white shadow-md shadow-berry/20 transition-all hover:bg-wine active:scale-95 sm:px-5 sm:text-sm"
+              className="group shine glass-border-iridescent inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5]"
             >
-              <Plus className="h-4 w-4" />
+              <PlusIcon className="h-4 w-4 transition-transform group-hover:rotate-90" />
               <span>Novo Procedimento</span>
             </button>
           </div>
@@ -692,18 +700,18 @@ function ProcedimentosPage() {
             }
           />
         ) : (
-          <div className="space-y-4 pt-5">
+          <div className="space-y-5 pt-5">
             {/* Filtros e ordenação */}
-            <div className="flex flex-col gap-3 rounded-2xl border border-petal/40 bg-cream p-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="scrollbar-none flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+            <div className="flex flex-col gap-3 rounded-2xl border border-petal/40 bg-white/45 p-2 shadow-[inset_0_1px_3px_rgba(107,21,48,0.07)] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:rounded-full">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() =>
                     setFilterSemInsumo(false)
                   }
-                  className={`cursor-pointer whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`shine inline-flex h-9 cursor-pointer items-center justify-center whitespace-nowrap rounded-full border border-transparent px-4 text-[13px] font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] ${
                     !filterSemInsumo
-                      ? "bg-berry text-white shadow-xs"
+                      ? "border-white/80 bg-gradient-to-r from-berry to-rose text-white shadow-md shadow-berry/25"
                       : "border border-petal/60 bg-white text-wine hover:bg-pale"
                   }`}
                 >
@@ -715,16 +723,16 @@ function ProcedimentosPage() {
                   onClick={() =>
                     setFilterSemInsumo(true)
                   }
-                  className={`inline-flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-transparent px-3.5 text-[13px] font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] ${
                     filterSemInsumo
-                      ? "bg-berry text-white shadow-xs"
+                      ? "border-white/80 bg-gradient-to-r from-berry to-rose text-white shadow-md shadow-berry/25"
                       : procedimentosSemInsumosCount >
                           0
                         ? "border border-berry/50 bg-white text-berry hover:bg-pale"
                         : "border border-petal/60 bg-white text-wine hover:bg-pale"
                   }`}
                 >
-                  <AlertTriangle className="h-3 w-3" />
+                  <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${filterSemInsumo ? "bg-white" : "bg-[#D97706]"}`} />
 
                   <span>
                     Sem insumos vinculados (
@@ -735,41 +743,24 @@ function ProcedimentosPage() {
               </div>
 
               <div className="relative shrink-0">
-                <select
+                <Select
                   value={sortBy}
-                  onChange={(e) =>
-                    setSortBy(
-                      e.target.value as ProcedimentoSortOption
-                    )
+                  onValueChange={(value) =>
+                    setSortBy(value as ProcedimentoSortOption)
                   }
-                  className="cursor-pointer appearance-none rounded-full border border-petal bg-white px-3 py-1.5 pr-7 text-xs font-bold text-wine outline-none focus:ring-2 focus:ring-rose/20"
                 >
-                  <option value="nome_asc">
-                    Nome (A - Z)
-                  </option>
-
-                  <option value="nome_desc">
-                    Nome (Z - A)
-                  </option>
-
-                  <option value="duracao_asc">
-                    Menor Duração
-                  </option>
-
-                  <option value="duracao_desc">
-                    Maior Duração
-                  </option>
-
-                  <option value="preco_asc">
-                    Menor Preço
-                  </option>
-
-                  <option value="preco_desc">
-                    Maior Preço
-                  </option>
-                </select>
-
-                <SlidersHorizontal className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-berry" />
+                  <SelectTrigger className="h-9 w-full rounded-full border-petal/60 bg-white/80 pl-3.5 pr-3 text-[13px] font-bold sm:w-auto">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nome_asc">Nome (A - Z)</SelectItem>
+                    <SelectItem value="nome_desc">Nome (Z - A)</SelectItem>
+                    <SelectItem value="duracao_asc">Menor Duração</SelectItem>
+                    <SelectItem value="duracao_desc">Maior Duração</SelectItem>
+                    <SelectItem value="preco_asc">Menor Preço</SelectItem>
+                    <SelectItem value="preco_desc">Maior Preço</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -793,7 +784,7 @@ function ProcedimentosPage() {
                     setSearchTerm("");
                     setFilterSemInsumo(false);
                   }}
-                  className="flex cursor-pointer items-center gap-1 font-bold text-berry hover:underline"
+                  className="flex cursor-pointer items-center gap-1 font-bold text-berry hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 rounded"
                 >
                   <RefreshCw className="h-3 w-3" />
 

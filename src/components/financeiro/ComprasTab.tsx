@@ -11,6 +11,13 @@ import {
   X,
   Check,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type {
   CompraInsumo,
   CompraInsumoFormData,
@@ -53,7 +60,7 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
     return map;
   }, [insumos]);
 
-  // Form State — idInsumo é string porque vem de <select>
+  // Form state — idInsumo is a string until submission.
   const [formData, setFormData] = useState<CompraInsumoFormData>({
     idInsumo: insumos.length > 0 ? String(insumos[0].idInsumo) : "",
     dataCompra: new Date().toISOString().slice(0, 10),
@@ -92,7 +99,7 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
   const handleOpenEdit = (compra: CompraInsumo) => {
     setEditingCompra(compra);
     setFormData({
-      idInsumo: String(compra.idInsumo), // number → string para o <select>
+      idInsumo: String(compra.idInsumo),
       dataCompra: compra.dataCompra,
       quantidadeComprada: String(compra.quantidadeComprada),
       valorTotalCompra: compra.valorTotalCompra.toFixed(2).replace(".", ","),
@@ -388,26 +395,32 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
                   <label htmlFor="idInsumo-compra" className="block text-xs font-bold text-wine mb-1.5">
                     Insumo adquirido *
                   </label>
-                  <select
-                    id="idInsumo-compra"
-                    name="idInsumo"
+                  <Select
                     value={formData.idInsumo}
-                    onChange={(e) => {
-                      setFormData({ ...formData, idInsumo: e.target.value });
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, idInsumo: value });
                       if (errors.idInsumo) setErrors({ ...errors, idInsumo: undefined });
                     }}
-                    className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-ink font-medium transition-colors focus:outline-none focus:ring-1 ${
-                      errors.idInsumo
-                        ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                        : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
-                    }`}
                   >
+                    <SelectTrigger
+                      id="idInsumo-compra"
+                      name="idInsumo"
+                      className={`h-11 w-full rounded-xl px-3.5 text-xs font-medium ${
+                        errors.idInsumo
+                          ? "border-red-400 focus:border-red-500 focus:ring-red-500"
+                          : "border-petal/50 bg-white text-ink hover:border-rose focus:border-berry focus:ring-berry"
+                      }`}
+                    >
+                      <SelectValue placeholder="Selecione um insumo" />
+                    </SelectTrigger>
+                    <SelectContent>
                     {insumos.map((ins) => (
-                      <option key={ins.idInsumo} value={String(ins.idInsumo)}>
+                      <SelectItem key={ins.idInsumo} value={String(ins.idInsumo)}>
                         {ins.nome} ({ins.quantidadePorEmbalagem} {ins.unidadeMedida}/embalagem)
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
+                    </SelectContent>
+                  </Select>
                   {errors.idInsumo && (
                     <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle className="w-3.5 h-3.5" />{errors.idInsumo}

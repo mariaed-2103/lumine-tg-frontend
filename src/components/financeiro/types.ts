@@ -58,7 +58,7 @@ export interface DespesaVariavelFormErrors {
 
 // 3. Compra de Insumo (RF014)
 // idInsumo aqui é number — referência ao Insumo real do backend (INT).
-// Nos FormData, idInsumo permanece string pois vem de um <select>.
+// Nos FormData, idInsumo permanece string até ser convertido no submit.
 // A conversão Number(formData.idInsumo) acontece no momento do submit.
 export interface CompraInsumo {
   idCompra: number;
@@ -70,7 +70,7 @@ export interface CompraInsumo {
 }
 
 export interface CompraInsumoFormData {
-  idInsumo: string; // string: vem de <select>, convertido para number no submit
+  idInsumo: string;
   dataCompra: string;
   quantidadeComprada: string;
   valorTotalCompra: string;

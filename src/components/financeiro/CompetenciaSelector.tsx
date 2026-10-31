@@ -1,5 +1,12 @@
 import React from "react";
-import { Calendar, ChevronDown } from "lucide-react";
+import { Calendar } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CompetenciaSelectorProps {
   mes: number; // 1 to 12
@@ -45,40 +52,40 @@ export const CompetenciaSelector: React.FC<CompetenciaSelectorProps> = ({
 
       <div className="flex items-center gap-1.5">
         {/* Dropdown Mês */}
-        <div className="relative">
-          <select
+        <Select value={String(mes)} onValueChange={(value) => onMesChange(Number(value))}>
+          <SelectTrigger
             id="select-competencia-mes"
             aria-label="Selecionar mês de competência"
-            value={mes}
-            onChange={(e) => onMesChange(Number(e.target.value))}
-            className="appearance-none bg-white text-xs font-bold text-wine pl-3 pr-7 py-1.5 rounded-xl border border-petal/40 hover:border-berry focus:border-berry focus:outline-none focus:ring-1 focus:ring-berry cursor-pointer transition-all shadow-2xs"
+            className="h-9 w-auto rounded-xl border-petal/40 bg-white px-3 text-xs font-bold"
           >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
             {MESES.map((m) => (
-              <option key={m.valor} value={m.valor}>
+              <SelectItem key={m.valor} value={String(m.valor)}>
                 {m.nome}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-          <ChevronDown className="w-3.5 h-3.5 text-berry absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
+          </SelectContent>
+        </Select>
 
         {/* Dropdown Ano */}
-        <div className="relative">
-          <select
+        <Select value={String(ano)} onValueChange={(value) => onAnoChange(Number(value))}>
+          <SelectTrigger
             id="select-competencia-ano"
             aria-label="Selecionar ano de competência"
-            value={ano}
-            onChange={(e) => onAnoChange(Number(e.target.value))}
-            className="appearance-none bg-white text-xs font-bold text-wine pl-3 pr-7 py-1.5 rounded-xl border border-petal/40 hover:border-berry focus:border-berry focus:outline-none focus:ring-1 focus:ring-berry cursor-pointer transition-all shadow-2xs"
+            className="h-9 w-auto rounded-xl border-petal/40 bg-white px-3 text-xs font-bold"
           >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
             {ANOS.map((a) => (
-              <option key={a} value={a}>
+              <SelectItem key={a} value={String(a)}>
                 {a}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-          <ChevronDown className="w-3.5 h-3.5 text-berry absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
