@@ -172,3 +172,10 @@
     font-family: var(--font-display);
   }
 }
+
+@layer utilities {
+  .focus-ring:focus-visible {
+    outline: 3px solid var(--rose);
+    outline-offset: 3px;
+  }
+}

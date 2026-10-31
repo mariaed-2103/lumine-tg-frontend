@@ -10,6 +10,7 @@ import {
   BadgeDollarSign,
   CalendarCheck,
   LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 
 import { listarAtendimentos } from "@/services/atendimentoService";
@@ -96,6 +97,24 @@ export function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
         <span className="mb-2 block px-3 font-display text-[11px] font-bold uppercase tracking-wider text-wine/60">
           Módulos do Sistema
         </span>
+
+        <Link
+          to="/dashboard"
+          onClick={onCloseMobile}
+          className={linkBaseClass}
+          activeProps={{ className: `${linkBaseClass} ${linkActiveClass}` }}
+          inactiveProps={{ className: `${linkBaseClass} ${linkInactiveClass}` }}
+        >
+          {({ isActive }) => (
+            <>
+              <div className="flex items-center gap-2.5 truncate">
+                <LayoutDashboard className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-rose group-hover:text-berry"}`} />
+                <span className="truncate">Dashboard</span>
+              </div>
+              <ChevronRight className={`h-3.5 w-3.5 ${isActive ? "text-white" : "text-wine/30"}`} />
+            </>
+          )}
+        </Link>
 
         <Link
           to="/insumos"
