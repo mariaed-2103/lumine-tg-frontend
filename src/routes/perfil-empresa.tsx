@@ -145,6 +145,30 @@ function maskCnpj(value: string) {
   return out;
 }
 
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Não foi possível processar a imagem selecionada."));
+      }
+    };
+
+    reader.onerror = () => {
+      reject(new Error("Não foi possível ler a imagem selecionada."));
+    };
+
+    reader.onabort = () => {
+      reject(new Error("A leitura da imagem foi interrompida."));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
 function converterPerfilParaFormulario(
   perfil: PerfilEmpresaResponse
 ): FormData {
@@ -176,6 +200,7 @@ function PerfilEmpresaPage() {
   const [logotipo, setLogotipo] = useState<string>("");
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
+  const [processingLogo, setProcessingLogo] = useState(false);
   const [carregandoPerfil, setCarregandoPerfil] = useState(true);
   const [perfilExiste, setPerfilExiste] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -359,13 +384,37 @@ function PerfilEmpresaPage() {
     }));
   }
 
-  function handleFile(
+  async function handleFile(
     e: React.ChangeEvent<HTMLInputElement>
   ) {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
 
-    if (file) {
-      setLogotipo(URL.createObjectURL(file));
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setApiError("Selecione um arquivo de imagem válido.");
+      input.value = "";
+      return;
+    }
+
+    setProcessingLogo(true);
+    setSuccess(false);
+    setApiError("");
+
+    try {
+      setLogotipo(await readFileAsDataUrl(file));
+    } catch (error) {
+      setApiError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível processar a imagem selecionada."
+      );
+    } finally {
+      setProcessingLogo(false);
+      input.value = "";
     }
   }
 
@@ -798,6 +847,8 @@ function PerfilEmpresaPage() {
                     fileRef.current?.click()
                   }
                   aria-label="Enviar logotipo"
+                  disabled={loading || processingLogo}
+                  aria-busy={processingLogo}
                   className="group relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-pale bg-pale transition focus:outline-none focus:ring-4 focus:ring-rose/35"
                 >
                   {logotipo ? (
@@ -827,6 +878,7 @@ function PerfilEmpresaPage() {
                     fileRef.current?.click()
                   }
                   aria-label="Enviar logotipo"
+                  disabled={loading || processingLogo}
                   className="absolute bottom-0 right-0 rounded-full bg-berry p-2 text-white shadow-lg shadow-berry/30 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35"
                 >
                   <Upload size={14} />
@@ -839,6 +891,7 @@ function PerfilEmpresaPage() {
                 name="logotipo"
                 type="file"
                 accept="image/*"
+                disabled={loading || processingLogo}
                 className="sr-only"
                 onChange={handleFile}
               />
@@ -848,9 +901,10 @@ function PerfilEmpresaPage() {
                 onClick={() =>
                   fileRef.current?.click()
                 }
+                disabled={loading || processingLogo}
                 className="rounded-xl px-3 py-1.5 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35"
               >
-                Alterar logotipo
+                {processingLogo ? "Preparando imagem..." : "Alterar logotipo"}
               </button>
             </div>
 
@@ -1158,7 +1212,7 @@ function PerfilEmpresaPage() {
               <button
                 type="button"
                 onClick={cancelarEdicao}
-                disabled={loading}
+                disabled={loading || processingLogo}
                 className="inline-flex w-full items-center justify-center rounded-2xl border border-berry bg-transparent px-5 py-3 font-sans text-sm font-bold text-berry transition hover:bg-pale focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
               >
                 Cancelar
@@ -1167,7 +1221,7 @@ function PerfilEmpresaPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || processingLogo}
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-berry px-5 py-3 font-sans text-sm font-bold text-white shadow-lg shadow-berry/25 transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80 sm:w-auto"
             >
               {loading ? (

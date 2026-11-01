@@ -35,11 +35,7 @@ export const AtendimentoTable: React.FC<AtendimentoTableProps> = ({
 
         <div className="flex flex-col gap-3" role="rowgroup">
           {atendimentos.map((atendimento) => (
-            <div
-              key={atendimento.idAtendimento}
-              className="lumine-row"
-              role="row"
-            >
+            <div key={atendimento.idAtendimento} className="lumine-row" role="row">
               <div className="at-grid min-h-[68px] px-[var(--at-pad)] py-3.5">
                 <div
                   className="min-w-0 whitespace-nowrap text-[13px] font-semibold tabular-nums text-ink/60"
@@ -69,7 +65,7 @@ export const AtendimentoTable: React.FC<AtendimentoTableProps> = ({
                 </div>
 
                 <div role="cell">
-                  <span className="inline-flex h-7 w-fit items-center gap-1.5 whitespace-nowrap rounded-full border border-petal/50 bg-pale px-2.5 text-xs font-bold text-wine">
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-ink/70">
                     <PaymentMiniIcon label={atendimento.nomeFormaPagamento} />
                     {atendimento.nomeFormaPagamento}
                   </span>
@@ -85,7 +81,7 @@ export const AtendimentoTable: React.FC<AtendimentoTableProps> = ({
                       type="button"
                       id={`btn-edit-atendimento-${atendimento.idAtendimento}`}
                       onClick={() => onEdit(atendimento)}
-                      className="at-action-edit inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/80 bg-white/50 text-[#6B1530]/75 shadow-[0_2px_6px_rgba(107,21,48,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-[#F5A8BC]/35 transition-all hover:bg-[#FCE1E8] hover:text-[#C5325A] hover:ring-[#F5A8BC]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5]"
+                      className="at-action-edit inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-petal/30 bg-white/55 text-wine/65 transition-colors hover:bg-pale hover:text-berry focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-berry/40"
                       title="Editar atendimento"
                       aria-label={`Editar atendimento de ${atendimento.nomeCliente}`}
                     >
@@ -95,7 +91,7 @@ export const AtendimentoTable: React.FC<AtendimentoTableProps> = ({
                       type="button"
                       id={`btn-delete-atendimento-${atendimento.idAtendimento}`}
                       onClick={() => onDelete(atendimento)}
-                      className="at-action-delete inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/80 bg-white/50 text-[#C5325A]/75 shadow-[0_2px_6px_rgba(107,21,48,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-[#F5A8BC]/35 transition-all hover:bg-[rgba(197,50,90,0.12)] hover:text-[#C5325A] hover:ring-[#C5325A]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5]"
+                      className="at-action-delete inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-petal/30 bg-white/55 text-wine/55 transition-colors hover:bg-rose/15 hover:text-berry focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-berry/40"
                       title="Excluir atendimento"
                       aria-label={`Excluir atendimento de ${atendimento.nomeCliente}`}
                     >

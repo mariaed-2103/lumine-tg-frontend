@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 
 import { Wordmark } from "@/components/lumine/Wordmark";
@@ -34,10 +34,22 @@ function LoginPage() {
   const [senha, setSenha] = useState("");
   const [showSenha, setShowSenha] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
 
   const [emailError, setEmailError] = useState<string | undefined>();
   const [senhaError, setSenhaError] = useState<string | undefined>();
   const [formError, setFormError] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (window.location.search) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        `${window.location.pathname}${window.location.hash}`,
+      );
+    }
+    setReady(true);
+  }, []);
 
   function handleEmailChange(value: string) {
     setEmail(value);
@@ -105,23 +117,17 @@ function LoginPage() {
       if (usuario.token) {
         localStorage.setItem("tokenLumine", usuario.token);
       }
-      console.log("Usuário logado:", usuario);
-      console.log(
-        "ID salvo:",
-        usuario.idUsuario
-      );
-
       const perfil = await buscarPerfilEmpresa();
 
       if (!perfil) {
         // Primeiro acesso — redirecionar para o perfil com flag de onboarding
-        void navigate({
+        await navigate({
           to: "/perfil-empresa",
           search: { onboarding: true },
         });
       } else {
         // Perfil já existe — ir para o dashboard normalmente
-        void navigate({
+        await navigate({
           to: "/dashboard",
         });
       }
@@ -191,6 +197,7 @@ function LoginPage() {
           )}
 
           <form
+            method="post"
             onSubmit={handleSubmit}
             noValidate
             className="mt-7 space-y-5"
@@ -293,7 +300,7 @@ function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !ready}
               className="auth-primary flex w-full items-center justify-center gap-2 rounded-full bg-berry px-4 py-3.5 font-sans text-sm font-bold text-white transition hover:bg-wine focus:outline-none focus:ring-4 focus:ring-rose/35 disabled:cursor-not-allowed disabled:opacity-80"
             >
               {loading ? (

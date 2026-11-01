@@ -1,5 +1,13 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Filter, Search, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import type {
   Atendimento,
@@ -54,6 +62,11 @@ export function AtendimentosPage() {
   const [procedimentos, setProcedimentos] = useState<ProcedimentoOpcao[]>([]);
   const [formasPagamento, setFormasPagamento] = useState<FormaPagamentoOpcao[]>([]);
   const [temPerfil, setTemPerfil] = useState<boolean | null>(null);
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [procedimentoFiltrado, setProcedimentoFiltrado] = useState("");
+  const [pagamentoFiltrado, setPagamentoFiltrado] = useState("");
+  const [imprevistoFiltrado, setImprevistoFiltrado] = useState("");
 
   // Contador usado como fallback caso o backend esteja desligado durante testes visuais
   const proximoId = useRef(1);
@@ -288,6 +301,43 @@ export function AtendimentosPage() {
     [atendimentos],
   );
 
+  const atendimentosFiltrados = useMemo(() => {
+    const textoBusca = busca
+      .trim()
+      .toLocaleLowerCase("pt-BR")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    return atendimentosOrdenados.filter((atendimento) => {
+      const textoAtendimento = `${atendimento.nomeCliente} ${atendimento.nomeProcedimento}`
+        .toLocaleLowerCase("pt-BR")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      const correspondeBusca = !textoBusca || textoAtendimento.includes(textoBusca);
+      const correspondeProcedimento =
+        !procedimentoFiltrado || String(atendimento.idProcedimento) === procedimentoFiltrado;
+      const correspondePagamento =
+        !pagamentoFiltrado || String(atendimento.idFormaPagamento) === pagamentoFiltrado;
+      const temImprevisto = atendimento.tempoAdicional > 0 || atendimento.desperdicioMateriais > 0;
+      const correspondeImprevisto =
+        !imprevistoFiltrado || (imprevistoFiltrado === "com" ? temImprevisto : !temImprevisto);
+
+      return (
+        correspondeBusca && correspondeProcedimento && correspondePagamento && correspondeImprevisto
+      );
+    });
+  }, [atendimentosOrdenados, busca, procedimentoFiltrado, pagamentoFiltrado, imprevistoFiltrado]);
+
+  const filtrosAtivos = Boolean(
+    busca.trim() || procedimentoFiltrado || pagamentoFiltrado || imprevistoFiltrado,
+  );
+  const limparFiltros = () => {
+    setBusca("");
+    setProcedimentoFiltrado("");
+    setPagamentoFiltrado("");
+    setImprevistoFiltrado("");
+  };
+
   const total = atendimentos.length;
 
   // ================================
@@ -341,36 +391,168 @@ export function AtendimentosPage() {
                 Atendimentos
               </span>
               <span className="rounded-full bg-pale px-2.5 py-1 text-xs font-bold tabular-nums text-wine">
-                {total}
+                {filtrosAtivos ? `${atendimentosFiltrados.length}/${total}` : total}
               </span>
             </div>
 
-            <button
-              type="button"
-              id="btn-novo-atendimento"
-              onClick={handleOpenCreateModal}
-              className="group shine inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] sm:w-auto"
-            >
-              <PlusIcon className="h-4 w-4 transition-transform group-hover:rotate-90" />
-              <span>Novo Atendimento</span>
-            </button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              {total > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFiltrosAbertos((abertos) => !abertos)}
+                  aria-expanded={filtrosAbertos}
+                  aria-controls="atendimentos-filtros"
+                  className={`inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 ${
+                    filtrosAbertos || filtrosAtivos
+                      ? "border-petal bg-pale/70 text-wine"
+                      : "border-petal/40 bg-white/70 text-ink/70 hover:bg-pale/50"
+                  }`}
+                >
+                  <Filter className="h-4 w-4" />
+                  Filtrar
+                  {filtrosAtivos && <span className="h-1.5 w-1.5 rounded-full bg-berry" />}
+                </button>
+              )}
+              <button
+                type="button"
+                id="btn-novo-atendimento"
+                onClick={handleOpenCreateModal}
+                className="group shine inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] sm:w-auto"
+              >
+                <PlusIcon className="h-4 w-4 transition-transform group-hover:rotate-90" />
+                <span>Novo Atendimento</span>
+              </button>
+            </div>
           </div>
+
+          {filtrosAbertos && total > 0 && (
+            <div
+              id="atendimentos-filtros"
+              className="mb-5 grid gap-3 rounded-2xl border border-petal/25 bg-[#FFF9F7] p-4 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2"
+            >
+              <label className="relative min-w-0 sm:col-span-2 2xl:col-span-1">
+                <span className="sr-only">Buscar cliente ou procedimento</span>
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/40" />
+                <input
+                  type="search"
+                  value={busca}
+                  onChange={(event) => setBusca(event.target.value)}
+                  placeholder="Cliente ou procedimento"
+                  className="h-10 w-full min-w-0 rounded-full border border-petal/40 bg-white pl-9 pr-3 text-sm text-wine outline-none transition placeholder:text-ink/45 focus:border-berry/60 focus:ring-2 focus:ring-berry/10"
+                />
+              </label>
+
+              <div className="min-w-0">
+                <Select
+                  value={procedimentoFiltrado || undefined}
+                  onValueChange={setProcedimentoFiltrado}
+                >
+                  <SelectTrigger
+                    aria-label="Filtrar por procedimento"
+                    className="h-10 min-w-0 rounded-full border-petal/40 bg-white px-3 text-sm"
+                  >
+                    <SelectValue placeholder="Todos os procedimentos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {procedimentos.map((procedimento) => (
+                      <SelectItem
+                        key={procedimento.idProcedimento}
+                        value={String(procedimento.idProcedimento)}
+                      >
+                        {procedimento.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="min-w-0">
+                <Select value={pagamentoFiltrado || undefined} onValueChange={setPagamentoFiltrado}>
+                  <SelectTrigger
+                    aria-label="Filtrar por forma de pagamento"
+                    className="h-10 min-w-0 rounded-full border-petal/40 bg-white px-3 text-sm"
+                  >
+                    <SelectValue placeholder="Todas as formas de pagamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formasPagamento.map((forma) => (
+                      <SelectItem
+                        key={forma.idFormaPagamento}
+                        value={String(forma.idFormaPagamento)}
+                      >
+                        {forma.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex min-w-0 gap-2">
+                <div className="min-w-0 flex-1">
+                  <Select
+                    value={imprevistoFiltrado || undefined}
+                    onValueChange={setImprevistoFiltrado}
+                  >
+                    <SelectTrigger
+                      aria-label="Filtrar por imprevistos"
+                      className="h-10 min-w-0 rounded-full border-petal/40 bg-white px-3 text-sm"
+                    >
+                      <SelectValue placeholder="Com e sem imprevistos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="com">Com imprevistos</SelectItem>
+                      <SelectItem value="sem">Sem imprevistos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {filtrosAtivos && (
+                  <button
+                    type="button"
+                    onClick={limparFiltros}
+                    aria-label="Limpar filtros"
+                    title="Limpar filtros"
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-ink/55 transition hover:bg-pale hover:text-wine"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Corpo do card */}
           {total === 0 ? (
             <EmptyState onNewAtendimento={handleOpenCreateModal} />
           ) : (
             <div className="pt-5">
-              <AtendimentoTable
-                atendimentos={atendimentosOrdenados}
-                onEdit={handleOpenEditModal}
-                onDelete={handleOpenDeleteModal}
-              />
-              <AtendimentoCardList
-                atendimentos={atendimentosOrdenados}
-                onEdit={handleOpenEditModal}
-                onDelete={handleOpenDeleteModal}
-              />
+              {atendimentosFiltrados.length > 0 ? (
+                <>
+                  <AtendimentoTable
+                    atendimentos={atendimentosFiltrados}
+                    onEdit={handleOpenEditModal}
+                    onDelete={handleOpenDeleteModal}
+                  />
+                  <AtendimentoCardList
+                    atendimentos={atendimentosFiltrados}
+                    onEdit={handleOpenEditModal}
+                    onDelete={handleOpenDeleteModal}
+                  />
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-2 py-12 text-center">
+                  <p className="text-sm font-semibold text-wine">Nenhum atendimento encontrado</p>
+                  <p className="text-xs text-ink/55">
+                    Ajuste ou limpe os filtros para ver resultados.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={limparFiltros}
+                    className="mt-1 text-xs font-semibold text-berry hover:underline"
+                  >
+                    Limpar filtros
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

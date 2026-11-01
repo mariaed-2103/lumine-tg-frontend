@@ -539,23 +539,6 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover {
   transform: scale(1.08);
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
-  header.glass.lg\:hidden { display: none; }
-  div:has(> .lumine-sidebar) { flex-direction: row; align-items: flex-start; }
-  .lumine-sidebar { width: 4.5rem; padding: .75rem; }
-  .lumine-sidebar > div > div:first-child { justify-content: center; }
-  .lumine-sidebar > div > div:first-child > div > div { display: none; }
-  .lumine-sidebar .truncate > span,
-  .lumine-sidebar > div > div.flex-1 > span,
-  .lumine-sidebar .ml-2 > span,
-  .lumine-sidebar .ml-2 > div,
-  .lumine-sidebar > div > div.mt-auto span { display: none; }
-  .lumine-sidebar > div > div.flex-1 > a { justify-content: center; padding-inline: .75rem; }
-  .lumine-sidebar > div > div.mt-auto > a,
-  .lumine-sidebar > div > div.mt-auto > button { justify-content: center; padding: .75rem; }
-  .lumine-sidebar > div > div.mt-auto > a > svg { display: none; }
-}
-
 /* Micro-refinements scoped to the original authentication layouts. */
 .auth-page {
   background-image: radial-gradient(
@@ -767,4 +750,261 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover {
     animation: none !important;
     transition: none !important;
   }
+}
+
+
+/* ============================================================
+   LUMINE SIDEBAR — Liquid Glass Redesign
+   Todas as classes abaixo são puramente visuais (sem lógica).
+   ============================================================ */
+
+/* --- Container principal --- */
+.lumine-sidebar {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+
+/* Malha de pontos tecnológica desaparecendo para baixo */
+.lumine-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: radial-gradient(rgba(197, 50, 90, 0.13) 1px, transparent 1.2px);
+  background-size: 18px 18px;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.12) 55%, transparent 88%);
+          mask-image: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.12) 55%, transparent 88%);
+}
+
+/* Brilho ambiente na base do card */
+.lumine-sidebar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(232, 105, 138, 0.24), transparent 70%);
+}
+
+/* Hairline iridescente no topo do card (linha de luz fina) */
+.lumine-sidebar .lumine-hairline,
+.lumine-hairline {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(245,168,188,0.6) 40%, rgba(255,255,255,0.9) 55%, rgba(245,168,188,0.5) 70%, transparent 100%);
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+/* --- Anel orbital do logo --- */
+.lumine-orbit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lumine-orbit::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    rgba(232, 105, 138, 0) 0deg,
+    rgba(232, 105, 138, 0.7) 80deg,
+    rgba(232, 105, 138, 0) 130deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+  animation: lumine-orbit-spin 12s linear infinite;
+}
+
+@keyframes lumine-orbit-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Linha decorativa ao lado do label de seção --- */
+.lumine-section-line {
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(245, 168, 188, 0.5), transparent);
+  border-radius: 999px;
+}
+
+/* --- Tile de vidro do ícone (estado inativo) --- */
+.lumine-icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 2px 8px -3px rgba(107, 21, 48, 0.12);
+  transition:
+    background 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  flex-shrink: 0;
+}
+
+/* Hover no item inativo: tile fica mais luminoso */
+.lumine-nav-item:hover .lumine-icon-tile:not(.lumine-icon-tile-active) {
+  background: rgba(252, 225, 232, 0.75);
+  box-shadow: 0 0 14px rgba(232, 105, 138, 0.32);
+  transform: translateX(2px);
+}
+
+/* Tile no estado ativo */
+.lumine-icon-tile-active {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.38) !important;
+  box-shadow: none !important;
+}
+
+/* --- Contador/badge de nav --- */
+.lumine-nav-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  background: #fce1e8;
+  color: #6b1530;
+  border: 1px solid rgba(245, 168, 188, 0.5);
+}
+
+.lumine-nav-counter-active {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* --- Item ativo: barra de luz lateral --- */
+.lumine-nav-active {
+  position: relative;
+}
+
+.lumine-nav-active::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 22%;
+  bottom: 22%;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e8698a, #c5325a);
+  box-shadow: 0 0 10px rgba(232, 105, 138, 0.55);
+  pointer-events: none;
+}
+
+/* Varredura de brilho (shine) lenta no item ativo */
+.lumine-nav-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 70%
+  );
+  background-size: 300% 100%;
+  background-position: 200% center;
+  animation: lumine-nav-sweep 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes lumine-nav-sweep {
+  0%, 100% { background-position: 200% center; }
+  50% { background-position: -100% center; }
+}
+
+/* --- Ponto luminoso pulsante (substitui chevron >) --- */
+.lumine-dot-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  animation: lumine-dot-pulse-anim 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes lumine-dot-pulse-anim {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.65); }
+  50% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); }
+}
+
+/* --- Divisória entre seções operacional / financeira --- */
+.lumine-sidebar-divider {
+  height: 1px;
+  margin: 6px 12px;
+  background: linear-gradient(90deg, transparent, rgba(245, 168, 188, 0.55) 30%, rgba(232, 105, 138, 0.35) 50%, rgba(245, 168, 188, 0.45) 70%, transparent);
+  border-radius: 999px;
+}
+
+/* --- Scrollbar invisível da nav --- */
+.lumine-nav-scroll {
+  scrollbar-width: none;
+}
+.lumine-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================
+   RESPONSIVO: tablet (768–1023px) — modo ícone compacto
+   Atualiza as seletores legados para usar as novas classes
+   ============================================================ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  header.glass.lg\:hidden { display: none; }
+  div:has(> .lumine-sidebar) { flex-direction: row; align-items: flex-start; }
+  .lumine-sidebar { width: 4.5rem; padding: .75rem; }
+  .lumine-sidebar > div > div:first-child { justify-content: center; }
+  .lumine-sidebar > div > div:first-child > div > div { display: none; }
+  .lumine-sidebar .truncate > span,
+  .lumine-sidebar > div > div.flex-1 > span,
+  .lumine-sidebar .ml-2 > span,
+  .lumine-sidebar .ml-2 > div,
+  .lumine-sidebar > div > div.mt-auto span { display: none; }
+  .lumine-sidebar > div > div.flex-1 > a { justify-content: center; padding-inline: .75rem; }
+  .lumine-sidebar > div > div.mt-auto > a,
+  .lumine-sidebar > div > div.mt-auto > button { justify-content: center; padding: .75rem; }
+  .lumine-sidebar > div > div.mt-auto > a > svg { display: none; }
+  /* Orbit ring fica menor no modo compacto */
+  .lumine-orbit::after { inset: -4px; }
+  /* Label de seção e linha decorativa somem */
+  .lumine-section-line,
+  .lumine-sidebar-divider { display: none; }
+  /* Dot pulse fica menor */
+  .lumine-dot-pulse { width: 6px; height: 6px; }
+  /* Barra de luz lateral desativada (não tem espaço) */
+  .lumine-nav-active::before { display: none; }
+}
+
+/* ============================================================
+   prefers-reduced-motion — desliga todas as animações visuais
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .lumine-orbit::after { animation: none; }
+  .lumine-nav-active::after { animation: none; background: none; }
+  .lumine-dot-pulse { animation: none; box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  .lumine-nav-item .lumine-icon-tile { transition: none !important; transform: none !important; }
 }
