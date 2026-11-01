@@ -9,6 +9,7 @@ import {
   X,
   Check,
 } from "lucide-react";
+import { LumineDatePicker } from "@/components/ui/lumine-date-picker";
 import type {
   DespesaFixa,
   DespesaFixaFormData,
@@ -547,21 +548,17 @@ export const DespesasFixasTab: React.FC<DespesasFixasTabProps> = ({
                   >
                     Data de início *
                   </label>
-                  <input
-                    type="date"
+                  <LumineDatePicker
                     id="dataInicio-despesa-fixa"
                     name="dataInicio"
                     value={formData.dataInicio}
-                    onChange={(e) => {
-                      setFormData({ ...formData, dataInicio: e.target.value });
+                    variant="rounded"
+                    onChange={(val) => {
+                      setFormData({ ...formData, dataInicio: val });
                       if (errors.dataInicio)
                         setErrors({ ...errors, dataInicio: undefined });
                     }}
-                    className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-white text-ink transition-colors focus:outline-none focus:ring-1 ${
-                      errors.dataInicio
-                        ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                        : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
-                    }`}
+                    hasError={!!errors.dataInicio}
                   />
                   {errors.dataInicio && (
                     <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
@@ -579,21 +576,19 @@ export const DespesasFixasTab: React.FC<DespesasFixasTabProps> = ({
                     Data de término{" "}
                     <span className="text-wine/60 font-normal">(opcional)</span>
                   </label>
-                  <input
-                    type="date"
+                  <LumineDatePicker
                     id="dataFim-despesa-fixa"
                     name="dataFim"
                     value={formData.dataFim}
-                    onChange={(e) => {
-                      setFormData({ ...formData, dataFim: e.target.value });
+                    variant="rounded"
+                    clearable
+                    placeholder="Sem data de término"
+                    onChange={(val) => {
+                      setFormData({ ...formData, dataFim: val });
                       if (errors.dataFim)
                         setErrors({ ...errors, dataFim: undefined });
                     }}
-                    className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-white text-ink transition-colors focus:outline-none focus:ring-1 ${
-                      errors.dataFim
-                        ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                        : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
-                    }`}
+                    hasError={!!errors.dataFim}
                   />
                   <span className="text-[10px] text-wine/60 mt-1 block">
                     Se vazio, a despesa é ativa indefinidamente

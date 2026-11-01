@@ -16,7 +16,7 @@ export function FinanceiroTabs({ value, onChange }: FinanceiroTabsProps) {
     <div
       role="tablist"
       aria-label="Seções de precificação"
-      className="mb-6 flex flex-wrap items-center gap-2 border-b border-petal/30 pb-4"
+      className="flex w-full max-w-full items-center gap-1 overflow-x-auto rounded-full border border-petal/40 bg-white/45 p-1.5 shadow-[inset_0_1px_3px_rgba(107,21,48,0.07)] sm:w-auto"
     >
       {tabs.map((tab) => (
         <button
@@ -27,10 +27,10 @@ export function FinanceiroTabs({ value, onChange }: FinanceiroTabsProps) {
           aria-selected={value === tab.id}
           aria-controls="painel-precificacao"
           onClick={() => onChange(tab.id)}
-          className={`rounded-full px-5 py-2.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+          className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center whitespace-nowrap rounded-full border px-4 text-[13px] font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] sm:flex-none ${
             value === tab.id
-              ? "bg-berry text-white shadow-md shadow-berry/20"
-              : "text-wine/80 hover:text-wine hover:bg-cream border border-transparent hover:border-petal/40"
+              ? "border-white/80 bg-gradient-to-r from-berry to-rose text-white shadow-md shadow-berry/25"
+              : "border-transparent text-wine/75 hover:bg-pale hover:text-wine"
           }`}
         >
           {tab.label}

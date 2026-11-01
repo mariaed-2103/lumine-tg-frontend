@@ -1,15 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Tag,
-  TrendingUp,
-} from "lucide-react";
+import { AlertCircle, Check } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
+import { GlassCoin } from "@/components/decor/GlassCoin";
+import {
+  ClipboardIcon,
+  ClockIcon,
+} from "@/components/icons/lumine";
 import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
 import type {
   ConfiguracaoFinanceira,
@@ -49,6 +48,7 @@ import { ConfiguracaoFinanceiraTab } from "@/components/financeiro/ConfiguracaoF
 import { FormasPagamentoTab } from "@/components/financeiro/FormasPagamentoTab";
 import { FinanceiroTabs, type FinanceiroTabId } from "@/components/financeiro/FinanceiroTabs";
 import { FinanceiroDeleteModal } from "@/components/financeiro/FinanceiroDeleteModal";
+import { MESES, ANOS } from "@/components/financeiro/CompetenciaSelector";
 import {
   Select,
   SelectContent,
@@ -407,34 +407,50 @@ export function PrecificacaoPage() {
   return (
     <AppShell mobileTitle="Precificação">
       {temPerfil === false && <SemPerfilBanner />}
-      <div className="space-y-6">
-        <header>
-          <h1 className="font-display text-2xl font-bold text-wine">Precificação</h1>
-          <p className="mt-1 text-xs sm:text-sm text-wine/70 font-medium">
-            Defina os parâmetros financeiros e simule o preço dos seus procedimentos
-          </p>
-        </header>
 
-        <section className="rounded-2xl border border-petal/40 bg-white p-5 sm:p-7 shadow-xs">
-          {/* Abas com visual de pílula idêntico ao padrão do sistema */}
+      {/* Cabeçalho */}
+      <div className="relative pt-2 mb-6">
+        <h1 className="font-display text-4xl font-bold tracking-tight text-wine sm:text-[40px]">
+          Precificação
+        </h1>
+
+        <p className="mt-1.5 max-w-[600px] text-balance text-sm font-medium text-ink/65 sm:text-[15px]">
+          Defina os parâmetros financeiros e simule o preço dos seus procedimentos
+        </p>
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-0 top-0 z-0 hidden h-[88px] w-[92px] select-none xl:block 2xl:h-[98px] 2xl:w-[104px]"
+        >
+          <GlassCoin className="h-full w-full" size={190} />
+        </div>
+      </div>
+
+      {/* Card principal no padrão Lumine */}
+      <section className="glass-strong glass-border-iridescent w-full rounded-[32px] p-6 shadow-sm transition-all sm:p-8">
+        {/* Barra superior com navegação em pílulas */}
+        <div className="relative flex flex-col gap-4 pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-petal/70 to-transparent" />
           <FinanceiroTabs value={aba} onChange={setAba} />
+        </div>
 
-          <div
-            id="painel-precificacao"
-            role="tabpanel"
-            aria-labelledby={`tab-${aba}`}
-          >
+        <div
+          id="painel-precificacao"
+          role="tabpanel"
+          aria-labelledby={`tab-${aba}`}
+          className="pt-5"
+        >
           {loading ? (
-            <div className="py-12 text-center text-xs sm:text-sm text-wine/70 font-medium">
+            <div className="py-16 text-center text-sm font-semibold text-wine/70">
               Carregando dados de precificação...
             </div>
           ) : (
             <>
               {errorsLoad.length > 0 && (
-                <div className="mb-5 flex items-center justify-between rounded-2xl border border-petal/60 bg-pale/70 p-4 text-xs font-medium text-wine">
+                <div className="mb-5 flex items-center justify-between rounded-2xl border border-petal/60 bg-pale/75 p-4 text-xs font-semibold text-wine">
                   <span>{errorsLoad[0]}</span>
                   <button
-                    className="font-bold underline hover:text-berry transition-colors cursor-pointer"
+                    className="cursor-pointer font-bold text-berry underline transition-colors hover:text-wine"
                     onClick={() => void load()}
                   >
                     Tentar novamente
@@ -462,29 +478,71 @@ export function PrecificacaoPage() {
 
               {/* ABA 3: SIMULAÇÃO DE PREÇO */}
               {aba === "simulacao" && (
-                <div className="space-y-6">
+                <div className="space-y-5">
                   {/* Filtros de Competência e Procedimento */}
-                  <div className="rounded-2xl bg-cream/50 border border-petal/40 p-4 sm:p-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-[24px] border border-petal/40 bg-white/45 p-4 shadow-[inset_0_1px_3px_rgba(107,21,48,0.07)] sm:p-5">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label
-                          htmlFor="competencia-sim"
-                          className="block text-xs font-bold text-wine mb-1.5"
+                          id="label-competencia"
+                          htmlFor="select-competencia-mes"
+                          className="mb-1.5 ml-1 block text-xs font-bold text-wine"
                         >
                           Mês de Competência
                         </label>
-                        <input
-                          id="competencia-sim"
-                          type="month"
-                          value={competencia}
-                          onChange={(e) => setCompetencia(e.target.value)}
-                          className="w-full rounded-xl border border-petal/50 bg-white px-3.5 py-2.5 text-xs font-medium text-ink outline-none transition focus:border-berry focus:ring-1 focus:ring-berry"
-                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Select
+                            value={String(mesCompetencia)}
+                            onValueChange={(val) => {
+                              const newMes = String(val).padStart(2, "0");
+                              setCompetencia(`${anoCompetencia}-${newMes}`);
+                            }}
+                          >
+                            <SelectTrigger
+                              id="select-competencia-mes"
+                              aria-labelledby="label-competencia select-competencia-mes"
+                              className="h-11 w-full rounded-full border-petal/70 bg-white/80 px-4 text-sm font-semibold text-ink"
+                            >
+                              <SelectValue placeholder="Mês" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {MESES.map((m) => (
+                                <SelectItem key={m.valor} value={String(m.valor)}>
+                                  {m.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          <Select
+                            value={String(anoCompetencia)}
+                            onValueChange={(val) => {
+                              setCompetencia(`${val}-${String(mesCompetencia).padStart(2, "0")}`);
+                            }}
+                          >
+                            <SelectTrigger
+                              id="select-competencia-ano"
+                              aria-labelledby="label-competencia select-competencia-ano"
+                              className="h-11 w-full rounded-full border-petal/70 bg-white/80 px-4 text-sm font-semibold text-ink"
+                            >
+                              <SelectValue placeholder="Ano" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ANOS.map((a) => (
+                                <SelectItem key={a} value={String(a)}>
+                                  {a}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {/* Input hidden de compatibilidade com testes e formulários legados */}
+                        <input id="competencia-sim" type="hidden" value={competencia} readOnly />
                       </div>
                       <div>
                         <label
                           htmlFor="procedimento-sim"
-                          className="block text-xs font-bold text-wine mb-1.5"
+                          className="mb-1.5 ml-1 block text-xs font-bold text-wine"
                         >
                           Procedimento para Simulação
                         </label>
@@ -496,14 +554,19 @@ export function PrecificacaoPage() {
                         >
                           <SelectTrigger
                             id="procedimento-sim"
-                            className="h-11 w-full rounded-xl border-petal/50 bg-white px-3.5 text-xs font-medium text-ink"
+                            className="h-11 w-full rounded-full border-petal/70 bg-white/80 px-4 text-sm font-semibold text-ink"
                           >
                             <SelectValue placeholder="Selecione um procedimento" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="__empty__">Selecione um procedimento</SelectItem>
+                            <SelectItem value="__empty__">
+                              Selecione um procedimento
+                            </SelectItem>
                             {procedimentos.map((p) => (
-                              <SelectItem key={p.idProcedimento} value={String(p.idProcedimento)}>
+                              <SelectItem
+                                key={p.idProcedimento}
+                                value={String(p.idProcedimento)}
+                              >
                                 {p.nome} · {p.duracaoMinutos} min
                               </SelectItem>
                             ))}
@@ -512,50 +575,47 @@ export function PrecificacaoPage() {
                       </div>
                     </div>
                     {procedimentos.length === 0 && (
-                      <p className="mt-3 text-xs text-wine/70 font-medium">
+                      <p className="mt-3 ml-1 text-xs font-medium text-ink/60">
                         Nenhum procedimento cadastrado. Cadastre procedimentos no menu para simular preços.
                       </p>
                     )}
                   </div>
 
                   {!selected ? (
-                    <div className="py-12 px-4 text-center max-w-md mx-auto">
-                      <div className="mx-auto w-16 h-16 rounded-2xl bg-pale flex items-center justify-center mb-4 border border-petal/40 text-berry">
-                        <TrendingUp className="w-8 h-8" />
+                    <div className="mx-auto max-w-lg px-4 py-12 text-center sm:py-16">
+                      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-petal/40 bg-pale shadow-xs">
+                        <ClipboardIcon className="h-9 w-9 text-rose" size={36} />
                       </div>
-                      <h3 className="font-display font-bold text-lg text-wine mb-1">
+                      <h3 className="mb-2 font-display text-xl font-bold tracking-tight text-wine sm:text-2xl">
                         Selecione um procedimento
                       </h3>
-                      <p className="text-xs text-wine/70 leading-relaxed font-sans">
-                        Escolha um procedimento acima para analisar a ficha técnica, custos fixos calculados e obter a sugestão de preço ideal.
+                      <p className="mx-auto max-w-md font-sans text-xs leading-relaxed text-wine/80 sm:text-sm">
+                        Escolha um procedimento acima para consultar os insumos da ficha técnica, o custo fixo por minuto e o preço sugerido.
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                      {/* Coluna da esquerda (Espaçosa para a tabela de insumos) */}
-                      <div className="lg:col-span-7 xl:col-span-7 space-y-5">
+                    <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
+                      {/* Coluna da esquerda: Procedimento e Ficha Técnica */}
+                      <div className="space-y-4 lg:col-span-7">
                         {procedimento && (
-                          <div className="rounded-2xl bg-white border border-petal/40 p-5 shadow-xs space-y-4">
-                            {/* Destaque do procedimento */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-petal/30">
-                              <div>
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-berry block">
+                          <div className="rounded-[24px] border border-white/80 bg-white/75 p-5 shadow-xs space-y-5 sm:p-6">
+                            {/* Cabeçalho limpo e leve do procedimento selecionado */}
+                            <div className="space-y-2 border-b border-petal/25 pb-4">
+                              <div className="flex flex-wrap items-center justify-between gap-2.5">
+                                <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-berry">
                                   Procedimento Selecionado
                                 </span>
-                                <h3 className="font-display font-bold text-lg text-wine">
-                                  {procedimento.nome}
-                                </h3>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <div className="inline-flex items-center gap-1.5 text-xs bg-cream px-3 py-1.5 rounded-full border border-petal/50 text-wine font-medium">
-                                  <Clock className="w-3.5 h-3.5 text-rose" />
-                                  <span>{procedimento.duracaoMinutos} min</span>
-                                </div>
-                                <div className="inline-flex items-center gap-1.5 text-xs bg-cream px-3 py-1.5 rounded-full border border-petal/50 text-wine font-medium">
-                                  <Tag className="w-3.5 h-3.5 text-berry" />
-                                  <span>
+                                <div className="flex flex-wrap items-center gap-2.5 text-xs text-ink/70">
+                                  <span className="inline-flex items-center gap-1.5 font-semibold text-wine bg-cream/70 px-2.5 py-0.5 rounded-full border border-petal/40">
+                                    <ClockIcon
+                                      size={13}
+                                      className="h-3.5 w-3.5 text-rose"
+                                    />
+                                    <span>{procedimento.duracaoMinutos} min</span>
+                                  </span>
+                                  <span className="font-medium text-ink/65">
                                     Preço padrão:{" "}
-                                    <strong className="text-wine">
+                                    <strong className="font-bold tabular-nums text-wine">
                                       {procedimento.precoPadrao == null
                                         ? "Não definido"
                                         : dinheiro(procedimento.precoPadrao)}
@@ -563,213 +623,226 @@ export function PrecificacaoPage() {
                                   </span>
                                 </div>
                               </div>
+                              <h3 className="font-display text-2xl font-bold tracking-tight text-wine sm:text-[26px]">
+                                {procedimento.nome}
+                              </h3>
                             </div>
 
-                            {/* Título e resumo de insumos */}
-                            <div className="flex items-center justify-between pt-1">
-                              <div>
-                                <h4 className="font-display font-bold text-sm text-wine">
-                                  Insumos da Ficha Técnica
+                            {/* Título da Ficha Técnica */}
+                            <div className="flex items-center justify-between gap-2 pt-0.5">
+                              <div className="flex items-center gap-2">
+                                <ClipboardIcon
+                                  size={16}
+                                  className="h-4 w-4 text-berry"
+                                />
+                                <h4 className="font-display text-base font-bold text-wine">
+                                  Ficha Técnica
                                 </h4>
-                                <p className="text-[11px] text-wine/70 font-medium">
-                                  Custos calculados com base nas compras desta competência
-                                </p>
-                              </div>
-                              {ficha.length > 0 && (
-                                <span className="text-xs font-bold text-wine bg-cream px-3 py-1 rounded-full border border-petal/40">
-                                  Total: <strong className="text-berry">{dinheiro(custoInsumos)}</strong>
+                                <span className="text-xs font-semibold text-wine/55">
+                                  ({ficha.length} {ficha.length === 1 ? "insumo" : "insumos"})
                                 </span>
-                              )}
+                              </div>
+                              <span className="text-[11px] font-medium text-ink/50">
+                                Compras da competência
+                              </span>
                             </div>
 
-                            {/* Tabela estilizada no padrão de design do Lumine */}
+                            {/* Lista limpa de insumos */}
                             {fichaLoading ? (
-                              <div className="py-8 text-center text-xs text-wine/70">
+                              <div className="py-10 text-center text-sm font-semibold text-wine/70">
                                 Carregando insumos da ficha técnica...
                               </div>
                             ) : fichaError ? (
-                              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                              <div className="rounded-2xl border border-berry/30 bg-pale/80 p-4 text-xs font-semibold text-wine">
                                 {fichaError}
                               </div>
                             ) : ficha.length === 0 ? (
-                              <div className="p-6 text-center rounded-2xl bg-cream border border-petal/40 text-xs text-wine/80">
-                                Este procedimento não possui insumos na ficha técnica. Cadastre ao menos um insumo para simular o preço com precisão.
+                              <div className="rounded-2xl border border-petal/35 bg-cream/30 p-6 text-center text-xs font-medium text-wine/75">
+                                Este procedimento não possui insumos vinculados na ficha técnica.
                               </div>
                             ) : (
-                              <div className="overflow-hidden rounded-2xl border border-petal/40 bg-white shadow-2xs">
-                                <table className="w-full text-left border-collapse">
-                                  <thead>
-                                    <tr className="bg-cream border-b border-petal/40 text-wine font-display font-bold text-[11px] uppercase tracking-wider">
-                                      <th className="py-3.5 px-4">Insumo</th>
-                                      <th className="py-3.5 px-3 text-center">Quantidade Utilizada</th>
-                                      <th className="py-3.5 px-3 text-right">Custo Unitário</th>
-                                      <th className="py-3.5 px-4 text-right">Custo Total</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-petal/20 text-xs text-ink font-medium">
-                                    {linhas.map((x) => (
-                                      <tr
-                                        key={x.f.idInsumo}
-                                        className="hover:bg-cream/40 transition-colors"
-                                      >
-                                        <td className="py-3.5 px-4 font-bold text-wine">
+                              <div className="space-y-1">
+                                <div className="grid grid-cols-[minmax(0,1.6fr)_100px_100px_110px] items-center px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#6B1530]/50 border-b border-petal/25">
+                                  <div>Insumo</div>
+                                  <div className="text-center">Qtd.</div>
+                                  <div className="text-right">Unitário</div>
+                                  <div className="text-right">Total</div>
+                                </div>
+
+                                <div className="divide-y divide-petal/15">
+                                  {linhas.map((x) => (
+                                    <div
+                                      key={x.f.idInsumo}
+                                      className="grid grid-cols-[minmax(0,1.6fr)_100px_100px_110px] items-center px-3 py-3 text-xs transition-colors hover:bg-cream/40 rounded-xl"
+                                    >
+                                      <div className="min-w-0 pr-2">
+                                        <span className="block truncate font-semibold text-ink">
                                           {x.insumo?.nome ?? "—"}
-                                        </td>
-                                        <td className="py-3.5 px-3 text-center">
-                                          <span className="inline-flex items-center text-xs bg-cream px-2.5 py-0.5 rounded-full border border-petal/40 text-wine tabular-nums">
-                                            {x.f.quantidadeUtilizada} {x.insumo?.unidadeMedida ?? ""}
-                                          </span>
-                                        </td>
-                                        <td className="py-3.5 px-3 text-right tabular-nums text-wine/80">
-                                          {x.custoUnitario === null ? "—" : dinheiro(x.custoUnitario)}
-                                        </td>
-                                        <td className="py-3.5 px-4 text-right tabular-nums font-bold text-wine">
-                                          {x.custo === null ? "—" : dinheiro(x.custo)}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                  <tfoot>
-                                    <tr className="bg-cream/50 border-t-2 border-petal/50 font-display font-bold text-xs sm:text-sm text-wine">
-                                      <td colSpan={3} className="py-3.5 px-4">
-                                        Total de Insumos
-                                      </td>
-                                      <td className="py-3.5 px-4 text-right tabular-nums text-berry text-sm sm:text-base font-bold">
-                                        {dinheiro(custoInsumos)}
-                                      </td>
-                                    </tr>
-                                  </tfoot>
-                                </table>
+                                        </span>
+                                      </div>
+                                      <div className="text-center font-medium tabular-nums text-ink/75">
+                                        {x.f.quantidadeUtilizada}{" "}
+                                        {x.insumo?.unidadeMedida ?? ""}
+                                      </div>
+                                      <div className="text-right font-medium tabular-nums text-ink/60">
+                                        {x.custoUnitario === null
+                                          ? "—"
+                                          : dinheiro(x.custoUnitario)}
+                                      </div>
+                                      <div className="text-right font-bold tabular-nums text-wine">
+                                        {x.custo === null ? "—" : dinheiro(x.custo)}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="flex items-center justify-between border-t-2 border-petal/30 px-3 pt-3.5 mt-2">
+                                  <span className="font-display text-xs font-bold uppercase tracking-wider text-wine/75">
+                                    Total de Insumos
+                                  </span>
+                                  <span className="font-display text-lg font-bold tabular-nums text-berry">
+                                    {dinheiro(custoInsumos)}
+                                  </span>
+                                </div>
                               </div>
                             )}
 
                             {linhas.some((x) => x.custo === null) && (
-                              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                                <span>Há insumos sem compras registradas no período. Custo unitário considerado zerado no cálculo.</span>
+                              <div className="flex items-center gap-2.5 rounded-xl border border-petal/50 bg-cream/50 p-3 text-xs font-medium text-wine/80">
+                                <AlertCircle className="h-4 w-4 shrink-0 text-berry" />
+                                <span>
+                                  Há insumos sem compras registradas nesta competência.
+                                </span>
                               </div>
                             )}
                           </div>
                         )}
 
                         {!config && (
-                          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                            <span>Configure a margem de segurança e o lucro desejado na aba Configuração para habilitar o cálculo ideal.</span>
+                          <div className="flex items-center gap-2.5 rounded-2xl border border-petal/60 bg-pale/60 p-4 text-xs font-medium text-wine">
+                            <AlertCircle className="h-4 w-4 shrink-0 text-berry" />
+                            <span>
+                              Salve a margem de segurança e o lucro desejado na aba Configuração para habilitar o cálculo local.
+                            </span>
                           </div>
                         )}
 
                         {fixoMin === null && (
-                          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                            <span>Informe os dias trabalhados e horas disponíveis no Perfil da Empresa para cálculo do custo fixo por minuto.</span>
+                          <div className="flex items-center gap-2.5 rounded-2xl border border-petal/60 bg-pale/60 p-4 text-xs font-medium text-wine">
+                            <AlertCircle className="h-4 w-4 shrink-0 text-berry" />
+                            <span>
+                              Informe os dias trabalhados e horas disponíveis no Perfil da Empresa para calcular o custo fixo por minuto.
+                            </span>
                           </div>
                         )}
                       </div>
 
-                      {/* Coluna da direita: Composição do Preço (Fixa e Elegante) */}
-                      <div className="lg:col-span-5 xl:col-span-5 rounded-2xl border border-petal/40 bg-white p-5 sm:p-6 shadow-xs space-y-4 lg:sticky lg:top-6">
-                        <div className="flex items-center gap-2.5 pb-2 border-b border-petal/30">
-                          <div className="w-9 h-9 rounded-xl bg-pale border border-petal/40 flex items-center justify-center text-berry shrink-0">
-                            <TrendingUp className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h3 className="font-display font-bold text-base text-wine">Composição do Preço</h3>
-                            <p className="text-[11px] text-wine/70 font-medium">Detalhamento dos custos e margens</p>
-                          </div>
+                      {/* Coluna da direita: Composição do Preço */}
+                      <div className="rounded-[24px] border border-white/80 bg-white/75 p-5 shadow-[0_8px_24px_-8px_rgba(107,21,48,0.12)] space-y-5 sm:p-6 lg:col-span-5 lg:sticky lg:top-6">
+                        <div className="border-b border-petal/30 pb-3">
+                          <h3 className="font-display text-lg font-bold text-wine">
+                            Composição do Preço
+                          </h3>
+                          <p className="text-xs font-medium text-ink/60">
+                            Custos e margens aplicados ao procedimento
+                          </p>
                         </div>
 
-                        <div className="space-y-2.5 text-xs">
-                          <div className="flex justify-between gap-3 text-wine">
+                        <div className="divide-y divide-petal/25 text-xs sm:text-[13px]">
+                          <div className="flex justify-between gap-3 py-2 text-ink/80">
                             <span>Custo dos insumos</span>
-                            <span className="tabular-nums font-semibold">
+                            <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? dinheiro(simulacaoBackend.custoInsumos)
                                 : simulation
-                                ? dinheiro(custoInsumos)
-                                : "—"}
+                                  ? dinheiro(custoInsumos)
+                                  : "—"}
                             </span>
                           </div>
-                          <div className="flex justify-between gap-3 text-wine">
+                          <div className="flex justify-between gap-3 py-2 text-ink/80">
                             <span>Custo fixo por minuto</span>
-                            <span className="tabular-nums font-semibold">
+                            <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? `${dinheiro(simulacaoBackend.custoFixoPorMinuto)} × ${simulacaoBackend.duracaoMinutos} min`
                                 : fixoMin === null
-                                ? "—"
-                                : `${dinheiro(fixoMin)} × ${procedimento?.duracaoMinutos ?? "—"} min`}
+                                  ? "—"
+                                  : `${dinheiro(fixoMin)} × ${procedimento?.duracaoMinutos ?? "—"} min`}
                             </span>
                           </div>
-                          <div className="flex justify-between gap-3 text-wine">
+                          <div className="flex justify-between gap-3 py-2 text-ink/80">
                             <span>Custo fixo do procedimento</span>
-                            <span className="tabular-nums font-semibold">
+                            <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? dinheiro(simulacaoBackend.custoFixoProcedimento)
                                 : simulation
-                                ? dinheiro(simulation.custoFixoProcedimento)
-                                : "—"}
+                                  ? dinheiro(simulation.custoFixoProcedimento)
+                                  : "—"}
                             </span>
                           </div>
-                          <div className="flex justify-between gap-3 border-t border-petal/40 pt-2.5 font-bold text-wine text-xs sm:text-sm">
+                          <div className="flex justify-between gap-3 py-2.5 font-bold text-wine">
                             <span>Custo do procedimento</span>
                             <span className="tabular-nums">
                               {simulacaoBackend
                                 ? dinheiro(simulacaoBackend.custoProcedimento)
                                 : simulation
-                                ? dinheiro(simulation.custoProcedimento)
-                                : "—"}
+                                  ? dinheiro(simulation.custoProcedimento)
+                                  : "—"}
                             </span>
                           </div>
-                          <div className="flex justify-between gap-3 text-wine">
+                          <div className="flex justify-between gap-3 py-2 text-ink/80">
                             <span>Margem de segurança</span>
-                            <span className="tabular-nums font-semibold">
+                            <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? percentual(simulacaoBackend.margemSeguranca)
                                 : simulation
-                                ? `${dinheiro(simulation.valorMargem)} (${percentual(config?.margemSeguranca ?? 0)})`
-                                : "—"}
+                                  ? `${dinheiro(simulation.valorMargem)} (${percentual(config?.margemSeguranca ?? 0)})`
+                                  : "—"}
                             </span>
                           </div>
-                          <div className="flex justify-between gap-3 text-wine">
+                          <div className="flex justify-between gap-3 py-2 text-ink/80">
                             <span>Lucro desejado</span>
-                            <span className="tabular-nums font-semibold">
+                            <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? percentual(simulacaoBackend.lucroDesejado)
                                 : simulation
-                                ? `${dinheiro(simulation.valorLucro)} (${percentual(config?.lucroDesejado ?? 0)})`
-                                : "—"}
+                                  ? `${dinheiro(simulation.valorLucro)} (${percentual(config?.lucroDesejado ?? 0)})`
+                                  : "—"}
                             </span>
                           </div>
                         </div>
 
-                        <div className="rounded-2xl bg-gradient-to-br from-pale to-cream/80 border border-petal/60 p-4 sm:p-5 text-center sm:text-left">
-                          <span className="text-[11px] font-bold text-wine/80 uppercase tracking-wider block mb-1 font-display">
+                        <div className="rounded-[20px] border border-petal/55 bg-gradient-to-br from-pale/90 via-white/85 to-cream/90 p-5">
+                          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#6B1530]/65">
                             Preço Sugerido
                           </span>
-                          <p className="font-display text-3xl font-bold tabular-nums text-wine">
+                          <p className="mt-1 font-display text-3xl font-bold tabular-nums text-wine sm:text-[34px]">
                             {precoSugerido != null ? dinheiro(precoSugerido) : "—"}
                           </p>
-                          <p className="text-[10px] text-wine/60 mt-1 leading-snug font-sans">
-                            Preço sugerido = custo do procedimento ÷ (1 − margem de segurança − lucro desejado)
+                          <p className="mt-1 text-[11px] font-medium text-ink/60">
+                            Calculado sobre o custo total somado às margens configuradas
                           </p>
                         </div>
 
                         {procedimento?.precoPadrao != null && precoSugerido != null && (
-                          <div className="rounded-xl bg-cream/60 border border-petal/40 p-3 text-xs text-wine space-y-1">
+                          <div className="rounded-2xl border border-petal/45 bg-white/75 p-3.5 text-xs text-wine space-y-1.5">
                             <div className="flex justify-between">
-                              <span className="text-wine/70">Preço padrão atual:</span>
-                              <strong className="tabular-nums">{dinheiro(procedimento.precoPadrao)}</strong>
+                              <span className="text-ink/65">Preço padrão atual:</span>
+                              <strong className="font-bold tabular-nums">
+                                {dinheiro(procedimento.precoPadrao)}
+                              </strong>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-wine/70">Diferença sugerida:</span>
+                              <span className="text-ink/65">Diferença sugerida:</span>
                               <strong
-                                className={`tabular-nums ${
+                                className={`font-bold tabular-nums ${
                                   precoSugerido - procedimento.precoPadrao >= 0
-                                    ? "text-emerald-700"
-                                    : "text-amber-800"
+                                    ? "text-wine"
+                                    : "text-berry"
                                 }`}
                               >
-                                {precoSugerido - procedimento.precoPadrao >= 0 ? "+" : ""}
+                                {precoSugerido - procedimento.precoPadrao >= 0
+                                  ? "+"
+                                  : ""}
                                 {dinheiro(precoSugerido - procedimento.precoPadrao)} (
                                 {percentual(
                                   ((precoSugerido - procedimento.precoPadrao) /
@@ -786,9 +859,9 @@ export function PrecificacaoPage() {
                           type="button"
                           disabled={precoSugerido == null}
                           onClick={() => setConfirmPrice(true)}
-                          className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-berry hover:bg-wine text-white font-bold text-xs py-3 px-4 transition-all duration-200 shadow-md shadow-berry/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                          className="group shine inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <CheckCircle2 className="w-4 h-4" />
+                          <Check className="h-4 w-4" />
                           <span>Definir como preço padrão</span>
                         </button>
                       </div>
@@ -798,73 +871,75 @@ export function PrecificacaoPage() {
               )}
             </>
           )}
-          </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Modal de confirmação do preço padrão */}
-        {confirmPrice && procedimento && precoSugerido != null && (
+      {/* Modal de confirmação do preço padrão */}
+      {confirmPrice && procedimento && precoSugerido != null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+          onClick={() => {
+            if (!savingPrice) setConfirmPrice(false);
+          }}
+        >
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
-            onClick={() => {
-              if (!savingPrice) setConfirmPrice(false);
-            }}
+            className="relative w-full max-w-md rounded-[28px] border border-petal/40 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200 sm:p-8"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="bg-white w-full max-w-md rounded-[32px] border border-petal/40 shadow-2xl p-6 sm:p-7 relative animate-in zoom-in-95 duration-200"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-2xl bg-pale border border-petal/40 flex items-center justify-center text-berry shrink-0">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-lg text-wine">
-                    Confirmar Preço Padrão
-                  </h3>
-                  <p className="text-xs text-wine/70 font-medium">
-                    Atualização do valor de referência
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-xs sm:text-sm text-wine/80 leading-relaxed font-sans mb-6">
-                Deseja definir <strong>{dinheiro(precoSugerido)}</strong> como o preço padrão do procedimento <strong>{procedimento.nome}</strong>?
+            <div className="border-b border-petal/25 pb-4">
+              <h3 className="font-display text-xl font-bold text-wine">
+                Confirmar Preço Padrão
+              </h3>
+              <p className="mt-1 text-xs font-medium text-ink/60">
+                Atualização do valor de referência do procedimento
               </p>
+            </div>
 
-              <div className="flex justify-end items-center gap-3">
-                <button
-                  type="button"
-                  disabled={savingPrice}
-                  onClick={() => setConfirmPrice(false)}
-                  className="rounded-full border border-petal/60 hover:bg-cream text-wine font-bold px-5 py-2.5 text-xs transition-colors cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  disabled={savingPrice}
-                  onClick={() => void setDefaultPrice()}
-                  className="rounded-full bg-berry hover:bg-wine text-white font-bold px-6 py-2.5 text-xs transition-all shadow-md shadow-berry/20 cursor-pointer disabled:opacity-50"
-                >
-                  {savingPrice ? "Salvando..." : "Confirmar Preço"}
-                </button>
-              </div>
+            <p className="my-5 font-sans text-xs leading-relaxed text-ink/80 sm:text-sm">
+              Deseja definir{" "}
+              <strong className="font-bold text-wine">
+                {dinheiro(precoSugerido)}
+              </strong>{" "}
+              como o preço padrão de{" "}
+              <strong className="font-bold text-wine">
+                {procedimento.nome}
+              </strong>
+              ?
+            </p>
+
+            <div className="flex items-center justify-end gap-3 border-t border-petal/25 pt-5">
+              <button
+                type="button"
+                disabled={savingPrice}
+                onClick={() => setConfirmPrice(false)}
+                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-petal/60 bg-white/70 px-5 text-sm font-bold text-wine transition-colors hover:bg-pale"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={savingPrice}
+                onClick={() => void setDefaultPrice()}
+                className="shine inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-6 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] disabled:opacity-50"
+              >
+                {savingPrice ? "Salvando..." : "Confirmar Preço"}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal de confirmação de exclusão da forma de pagamento */}
-        {deleteForma && (
-          <FinanceiroDeleteModal
-            isOpen={!!deleteForma}
-            title="Excluir Forma de Pagamento"
-            itemName={deleteForma.nome}
-            itemTypeLabel="a forma de pagamento"
-            onConfirm={handleConfirmDelete}
-            onCancel={() => setDeleteForma(null)}
-          />
-        )}
-      </div>
+      {/* Modal de confirmação de exclusão da forma de pagamento */}
+      {deleteForma && (
+        <FinanceiroDeleteModal
+          isOpen={!!deleteForma}
+          title="Excluir Forma de Pagamento"
+          itemName={deleteForma.nome}
+          itemTypeLabel="a forma de pagamento"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteForma(null)}
+        />
+      )}
     </AppShell>
   );
 }

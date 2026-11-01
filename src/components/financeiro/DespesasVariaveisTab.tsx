@@ -9,6 +9,7 @@ import {
   X,
   Check,
 } from "lucide-react";
+import { LumineDatePicker } from "@/components/ui/lumine-date-picker";
 import type {
   DespesaVariavel,
   DespesaVariavelFormData,
@@ -372,20 +373,16 @@ export const DespesasVariaveisTab: React.FC<DespesasVariaveisTabProps> = ({
                 <label htmlFor="data-despesa-variavel" className="block text-xs font-bold text-wine mb-1.5">
                   Data da despesa *
                 </label>
-                <input
-                  type="date"
+                <LumineDatePicker
                   id="data-despesa-variavel"
                   name="data"
                   value={formData.data}
-                  onChange={(e) => {
-                    setFormData({ ...formData, data: e.target.value });
+                  variant="rounded"
+                  onChange={(val) => {
+                    setFormData({ ...formData, data: val });
                     if (errors.data) setErrors({ ...errors, data: undefined });
                   }}
-                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-ink transition-colors focus:outline-none focus:ring-1 ${
-                    errors.data
-                      ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                      : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
-                  }`}
+                  hasError={!!errors.data}
                 />
                 {errors.data && (
                   <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">

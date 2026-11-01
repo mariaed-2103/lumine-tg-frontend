@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import {
-  Plus,
   Edit2,
   Trash2,
-  CreditCard,
   AlertCircle,
   X,
   Check,
   Percent,
 } from "lucide-react";
+import {
+  CardIcon,
+  PaymentMiniIcon,
+  PlusIcon,
+} from "@/components/icons/lumine";
 import type {
   FormaPagamento,
   FormaPagamentoFormData,
@@ -109,127 +112,125 @@ export const FormasPagamentoTab: React.FC<FormasPagamentoTabProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top action & Sub-header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-petal/30">
+    <div className="space-y-5">
+      {/* Cabeçalho da aba */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="font-display font-bold text-lg text-wine">
-            Formas de Pagamento e Taxas
-          </h3>
-          <p className="text-xs text-wine/70 font-medium">
-            Cadastre os métodos aceitos e suas taxas operacionais para cálculo do lucro real líquido
+          <div className="flex items-center gap-2">
+            <h3 className="font-display text-base font-bold text-wine sm:text-lg">
+              Formas de Pagamento
+            </h3>
+            <span className="rounded-full bg-pale px-2.5 py-0.5 text-xs font-bold tabular-nums text-wine">
+              {formasPagamento.length}
+            </span>
+          </div>
+          <p className="mt-0.5 text-xs font-medium text-ink/60 sm:text-[13px]">
+            Meios aceitos e taxas descontadas automaticamente nos atendimentos
           </p>
         </div>
+
         <button
           type="button"
           id="btn-nova-forma-pagamento"
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 bg-berry hover:bg-wine text-white text-xs font-bold px-5 py-2.5 rounded-full transition-all duration-200 shadow-md shadow-berry/20 active:scale-[0.98] cursor-pointer shrink-0"
+          className="group shine inline-flex h-11 w-full shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] sm:w-auto"
         >
-          <Plus className="w-4 h-4" />
+          <PlusIcon className="h-4 w-4 transition-transform group-hover:rotate-90" />
           <span>Nova Forma de Pagamento</span>
         </button>
       </div>
 
       {/* Lista */}
       {formasPagamento.length === 0 ? (
-        <div id="empty-state-formas-pagamento" className="py-12 sm:py-16 px-4 text-center max-w-lg mx-auto transition-all">
-          <div className="mx-auto w-20 h-20 rounded-full bg-pale flex items-center justify-center mb-5 shadow-xs border border-petal/40">
-            <CreditCard className="w-9 h-9 text-berry" strokeWidth={1.75} />
+        <div
+          id="empty-state-formas-pagamento"
+          className="mx-auto max-w-lg px-4 py-12 text-center transition-all sm:py-16"
+        >
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-petal/40 bg-pale shadow-xs">
+            <CardIcon className="h-9 w-9 text-rose" size={36} />
           </div>
-          <h4 className="font-display font-bold text-xl text-wine mb-2">
+          <h4 className="mb-2 font-display text-xl font-bold tracking-tight text-wine sm:text-2xl">
             Nenhuma forma de pagamento cadastrada
           </h4>
-          <p className="text-xs sm:text-sm text-wine/80 max-w-md mx-auto mb-6 leading-relaxed font-sans">
-            Cadastre os meios de pagamento recebidos pela clínica (como Pix, Cartão de Crédito,
-            Débito e Dinheiro) para que as taxas sejam descontadas automaticamente nos atendimentos.
+          <p className="mx-auto mb-7 max-w-md font-sans text-xs leading-relaxed text-wine/80 sm:text-sm">
+            Cadastre os meios de pagamento recebidos (como Pix, Cartão e Dinheiro) para calcular o valor líquido de cada atendimento.
           </p>
           <button
             type="button"
             id="btn-empty-forma-pagamento"
             onClick={handleOpenCreate}
-            className="inline-flex items-center justify-center gap-2 bg-berry hover:bg-wine text-white font-bold px-6 py-2.5 rounded-full text-xs transition-all shadow-md shadow-berry/20 cursor-pointer"
+            className="group shine inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-6 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98]"
           >
-            <Plus className="w-4 h-4" />
+            <PlusIcon className="h-4 w-4 transition-transform group-hover:rotate-90" />
             <span>Cadastrar Primeira Forma</span>
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="px-1 text-xs text-wine/80 font-medium">
-            Total de <strong>{formasPagamento.length}</strong> forma(s) de pagamento configurada(s)
+        <div className="w-full">
+          {/* Cabeçalho das colunas (desktop) */}
+          <div
+            role="row"
+            className="mb-2 hidden grid-cols-[minmax(0,1.6fr)_160px_96px] items-center px-5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#6B1530]/55 md:grid"
+          >
+            <div>Forma de Pagamento</div>
+            <div className="text-center">Taxa Operacional</div>
+            <div className="text-right">Ações</div>
           </div>
 
-          {/* Table desktop */}
-          <div className="hidden md:block overflow-hidden rounded-2xl border border-petal/40 bg-white shadow-2xs">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-cream border-b border-petal/40 text-wine font-display font-bold text-[11px] uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Nome da Forma de Pagamento</th>
-                  <th className="py-3.5 px-4 text-center">Taxa Aplicada</th>
-                  <th className="py-3.5 px-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-petal/20">
-                {formasPagamento.map((item) => (
-                  <tr key={item.idFormaPagamento} className="hover:bg-cream/60 transition-colors group">
-                    <td className="py-3.5 px-4 font-bold text-ink">{item.nome}</td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${
-                        item.taxaPercentual === 0
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-pale text-berry border-petal/40"
-                      }`}>
-                        {item.taxaPercentual.toFixed(2).replace(".", ",")}%
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(item)}
-                          className="p-1.5 text-wine/70 hover:text-berry hover:bg-pale rounded-lg transition-colors cursor-pointer"
-                          title="Editar forma de pagamento"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeleteRequest(item)}
-                          className="p-1.5 text-wine/70 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                          title="Excluir forma de pagamento"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Cards mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:hidden">
+          {/* Linhas no padrão Lumine */}
+          <div className="flex flex-col gap-3">
             {formasPagamento.map((item) => (
-              <div key={item.idFormaPagamento} className="bg-white p-4 rounded-2xl border border-petal/40 shadow-xs flex items-center justify-between">
-                <div>
-                  <h5 className="font-bold text-sm text-ink leading-tight">{item.nome}</h5>
-                  <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                    item.taxaPercentual === 0
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-pale text-berry border-petal/40"
-                  }`}>
-                    Taxa: {item.taxaPercentual.toFixed(2).replace(".", ",")}%
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button type="button" onClick={() => handleOpenEdit(item)} className="p-1.5 text-wine hover:text-berry cursor-pointer">
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button type="button" onClick={() => onDeleteRequest(item)} className="p-1.5 text-wine hover:text-red-600 cursor-pointer">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+              <div
+                key={item.idFormaPagamento}
+                className="lumine-row group px-5 py-3.5"
+              >
+                <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[minmax(0,1.6fr)_160px_96px]">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-petal/45 bg-pale/80 text-rose">
+                      <PaymentMiniIcon label={item.nome} />
+                    </span>
+                    <div className="min-w-0">
+                      <span className="block truncate text-[15px] font-bold leading-tight text-ink">
+                        {item.nome}
+                      </span>
+                      <span className="mt-1 inline-flex items-center rounded-full border border-petal/45 bg-pale/75 px-2.5 py-0.5 text-[11px] font-bold tabular-nums text-wine md:hidden">
+                        Taxa: {item.taxaPercentual.toFixed(2).replace(".", ",")}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="hidden text-center md:block">
+                    <span
+                      className={`inline-flex h-7 items-center rounded-full border px-3 text-xs font-bold tabular-nums ${
+                        item.taxaPercentual === 0
+                          ? "border-petal/50 bg-white/75 text-wine/80"
+                          : "border-[rgba(245,168,188,0.5)] bg-[#FCE1E8] text-[#6B1530]"
+                      }`}
+                    >
+                      {item.taxaPercentual.toFixed(2).replace(".", ",")}%
+                    </span>
+                  </div>
+
+                  <div className="row-actions flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(item)}
+                      className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/80 bg-white/50 text-[#6B1530]/75 shadow-[0_2px_6px_rgba(107,21,48,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-[#F5A8BC]/35 transition-all hover:bg-[#FCE1E8] hover:text-[#C5325A] hover:ring-[#F5A8BC]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5]"
+                      title="Editar forma de pagamento"
+                      aria-label={`Editar ${item.nome}`}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteRequest(item)}
+                      className="proc-delete-btn inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/80 bg-white/50 text-[#C5325A]/75 shadow-[0_2px_6px_rgba(107,21,48,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-[#F5A8BC]/35 transition-all hover:bg-[rgba(197,50,90,0.12)] hover:text-[#C5325A] hover:ring-[#C5325A]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5]"
+                      title="Excluir forma de pagamento"
+                      aria-label={`Excluir ${item.nome}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -241,45 +242,46 @@ export const FormasPagamentoTab: React.FC<FormasPagamentoTabProps> = ({
       {isModalOpen && (
         <div
           id="modal-forma-pagamento-backdrop"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
-          onClick={(e) => { if (e.target === e.currentTarget && !isSaving) setIsModalOpen(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSaving) setIsModalOpen(false);
+          }}
         >
           <div
             id="modal-forma-pagamento-content"
             role="dialog"
             aria-modal="true"
-            className="bg-white w-full max-w-md rounded-[32px] border border-petal/40 shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-200"
+            className="relative w-full max-w-md overflow-hidden rounded-[28px] border border-petal/40 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200 sm:p-8"
           >
             {/* Header */}
-            <div className="p-6 sm:p-7 pb-4 border-b border-petal/30 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-pale border border-petal/40 flex items-center justify-center text-berry shrink-0">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-display font-bold text-lg text-wine leading-tight">
-                    {editingForma ? "Editar Forma de Pagamento" : "Nova Forma de Pagamento"}
-                  </h4>
-                  <p className="text-xs text-wine/70 font-medium">Configure a forma e sua taxa percentual</p>
-                </div>
+            <div className="flex items-start justify-between border-b border-petal/25 pb-4">
+              <div>
+                <h4 className="font-display text-xl font-bold leading-tight text-wine">
+                  {editingForma ? "Editar Forma de Pagamento" : "Nova Forma de Pagamento"}
+                </h4>
+                <p className="mt-1 text-xs font-medium text-ink/60">
+                  Informe o nome e a taxa percentual cobrada pela operadora
+                </p>
               </div>
               <button
                 type="button"
                 id="btn-close-modal-forma"
                 onClick={() => setIsModalOpen(false)}
                 disabled={isSaving}
-                className="p-1 text-wine/60 hover:text-wine hover:bg-pale rounded-full transition-colors cursor-pointer"
+                className="cursor-pointer rounded-full p-1 text-wine/60 transition-colors hover:bg-pale hover:text-wine"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSave} className="p-6 sm:p-7 space-y-4">
+            <form onSubmit={handleSave} className="mt-5 space-y-4">
               {/* Sugestões rápidas */}
               {!editingForma && (
                 <div>
-                  <span className="text-[11px] font-bold text-wine/70 block mb-1.5">Sugestões rápidas:</span>
+                  <span className="mb-1.5 ml-1 block text-[11px] font-bold text-wine/70">
+                    Preenchimento rápido:
+                  </span>
                   <div className="flex flex-wrap gap-1.5">
                     {SUGESTOES_FORMAS.map((sug) => (
                       <button
@@ -289,7 +291,7 @@ export const FormasPagamentoTab: React.FC<FormasPagamentoTabProps> = ({
                           setFormData({ nome: sug.nome, taxaPercentual: sug.taxa });
                           setErrors({});
                         }}
-                        className="text-[10px] font-semibold bg-cream hover:bg-pale text-wine px-2.5 py-1 rounded-lg border border-petal/40 transition-colors cursor-pointer"
+                        className="cursor-pointer rounded-full border border-petal/50 bg-cream/70 px-3 py-1 text-[11px] font-semibold text-wine transition-colors hover:bg-pale"
                       >
                         {sug.nome} ({sug.taxa}%)
                       </button>
@@ -300,7 +302,10 @@ export const FormasPagamentoTab: React.FC<FormasPagamentoTabProps> = ({
 
               {/* Nome */}
               <div>
-                <label htmlFor="nome-forma" className="block text-xs font-bold text-wine mb-1.5">
+                <label
+                  htmlFor="nome-forma"
+                  className="mb-1.5 ml-1 block text-xs font-bold text-wine"
+                >
                   Nome da forma de pagamento *
                 </label>
                 <input
@@ -314,22 +319,26 @@ export const FormasPagamentoTab: React.FC<FormasPagamentoTabProps> = ({
                     setFormData({ ...formData, nome: e.target.value });
                     if (errors.nome) setErrors({ ...errors, nome: undefined });
                   }}
-                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-ink placeholder-wine/40 transition-colors focus:outline-none focus:ring-1 ${
+                  className={`h-11 w-full rounded-full border bg-white/80 px-4 text-sm text-ink placeholder-ink/40 outline-none transition-all ${
                     errors.nome
-                      ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                      : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
+                      ? "border-berry focus:border-berry focus:ring-4 focus:ring-berry/15"
+                      : "border-petal/70 hover:border-rose focus:border-berry focus:ring-4 focus:ring-berry/15"
                   }`}
                 />
                 {errors.nome && (
-                  <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3.5 h-3.5" />{errors.nome}
+                  <p className="mt-1.5 ml-1 flex items-center gap-1 text-xs font-semibold text-berry">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {errors.nome}
                   </p>
                 )}
               </div>
 
               {/* Taxa percentual */}
               <div>
-                <label htmlFor="taxaPercentual-forma" className="block text-xs font-bold text-wine mb-1.5">
+                <label
+                  htmlFor="taxaPercentual-forma"
+                  className="mb-1.5 ml-1 block text-xs font-bold text-wine"
+                >
                   Taxa percentual aplicada (%) *
                 </label>
                 <div className="relative">
@@ -342,34 +351,36 @@ export const FormasPagamentoTab: React.FC<FormasPagamentoTabProps> = ({
                     onChange={(e) => {
                       const clean = e.target.value.replace(/[^\d,.]/g, "");
                       setFormData({ ...formData, taxaPercentual: clean });
-                      if (errors.taxaPercentual) setErrors({ ...errors, taxaPercentual: undefined });
+                      if (errors.taxaPercentual)
+                        setErrors({ ...errors, taxaPercentual: undefined });
                     }}
-                    className={`w-full pl-3.5 pr-8 py-2.5 text-xs rounded-xl border bg-white text-ink font-bold placeholder-wine/40 transition-colors focus:outline-none focus:ring-1 ${
+                    className={`h-11 w-full rounded-full border bg-white/80 pl-4 pr-9 text-sm font-bold tabular-nums text-ink placeholder-ink/40 outline-none transition-all ${
                       errors.taxaPercentual
-                        ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                        : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
+                        ? "border-berry focus:border-berry focus:ring-4 focus:ring-berry/15"
+                        : "border-petal/70 hover:border-rose focus:border-berry focus:ring-4 focus:ring-berry/15"
                     }`}
                   />
-                  <Percent className="w-3.5 h-3.5 text-wine/60 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Percent className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-wine/55" />
                 </div>
-                <span className="text-[10px] text-wine/60 mt-1 block">
-                  Informe 0 para formas sem incidência de taxa (ex: dinheiro ou Pix).
+                <span className="mt-1 ml-1 block text-[11px] font-medium text-ink/55">
+                  Informe 0 para recebimentos sem taxa (ex.: dinheiro ou Pix).
                 </span>
                 {errors.taxaPercentual && (
-                  <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3.5 h-3.5" />{errors.taxaPercentual}
+                  <p className="mt-1.5 ml-1 flex items-center gap-1 text-xs font-semibold text-berry">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {errors.taxaPercentual}
                   </p>
                 )}
               </div>
 
               {/* Actions */}
-              <div className="pt-4 border-t border-petal/30 flex items-center justify-end gap-3">
+              <div className="flex items-center justify-end gap-3 border-t border-petal/25 pt-5">
                 <button
                   type="button"
                   id="btn-cancelar-forma"
                   onClick={() => setIsModalOpen(false)}
                   disabled={isSaving}
-                  className="px-5 py-2.5 rounded-full border border-petal/60 text-xs font-bold text-wine hover:bg-pale transition-colors cursor-pointer"
+                  className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-petal/60 bg-white/70 px-5 text-sm font-bold text-wine transition-colors hover:bg-pale"
                 >
                   Cancelar
                 </button>
@@ -377,14 +388,16 @@ export const FormasPagamentoTab: React.FC<FormasPagamentoTabProps> = ({
                   type="submit"
                   id="btn-salvar-forma"
                   disabled={isSaving}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-berry hover:bg-wine text-white text-xs font-bold shadow-md shadow-berry/20 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-70"
+                  className="shine inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-6 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] disabled:opacity-70"
                 >
                   {isSaving ? (
                     <span>Salvando...</span>
                   ) : (
                     <>
-                      <Check className="w-4 h-4" />
-                      <span>{editingForma ? "Salvar Alterações" : "Cadastrar Forma"}</span>
+                      <Check className="h-4 w-4" />
+                      <span>
+                        {editingForma ? "Salvar Alterações" : "Cadastrar Forma"}
+                      </span>
                     </>
                   )}
                 </button>

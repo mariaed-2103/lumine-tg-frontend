@@ -55,6 +55,7 @@ import { apiFetch } from "@/services/api";
 import { AppShell } from "@/components/layout/AppShell";
 import { SemPerfilBanner } from "@/components/layout/SemPerfilBanner";
 import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
+import { GlassFinanceWallet } from "@/components/decor/GlassFinanceWallet";
 
 export const Route = createFileRoute("/gestao-financeira")({
   head: () => ({
@@ -548,22 +549,28 @@ function GestaoFinanceiraPage() {
   return (
     <AppShell mobileTitle="Gestão Financeira">
       {temPerfil === false && <SemPerfilBanner />}
-      {/* Cabeçalho */}
-      <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-wine sm:text-4xl">
+      <div className="relative mb-6 min-h-[82px]">
+        <h1 className="relative z-10 font-display text-4xl font-bold tracking-tight text-wine sm:text-[40px]">
           Gestão Financeira
         </h1>
-        <p className="mt-1 text-xs font-medium text-wine/80 sm:text-sm">
+        <p className="relative z-10 mt-1.5 max-w-[560px] text-sm font-medium text-ink/70 sm:text-[15px] lg:max-w-[410px] xl:max-w-[560px]">
           Controle suas despesas, compras de insumos, formas de pagamento e parâmetros de precificação
         </p>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-0 top-[-20px] z-0 hidden h-[112px] w-[138px] select-none xl:block 2xl:h-[128px] 2xl:w-[158px]"
+        >
+          <GlassFinanceWallet className="h-full w-full" />
+        </div>
       </div>
 
-      {/* Card branco principal */}
-      <div className="mt-6 w-full rounded-[32px] border border-petal/40 bg-white p-6 shadow-sm transition-all sm:p-8">
-        {/* Header do card: título + seletor de competência */}
-        <div className="flex flex-col gap-4 border-b border-petal/20 pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="glass-strong glass-border-iridescent w-full rounded-[32px] p-6 shadow-sm transition-all sm:p-8">
+        <div className="relative flex flex-col gap-4 pb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-petal/70 to-transparent" />
           <div className="flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-berry shrink-0" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-petal/45 bg-gradient-to-br from-white/90 to-pale text-berry shadow-sm">
+              <Wallet className="h-[18px] w-[18px]" />
+            </span>
             <span className="font-display text-base font-bold text-wine sm:text-lg">
               Financeiro
             </span>
@@ -580,18 +587,17 @@ function GestaoFinanceiraPage() {
           )}
         </div>
 
-        {/* Navegação por abas */}
-        <div className="mt-4 border-b border-petal/20">
-          <nav className="-mb-px flex gap-1 overflow-x-auto scrollbar-none pb-0">
+        <div className="mt-5 rounded-2xl border border-petal/30 bg-white/45 p-1.5 shadow-[inset_0_1px_3px_rgba(107,21,48,0.06)]">
+          <nav aria-label="Abas financeiras" className="flex gap-1 overflow-x-auto scrollbar-none">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setAbaAtiva(tab.id)}
-                className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-xs font-bold transition-all rounded-t-xl cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-berry/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] cursor-pointer ${
                   abaAtiva === tab.id
-                    ? "border-b-2 border-berry text-berry bg-pale/40"
-                    : "text-wine/60 hover:text-wine hover:bg-cream"
+                    ? "bg-gradient-to-br from-[#D13E66] to-berry text-white shadow-[0_4px_12px_-5px_rgba(107,21,48,0.42)]"
+                    : "text-wine/65 hover:bg-white/85 hover:text-wine"
                 }`}
               >
                 {tab.label}
@@ -601,7 +607,7 @@ function GestaoFinanceiraPage() {
         </div>
 
         {/* Conteúdo da aba */}
-        <div className="mt-6">
+        <div className="mt-6 min-w-0">
           {loading ? (
             <div className="py-16 text-center text-sm font-semibold text-wine/70">
               Carregando dados financeiros...

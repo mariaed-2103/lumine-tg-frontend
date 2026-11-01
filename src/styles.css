@@ -462,6 +462,19 @@
   align-items: center;
 }
 
+#insumos-table-container {
+  --insumo-cols: minmax(200px, 2.2fr) minmax(130px, 1.2fr) minmax(130px, 1.2fr) minmax(115px, 1fr) minmax(130px, 1.1fr) 88px;
+  --insumo-gap: 16px;
+  --insumo-pad-x: 20px;
+}
+
+.insumo-grid {
+  display: grid;
+  grid-template-columns: var(--insumo-cols);
+  column-gap: var(--insumo-gap);
+  align-items: center;
+}
+
 @keyframes proc-shake-2deg {
   0%, 100% { transform: rotate(0deg); }
   35% { transform: rotate(-2deg); }
@@ -506,6 +519,25 @@
 .procedure-expand-panel { animation:procedure-open 250ms cubic-bezier(.22,1,.36,1) both; }
 .procedure-modal input:focus-visible, .procedure-modal select:focus-visible, .procedure-modal button:focus-visible { outline:2px solid rgba(197,50,90,.4); outline-offset:2px; }
 @keyframes procedure-open { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+/* Padronização Lumine para campos e ícones de data/calendário */
+input[type="date"],
+input[type="month"] {
+  color-scheme: light;
+  accent-color: #c5325a;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(27%) sepia(85%) saturate(1682%) hue-rotate(320deg) brightness(85%) contrast(92%);
+  opacity: 0.75;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.08);
+}
 
 @media (min-width: 768px) and (max-width: 1023px) {
   header.glass.lg\:hidden { display: none; }

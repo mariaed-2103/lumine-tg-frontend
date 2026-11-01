@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LumineDatePicker } from "@/components/ui/lumine-date-picker";
 import type {
   CompraInsumo,
   CompraInsumoFormData,
@@ -434,20 +435,16 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
                     <label htmlFor="dataCompra-compra" className="block text-xs font-bold text-wine mb-1.5">
                       Data da compra *
                     </label>
-                    <input
-                      type="date"
+                    <LumineDatePicker
                       id="dataCompra-compra"
                       name="dataCompra"
                       value={formData.dataCompra}
-                      onChange={(e) => {
-                        setFormData({ ...formData, dataCompra: e.target.value });
+                      variant="rounded"
+                      onChange={(val) => {
+                        setFormData({ ...formData, dataCompra: val });
                         if (errors.dataCompra) setErrors({ ...errors, dataCompra: undefined });
                       }}
-                      className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-white text-ink transition-colors focus:outline-none focus:ring-1 ${
-                        errors.dataCompra
-                          ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                          : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
-                      }`}
+                      hasError={!!errors.dataCompra}
                     />
                     {errors.dataCompra && (
                       <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">

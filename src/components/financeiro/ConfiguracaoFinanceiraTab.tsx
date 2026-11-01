@@ -1,15 +1,6 @@
 import React, { useState } from "react";
-import {
-  Edit2,
-  Check,
-  X,
-  Info,
-  AlertCircle,
-  Percent,
-  ShieldAlert,
-  Sparkles,
-  Palmtree,
-} from "lucide-react";
+import { AlertCircle, Check, Percent } from "lucide-react";
+import { EditIcon } from "@/components/icons/lumine";
 import type {
   ConfiguracaoFinanceira,
   ConfiguracaoFinanceiraFormData,
@@ -124,137 +115,129 @@ export const ConfiguracaoFinanceiraTab: React.FC<ConfiguracaoFinanceiraTabProps>
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top action & Sub-header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-petal/30">
+    <div className="space-y-5">
+      {/* Cabeçalho da aba */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="font-display font-bold text-lg text-wine">
-            Configuração Financeira e Parâmetros de Precificação
-          </h3>
-          <p className="text-xs text-wine/70 font-medium">
-            Defina as taxas multiplicadoras e margens aplicadas no simulador de preços
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h3 className="font-display text-base font-bold text-wine sm:text-lg">
+              Parâmetros de Precificação
+            </h3>
+            <span className="rounded-full border border-petal/50 bg-pale px-2.5 py-0.5 text-xs font-bold tabular-nums text-wine">
+              Soma:{" "}
+              {(configuracao.margemSeguranca + configuracao.lucroDesejado)
+                .toFixed(2)
+                .replace(".", ",")}
+              %
+            </span>
+          </div>
+          <p className="mt-0.5 text-xs font-medium text-ink/60 sm:text-[13px]">
+            Margens aplicadas no cálculo do preço sugerido dos procedimentos
           </p>
         </div>
+
         {!isEditing && (
           <button
             type="button"
             id="btn-editar-configuracao"
             onClick={handleStartEdit}
-            className="inline-flex items-center justify-center gap-2 bg-berry hover:bg-wine text-white text-xs font-bold px-5 py-2.5 rounded-full transition-all duration-200 shadow-md shadow-berry/20 active:scale-[0.98] cursor-pointer shrink-0"
+            className="group shine inline-flex h-11 w-full shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-5 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5325A]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8F5] sm:w-auto"
           >
-            <Edit2 className="w-4 h-4" />
+            <EditIcon className="h-4 w-4" />
             <span>Editar configuração</span>
           </button>
         )}
       </div>
 
-      {/* Info Card */}
-      <div className="bg-pale p-4 sm:p-5 rounded-2xl border border-petal/60 flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-white/70 text-berry flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
-          <Info className="w-4 h-4" />
-        </div>
-        <div className="text-xs text-wine font-medium leading-relaxed">
-          <span className="font-bold block mb-0.5 font-display text-sm text-wine">
-            Como estes parâmetros afetam seu negócio:
-          </span>
-          Esses parâmetros são usados no simulador de preços para calcular o valor sugerido de cada procedimento.
-        </div>
-      </div>
-
-      {/* VIEW MODE */}
+      {/* MODO DE VISUALIZAÇÃO */}
       {!isEditing ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Margem de Segurança */}
-            <div className="bg-cream p-5 rounded-2xl border border-petal/40 shadow-xs space-y-2">
-              <div className="flex items-center gap-2 text-berry">
-                <ShieldAlert className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider text-wine/80">
-                  Margem de Segurança
-                </span>
-              </div>
-              <div className="font-display font-bold text-3xl text-wine">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Margem de Segurança */}
+          <div className="lumine-row flex flex-col justify-between p-5 sm:p-6">
+            <div>
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#6B1530]/55">
+                Margem de Segurança
+              </span>
+              <div className="mt-2 font-display text-3xl font-bold tabular-nums text-wine sm:text-[34px]">
                 {configuracao.margemSeguranca.toFixed(2).replace(".", ",")}%
               </div>
-              <p className="text-[11px] text-wine/70 font-medium">
-                Proteção percentual contra perdas pontuais, variações de insumos e desperdícios.
-              </p>
             </div>
-
-            {/* Lucro Desejado */}
-            <div className="bg-cream p-5 rounded-2xl border border-petal/40 shadow-xs space-y-2">
-              <div className="flex items-center gap-2 text-berry">
-                <Sparkles className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider text-wine/80">
-                  Lucro Desejado
-                </span>
-              </div>
-              <div className="font-display font-bold text-3xl text-wine">
-                {configuracao.lucroDesejado.toFixed(2).replace(".", ",")}%
-              </div>
-              <p className="text-[11px] text-wine/70 font-medium">
-                Percentual líquido de ganho pretendido sobre o custo base de cada procedimento.
-              </p>
-            </div>
-
-            {/* Provisão de Férias */}
-            <div className="bg-cream p-5 rounded-2xl border border-petal/40 shadow-xs space-y-2 sm:col-span-2 lg:col-span-1">
-              <div className="flex items-center gap-2 text-berry">
-                <Palmtree className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider text-wine/80">
-                  Provisão de Férias
-                </span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="font-display font-bold text-3xl text-wine">
-                  {configuracao.provisaoFeriasAtiva
-                    ? `${(configuracao.percentualProvisaoFerias ?? 0).toFixed(2).replace(".", ",")}%`
-                    : "Desativada"}
-                </span>
-                {configuracao.provisaoFeriasAtiva && (
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    Ativa
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-wine/70 font-medium">
-                {configuracao.provisaoFeriasAtiva
-                  ? "Percentual aplicado sobre o pró-labore fixo para reserva anual de descanso."
-                  : "Nenhuma reserva percentual automática está sendo adicionada ao custo/hora."}
-              </p>
-            </div>
+            <p className="mt-3 text-[13px] font-medium leading-relaxed text-ink/65">
+              Reserva para cobrir variações de custo, perdas pontuais e pequenos imprevistos.
+            </p>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-petal/30 text-xs text-wine/70 flex items-center justify-between">
-            <span>
-              Status dos parâmetros: <strong>Ativo e em conformidade com o Simulador</strong>
-            </span>
-            <span className="text-[11px]">
-              Soma Margem + Lucro:{" "}
-              <strong className="text-berry">
-                {(configuracao.margemSeguranca + configuracao.lucroDesejado).toFixed(2).replace(".", ",")}%
-              </strong>{" "}
-              (&lt; 100%)
-            </span>
+          {/* Lucro Desejado */}
+          <div className="lumine-row flex flex-col justify-between p-5 sm:p-6">
+            <div>
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#6B1530]/55">
+                Lucro Desejado
+              </span>
+              <div className="mt-2 font-display text-3xl font-bold tabular-nums text-wine sm:text-[34px]">
+                {configuracao.lucroDesejado.toFixed(2).replace(".", ",")}%
+              </div>
+            </div>
+            <p className="mt-3 text-[13px] font-medium leading-relaxed text-ink/65">
+              Retorno líquido esperado sobre o valor de cada procedimento realizado.
+            </p>
+          </div>
+
+          {/* Provisão de Férias */}
+          <div className="lumine-row flex flex-col justify-between p-5 sm:col-span-2 sm:p-6 lg:col-span-1">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#6B1530]/55">
+                  Provisão de Férias
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
+                    configuracao.provisaoFeriasAtiva
+                      ? "border-[rgba(245,168,188,0.5)] bg-[#FCE1E8] text-[#6B1530]"
+                      : "border-petal/50 bg-white/75 text-ink/55"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      configuracao.provisaoFeriasAtiva ? "bg-[#C5325A]" : "bg-petal"
+                    }`}
+                  />
+                  {configuracao.provisaoFeriasAtiva ? "Ativa" : "Inativa"}
+                </span>
+              </div>
+              <div className="mt-2 font-display text-3xl font-bold tabular-nums text-wine sm:text-[34px]">
+                {configuracao.provisaoFeriasAtiva
+                  ? `${(configuracao.percentualProvisaoFerias ?? 0).toFixed(2).replace(".", ",")}%`
+                  : "Desativada"}
+              </div>
+            </div>
+            <p className="mt-3 text-[13px] font-medium leading-relaxed text-ink/65">
+              {configuracao.provisaoFeriasAtiva
+                ? "Percentual sobre o pró-labore reservado para o período de férias."
+                : "Adicional opcional sobre o pró-labore para reserva anual de férias."}
+            </p>
           </div>
         </div>
       ) : (
-        /* EDIT MODE */
+        /* MODO DE EDIÇÃO */
         <form
           onSubmit={handleSave}
-          className="bg-cream p-6 sm:p-8 rounded-3xl border border-petal/50 shadow-xs space-y-6"
+          className="rounded-[24px] border border-white/80 bg-white/65 p-5 shadow-[0_2px_12px_-4px_rgba(107,21,48,0.10)] space-y-6 sm:p-7"
         >
           {errors.geral && (
-            <div className="bg-red-50 border border-red-200 p-3.5 rounded-2xl flex items-start gap-2.5 text-red-700 text-xs font-medium">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2.5 rounded-2xl border border-berry/30 bg-pale/80 p-3.5 text-xs font-semibold text-wine">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-berry" />
               <span>{errors.geral}</span>
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {/* Margem de Segurança */}
             <div>
-              <label htmlFor="margemSeguranca" className="block text-xs font-bold text-wine mb-1.5">
+              <label
+                htmlFor="margemSeguranca"
+                className="mb-1.5 ml-1 block text-xs font-bold text-wine"
+              >
                 Margem de segurança (%) *
               </label>
               <div className="relative">
@@ -268,30 +251,35 @@ export const ConfiguracaoFinanceiraTab: React.FC<ConfiguracaoFinanceiraTabProps>
                     const clean = e.target.value.replace(/[^\d,.]/g, "");
                     setFormData({ ...formData, margemSeguranca: clean });
                     if (errors.margemSeguranca || errors.geral) {
-                      setErrors({ ...errors, margemSeguranca: undefined, geral: undefined });
+                      setErrors({
+                        ...errors,
+                        margemSeguranca: undefined,
+                        geral: undefined,
+                      });
                     }
                   }}
-                  className={`w-full pl-3.5 pr-8 py-2.5 text-xs rounded-xl border bg-white text-ink font-bold transition-colors focus:outline-none focus:ring-1 ${
+                  className={`h-11 w-full rounded-full border bg-white/80 pl-4 pr-9 text-sm font-bold tabular-nums text-ink outline-none transition-all ${
                     errors.margemSeguranca || errors.geral
-                      ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                      : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
+                      ? "border-berry focus:border-berry focus:ring-4 focus:ring-berry/15"
+                      : "border-petal/70 hover:border-rose focus:border-berry focus:ring-4 focus:ring-berry/15"
                   }`}
                 />
-                <Percent className="w-3.5 h-3.5 text-wine/60 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Percent className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-wine/55" />
               </div>
-              <span className="text-[10px] text-wine/60 mt-1 block">
-                Valor percentual mínimo maior ou igual a 0%.
-              </span>
               {errors.margemSeguranca && (
-                <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
-                  <AlertCircle className="w-3.5 h-3.5" />{errors.margemSeguranca}
+                <p className="mt-1.5 ml-1 flex items-center gap-1 text-xs font-semibold text-berry">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {errors.margemSeguranca}
                 </p>
               )}
             </div>
 
             {/* Lucro Desejado */}
             <div>
-              <label htmlFor="lucroDesejado" className="block text-xs font-bold text-wine mb-1.5">
+              <label
+                htmlFor="lucroDesejado"
+                className="mb-1.5 ml-1 block text-xs font-bold text-wine"
+              >
                 Lucro desejado (%) *
               </label>
               <div className="relative">
@@ -305,38 +293,41 @@ export const ConfiguracaoFinanceiraTab: React.FC<ConfiguracaoFinanceiraTabProps>
                     const clean = e.target.value.replace(/[^\d,.]/g, "");
                     setFormData({ ...formData, lucroDesejado: clean });
                     if (errors.lucroDesejado || errors.geral) {
-                      setErrors({ ...errors, lucroDesejado: undefined, geral: undefined });
+                      setErrors({
+                        ...errors,
+                        lucroDesejado: undefined,
+                        geral: undefined,
+                      });
                     }
                   }}
-                  className={`w-full pl-3.5 pr-8 py-2.5 text-xs rounded-xl border bg-white text-ink font-bold transition-colors focus:outline-none focus:ring-1 ${
+                  className={`h-11 w-full rounded-full border bg-white/80 pl-4 pr-9 text-sm font-bold tabular-nums text-ink outline-none transition-all ${
                     errors.lucroDesejado || errors.geral
-                      ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                      : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
+                      ? "border-berry focus:border-berry focus:ring-4 focus:ring-berry/15"
+                      : "border-petal/70 hover:border-rose focus:border-berry focus:ring-4 focus:ring-berry/15"
                   }`}
                 />
-                <Percent className="w-3.5 h-3.5 text-wine/60 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Percent className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-wine/55" />
               </div>
-              <span className="text-[10px] text-wine/60 mt-1 block">
-                Valor percentual mínimo maior ou igual a 0%.
-              </span>
               {errors.lucroDesejado && (
-                <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
-                  <AlertCircle className="w-3.5 h-3.5" />{errors.lucroDesejado}
+                <p className="mt-1.5 ml-1 flex items-center gap-1 text-xs font-semibold text-berry">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  {errors.lucroDesejado}
                 </p>
               )}
             </div>
           </div>
 
           {/* Provisão de Férias */}
-          <div className="pt-4 border-t border-petal/30 space-y-4">
+          <div className="space-y-4 border-t border-petal/35 pt-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <span className="text-xs font-bold text-wine block">Ativar Provisão de Férias</span>
-                <span className="text-[11px] text-wine/70 font-medium block">
-                  Aplica um percentual adicional de reserva de férias sobre a base de cálculo.
+                <span className="block text-sm font-bold text-wine">
+                  Provisão de férias
+                </span>
+                <span className="block text-xs font-medium text-ink/60">
+                  Inclui uma reserva percentual sobre o pró-labore no custo fixo por minuto
                 </span>
               </div>
-              {/* Toggle Switch */}
               <button
                 type="button"
                 id="toggle-provisao-ferias"
@@ -361,10 +352,12 @@ export const ConfiguracaoFinanceiraTab: React.FC<ConfiguracaoFinanceiraTabProps>
               </button>
             </div>
 
-            {/* Campo percentualProvisaoFerias (condicional) */}
             {formData.provisaoFeriasAtiva && (
-              <div className="bg-white p-4 rounded-2xl border border-petal/50 animate-in fade-in duration-200 max-w-sm">
-                <label htmlFor="percentualProvisaoFerias" className="block text-xs font-bold text-wine mb-1.5">
+              <div className="max-w-sm pt-1">
+                <label
+                  htmlFor="percentualProvisaoFerias"
+                  className="mb-1.5 ml-1 block text-xs font-bold text-wine"
+                >
                   Percentual de provisão de férias (%) *
                 </label>
                 <div className="relative">
@@ -376,39 +369,46 @@ export const ConfiguracaoFinanceiraTab: React.FC<ConfiguracaoFinanceiraTabProps>
                     value={formData.percentualProvisaoFerias}
                     onChange={(e) => {
                       const clean = e.target.value.replace(/[^\d,.]/g, "");
-                      setFormData({ ...formData, percentualProvisaoFerias: clean });
+                      setFormData({
+                        ...formData,
+                        percentualProvisaoFerias: clean,
+                      });
                       if (errors.percentualProvisaoFerias) {
-                        setErrors({ ...errors, percentualProvisaoFerias: undefined });
+                        setErrors({
+                          ...errors,
+                          percentualProvisaoFerias: undefined,
+                        });
                       }
                     }}
-                    className={`w-full pl-3.5 pr-8 py-2 text-xs rounded-xl border bg-white text-ink font-bold transition-colors focus:outline-none focus:ring-1 ${
+                    className={`h-11 w-full rounded-full border bg-white/80 pl-4 pr-9 text-sm font-bold tabular-nums text-ink outline-none transition-all ${
                       errors.percentualProvisaoFerias
-                        ? "border-red-400 focus:border-red-500 focus:ring-red-500"
-                        : "border-petal/50 hover:border-rose focus:border-berry focus:ring-berry"
+                        ? "border-berry focus:border-berry focus:ring-4 focus:ring-berry/15"
+                        : "border-petal/70 hover:border-rose focus:border-berry focus:ring-4 focus:ring-berry/15"
                     }`}
                   />
-                  <Percent className="w-3.5 h-3.5 text-wine/60 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Percent className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-wine/55" />
                 </div>
-                <span className="text-[10px] text-wine/60 mt-1 block">
-                  Regra RN008: Deve ser maior que 0%. Ex: 8,33% equivale a 1 mês de férias por ano.
+                <span className="mt-1 ml-1 block text-[11px] font-medium text-ink/55">
+                  Ex.: 8,33% equivale a 1 mês de férias ao ano.
                 </span>
                 {errors.percentualProvisaoFerias && (
-                  <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3.5 h-3.5" />{errors.percentualProvisaoFerias}
+                  <p className="mt-1.5 ml-1 flex items-center gap-1 text-xs font-semibold text-berry">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {errors.percentualProvisaoFerias}
                   </p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Form Actions */}
-          <div className="pt-4 border-t border-petal/30 flex items-center justify-end gap-3">
+          {/* Ações */}
+          <div className="flex items-center justify-end gap-3 border-t border-petal/35 pt-5">
             <button
               type="button"
               id="btn-cancelar-configuracao"
               onClick={handleCancelEdit}
               disabled={isSaving}
-              className="px-5 py-2.5 rounded-full border border-petal/60 text-xs font-bold text-wine hover:bg-pale transition-colors cursor-pointer"
+              className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-petal/60 bg-white/70 px-5 text-sm font-bold text-wine transition-colors hover:bg-pale"
             >
               Cancelar
             </button>
@@ -416,13 +416,13 @@ export const ConfiguracaoFinanceiraTab: React.FC<ConfiguracaoFinanceiraTabProps>
               type="submit"
               id="btn-salvar-configuracao"
               disabled={isSaving}
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-berry hover:bg-wine text-white text-xs font-bold shadow-md shadow-berry/20 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-70"
+              className="shine inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-white/80 bg-gradient-to-br from-[#D13E66] to-berry px-6 text-sm font-bold text-white shadow-lg shadow-berry/30 transition-all hover:from-wine hover:to-wine active:scale-[0.98] disabled:opacity-70"
             >
               {isSaving ? (
                 <span>Salvando...</span>
               ) : (
                 <>
-                  <Check className="w-4 h-4" />
+                  <Check className="h-4 w-4" />
                   <span>Salvar Configuração</span>
                 </>
               )}

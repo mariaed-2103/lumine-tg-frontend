@@ -15,7 +15,7 @@ interface CompetenciaSelectorProps {
   onAnoChange: (ano: number) => void;
 }
 
-const MESES = [
+export const MESES = [
   { valor: 1, nome: "Janeiro" },
   { valor: 2, nome: "Fevereiro" },
   { valor: 3, nome: "Março" },
@@ -30,7 +30,7 @@ const MESES = [
   { valor: 12, nome: "Dezembro" },
 ];
 
-const ANOS = [2024, 2025, 2026, 2027, 2028];
+export const ANOS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
 export const CompetenciaSelector: React.FC<CompetenciaSelectorProps> = ({
   mes,

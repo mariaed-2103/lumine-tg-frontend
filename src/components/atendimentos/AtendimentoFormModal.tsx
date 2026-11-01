@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LumineDatePicker } from "@/components/ui/lumine-date-picker";
 
 import {
   hojeISO,
@@ -267,14 +268,16 @@ export const AtendimentoFormModal: React.FC<AtendimentoFormModalProps> = ({
                 <label htmlFor="dataAtendimento" className={labelClass}>
                   Data do Atendimento <span className="text-berry">*</span>
                 </label>
-                <input
-                  type="date"
+                <LumineDatePicker
                   id="dataAtendimento"
                   name="dataAtendimento"
                   value={formData.dataAtendimento}
-                  onChange={handleChange}
+                  onChange={(novaData) => {
+                    setFormData((prev) => ({ ...prev, dataAtendimento: novaData }));
+                    clearError("dataAtendimento");
+                  }}
                   disabled={isSubmitting}
-                  className={`${inputBase} px-4 py-2.5 ${errors.dataAtendimento ? inputErro : inputOk}`}
+                  hasError={!!errors.dataAtendimento}
                 />
                 <FieldError message={errors.dataAtendimento} />
               </div>
