@@ -42,6 +42,10 @@ export function mapearAtendimento(raw: any): Atendimento {
       raw.formaPagamento?.idFormaPagamento ?? raw.idFormaPagamento ?? 0,
     ),
     nomeFormaPagamento: String(raw.formaPagamento?.nome ?? raw.nomeFormaPagamento ?? ""),
+    taxaFormaPagamento:
+      raw.formaPagamento?.taxaPercentual == null
+        ? null
+        : Number(raw.formaPagamento.taxaPercentual),
     tempoAdicional: Number(raw.tempoAdicional ?? 0),
     desperdicioMateriais: Number(raw.desperdicioMateriais ?? 0),
   };

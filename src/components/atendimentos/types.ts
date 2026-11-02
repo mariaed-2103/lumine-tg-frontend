@@ -13,6 +13,7 @@ export interface Atendimento {
   valorCobrado: number;
   idFormaPagamento: number;
   nomeFormaPagamento: string;
+  taxaFormaPagamento?: number | null;
   tempoAdicional: number;
   desperdicioMateriais: number;
 }

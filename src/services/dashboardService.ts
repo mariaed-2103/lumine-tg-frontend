@@ -5,6 +5,7 @@ import type { Insumo } from "@/components/insumos/types";
 import type { PerfilEmpresaResponse } from "@/services/perfilEmpresaService";
 import { listarFichaTecnica } from "@/services/fichaTecnicaService";
 import { mapearAtendimento } from "@/services/atendimentoService";
+import { listarCustosUnitariosInsumos } from "@/services/custoInsumoService";
 
 const MESES = [
   "Janeiro",
@@ -32,8 +33,8 @@ export interface DashboardData {
   perfil: { nomeProfissional: string };
   resumo: {
     entradasMes: number;
-    lucroReal: number;
-    margemMedia: number;
+    lucroReal: number | null;
+    margemMedia: number | null;
     prejuizoImprevistos: number;
     qtdAtendimentos: number;
     variacao: {
@@ -45,13 +46,19 @@ export interface DashboardData {
     };
   };
   configuracao: { lucroDesejado: number };
-  historico: { ano: number; mes: number; entradas: number; despesas: number; lucroReal: number }[];
-  composicaoCustos: { categoria: string; valor: number }[];
+  historico: {
+    ano: number;
+    mes: number;
+    entradas: number;
+    despesas: number | null;
+    lucroReal: number | null;
+  }[];
+  composicaoCustos: { categoria: string; valor: number | null }[];
   procedimentos: {
     nome: string;
     idProcedimento?: number;
     qtdAtendimentos: number;
-    lucroTotal: number;
+    lucroTotal: number | null;
     margem: number | null;
   }[];
   insumosEstoqueBaixo: {
@@ -118,13 +125,24 @@ function despesaFixaAtivaNaCompetencia(item: DespesaFixa, ano: number, mes: numb
   return item.dataInicio <= fimMes && (!item.dataFim || item.dataFim >= inicioMes);
 }
 function calcularTaxas(atendimentos: Atendimento[], taxas: Map<number, number>) {
-  return somar(
-    atendimentos,
-    (a) => (numero(a.valorCobrado) * (taxas.get(a.idFormaPagamento) ?? 0)) / 100,
-  );
+  let total = 0;
+  let completo = true;
+  for (const atendimento of atendimentos) {
+    const taxa =
+      taxas.get(atendimento.idFormaPagamento) ?? atendimento.taxaFormaPagamento;
+    if (taxa == null || !Number.isFinite(taxa)) {
+      completo = false;
+      continue;
+    }
+    total += (numero(atendimento.valorCobrado) * taxa) / 100;
+  }
+  return { valor: arredondar(total), completo };
 }
-function percentualVariacao(atual: number, anterior: number): number | null {
-  if (anterior === 0) return null;
+function percentualVariacao(
+  atual: number | null,
+  anterior: number | null,
+): number | null {
+  if (atual === null || anterior === null || anterior === 0) return null;
   return percentual(((atual - anterior) / Math.abs(anterior)) * 100);
 }
 
@@ -242,9 +260,7 @@ export async function getDashboard(ano: number, mes: number): Promise<DashboardD
       historicalIndex += 1;
     }
   }
-  const taxas = new Map(
-    formas.map((forma) => [forma.idFormaPagamento, numero(forma.taxaPercentual)]),
-  );
+  const taxas = new Map(formas.map((forma) => [forma.idFormaPagamento, numero(forma.taxaPercentual)]));
   const atendimentosMes = atendimentoDoMes.filter((a) => pertenceAoMes(a, ano, mes));
   const fixasNaCompetencia = (competencia: { ano: number; mes: number }) =>
     somar(
@@ -285,62 +301,110 @@ export async function getDashboard(ano: number, mes: number): Promise<DashboardD
   const idsProcedimentos = [
     ...new Set(todosAtendimentos.map((a) => a.idProcedimento).filter((id) => id > 0)),
   ];
-  const fichasResult = await Promise.allSettled(
-    idsProcedimentos.map((id) => listarFichaTecnica(id)),
-  );
-  const custosPorProcedimento = new Map<number, number>();
-  const custosConhecidos = new Set<number>();
+  const [fichasResult, custosResult] = await Promise.all([
+    Promise.allSettled(idsProcedimentos.map((id) => listarFichaTecnica(id))),
+    Promise.allSettled(
+      historicoCompetencias.map((competencia) => {
+        const ultimoDia = new Date(competencia.ano, competencia.mes, 0).getDate();
+        const dataLimite = `${competencia.ano}-${String(competencia.mes).padStart(2, "0")}-${String(ultimoDia).padStart(2, "0")}`;
+        return listarCustosUnitariosInsumos(dataLimite);
+      }),
+    ),
+  ]);
+  const fichasPorProcedimento = new Map<
+    number,
+    Awaited<ReturnType<typeof listarFichaTecnica>>
+  >();
+  const custosPorCompetencia = new Map<string, Map<number, number | null>>();
+  const competenciasSemCustos = new Set<string>();
+  const avisosDeCustos = new Set<string>();
+  const fimCompetencia = (competencia: { ano: number; mes: number }) => {
+    const ultimoDia = new Date(competencia.ano, competencia.mes, 0).getDate();
+    return `${competencia.ano}-${String(competencia.mes).padStart(2, "0")}-${String(ultimoDia).padStart(2, "0")}`;
+  };
   for (let i = 0; i < fichasResult.length; i += 1) {
     const idProcedimento = idsProcedimentos[i];
-    if (idProcedimento === undefined) continue;
     const result = fichasResult[i];
-    if (!result) {
+    if (idProcedimento === undefined || !result) continue;
+    if (result.status === "fulfilled") {
+      fichasPorProcedimento.set(idProcedimento, result.value);
+    } else {
       console.warn(
-        `[Dashboard] Resposta ausente para /fichas-tecnicas/procedimento/${idProcedimento}.`,
-      );
-      avisos.push("fichas técnicas");
-      continue;
-    }
-    if (result.status === "rejected") {
-      console.warn(
-        `[Dashboard] Falha ao carregar /fichas-tecnicas/procedimento/${idProcedimento}:`,
+        `[Dashboard] Falha ao carregar ficha técnica do procedimento ${idProcedimento}:`,
         result.reason,
       );
       avisos.push("fichas técnicas");
+    }
+  }
+  for (let i = 0; i < custosResult.length; i += 1) {
+    const competencia = historicoCompetencias[i];
+    const result = custosResult[i];
+    if (!competencia || !result) continue;
+    const chave = `${competencia.ano}-${competencia.mes}`;
+    if (result.status === "rejected") {
+      console.warn(
+        `[Dashboard] Falha ao carregar custos dos insumos até ${fimCompetencia(competencia)}:`,
+        result.reason,
+      );
+      competenciasSemCustos.add(chave);
+      avisos.push("custos dos insumos");
       continue;
     }
-    const ficha = result.value as ((typeof result.value)[number] & {
-      custoUnitario?: number;
-      valorUnitario?: number;
-    })[];
-    const possuiCustosUnitarios = ficha.every((item) => {
-      const insumo = insumos.find((x) => x.idInsumo === item.idInsumo) as
-        (Insumo & { custoUnitario?: number; valorUnitario?: number }) | undefined;
-      return (
-        item.custoUnitario != null ||
-        item.valorUnitario != null ||
-        insumo?.custoUnitario != null ||
-        insumo?.valorUnitario != null
-      );
-    });
-    const custo = ficha.reduce((total, item) => {
-      const insumo = insumos.find((x) => x.idInsumo === item.idInsumo) as
-        (Insumo & { custoUnitario?: number; valorUnitario?: number }) | undefined;
-      const unitario = numero(
-        item.custoUnitario ?? item.valorUnitario ?? insumo?.custoUnitario ?? insumo?.valorUnitario,
-      );
-      return total + numero(item.quantidadeUtilizada) * unitario;
-    }, 0);
-    custosPorProcedimento.set(idProcedimento, custo);
-    if (possuiCustosUnitarios) custosConhecidos.add(idProcedimento);
+    custosPorCompetencia.set(
+      chave,
+      new Map(result.value.map((item) => [item.idInsumo, item.custoUnitario])),
+    );
   }
-  const custoInsumos = somar(
-    atendimentosMes,
-    (a) => custosPorProcedimento.get(a.idProcedimento) ?? 0,
-  );
-  const custoProporcionalDisponivel = atendimentosMes.every((a) =>
-    custosConhecidos.has(a.idProcedimento),
-  );
+
+  const custosDosAtendimentos = (
+    atendimentos: Atendimento[],
+    competencia: { ano: number; mes: number },
+  ) => {
+    if (atendimentos.length === 0) return { valor: 0, faltantes: [] as string[] };
+    const custos = custosPorCompetencia.get(`${competencia.ano}-${competencia.mes}`);
+    const faltantes = new Set<string>();
+    let total = 0;
+    if (competenciasSemCustos.has(`${competencia.ano}-${competencia.mes}`) || !custos) {
+      return { valor: null, faltantes: ["custos dos insumos indisponíveis"] };
+    }
+    for (const atendimento of atendimentos) {
+      const ficha = fichasPorProcedimento.get(atendimento.idProcedimento);
+      if (!ficha || ficha.length === 0) {
+        faltantes.add(
+          `ficha técnica de ${atendimento.nomeProcedimento || "procedimento"}`,
+        );
+        continue;
+      }
+      for (const item of ficha) {
+        const custoUnitario = custos.get(item.idInsumo);
+        if (custoUnitario == null || !Number.isFinite(custoUnitario)) {
+          faltantes.add(`compra válida de ${insumos.find((i) => i.idInsumo === item.idInsumo)?.nome ?? "insumo"}`);
+          continue;
+        }
+        total += numero(item.quantidadeUtilizada) * custoUnitario;
+      }
+    }
+    return {
+      valor: faltantes.size > 0 ? null : arredondar(total),
+      faltantes: [...faltantes],
+    };
+  };
+
+  const avisarFaltantes = (
+    competencia: { ano: number; mes: number },
+    faltantes: string[],
+  ) => {
+    if (faltantes.length === 0) return;
+    avisosDeCustos.add(
+      `Custo dos insumos indisponível em ${String(competencia.mes).padStart(2, "0")}/${competencia.ano}: ${faltantes.join(", ")}.`,
+    );
+  };
+
+  const custoInsumosAtual = custosDosAtendimentos(atendimentosMes, { ano, mes });
+  avisarFaltantes({ ano, mes }, custoInsumosAtual.faltantes);
+  if (!taxasMes.completo) {
+    avisos.push("taxas de pagamento de atendimentos antigos");
+  }
 
   const resumoHistorico = (comp: { ano: number; mes: number }) => {
     const atendimentos = todosAtendimentos.filter((a) => pertenceAoMes(a, comp.ano, comp.mes));
@@ -354,24 +418,37 @@ export async function getDashboard(ano: number, mes: number): Promise<DashboardD
     const desperdicio = somar(atendimentos, (a) => a.desperdicioMateriais);
     const imprevistos = imprevistosDaCompetencia(comp, tempo, desperdicio);
     const taxasPagamento = calcularTaxas(atendimentos, taxas);
-    const custoInsumosHistorico = somar(
-      atendimentos,
-      (a) => custosPorProcedimento.get(a.idProcedimento) ?? 0,
-    );
-    const despesas = arredondar(
-      fixas + variaveis + imprevistos + taxasPagamento + custoInsumosHistorico,
-    );
+    const custoInsumosHistorico = custosDosAtendimentos(atendimentos, comp);
+    avisarFaltantes(comp, custoInsumosHistorico.faltantes);
+    if (!taxasPagamento.completo) {
+      avisos.push(
+        `taxas de pagamento de atendimentos em ${String(comp.mes).padStart(2, "0")}/${comp.ano}`,
+      );
+    }
+    const despesas =
+      custoInsumosHistorico.valor === null || !taxasPagamento.completo
+        ? null
+        : arredondar(
+            fixas +
+              variaveis +
+              imprevistos +
+              taxasPagamento.valor +
+              custoInsumosHistorico.valor,
+          );
     return {
       ...comp,
       entradas: arredondar(entradas),
       despesas,
-      lucroReal: arredondar(entradas - despesas),
+      lucroReal: despesas === null ? null : arredondar(entradas - despesas),
     };
   };
   const historico = historicoCompetencias.map(resumoHistorico);
   const atual = historico.at(-1)!;
   const anterior = historico.at(-2);
-  const margemMedia = entradasMes > 0 ? percentual((atual.lucroReal / entradasMes) * 100) : 0;
+  const margemMedia =
+    entradasMes > 0 && atual.lucroReal !== null
+      ? percentual((atual.lucroReal / entradasMes) * 100)
+      : null;
   const atendimentosPorProcedimento = new Map<number, Atendimento[]>();
   for (const atendimento of atendimentosMes) {
     const grupo = atendimentosPorProcedimento.get(atendimento.idProcedimento) ?? [];
@@ -381,17 +458,23 @@ export async function getDashboard(ano: number, mes: number): Promise<DashboardD
   const procedimentos = [...atendimentosPorProcedimento.entries()]
     .map(([idProcedimento, lista]) => {
       const bruto = somar(lista, (a) => a.valorCobrado);
-      const custos = somar(lista, (a) => custosPorProcedimento.get(a.idProcedimento) ?? 0);
-      const lucro = arredondar(bruto - custos);
+      const custos = custosDosAtendimentos(lista, { ano, mes });
+      const taxasProcedimento = calcularTaxas(lista, taxas);
+      avisarFaltantes({ ano, mes }, custos.faltantes);
+      const lucro =
+        custos.valor === null || !taxasProcedimento.completo
+          ? null
+          : arredondar(bruto - custos.valor - taxasProcedimento.valor);
       return {
         idProcedimento,
         nome: lista[0]?.nomeProcedimento || "Procedimento",
         qtdAtendimentos: lista.length,
         lucroTotal: lucro,
-        margem: custoProporcionalDisponivel && bruto > 0 ? percentual((lucro / bruto) * 100) : null,
+        margem:
+          lucro !== null && bruto > 0 ? percentual((lucro / bruto) * 100) : null,
       };
     })
-    .sort((a, b) => b.lucroTotal - a.lucroTotal);
+    .sort((a, b) => (b.lucroTotal ?? -Infinity) - (a.lucroTotal ?? -Infinity));
   const atendimentosRecentes = [...atendimentosMes]
     .sort((a, b) => (dataDoAtendimento(b)?.getTime() ?? 0) - (dataDoAtendimento(a)?.getTime() ?? 0))
     .slice(0, 5);
@@ -408,7 +491,10 @@ export async function getDashboard(ano: number, mes: number): Promise<DashboardD
         entradasMes: percentualVariacao(atual.entradas, anterior?.entradas ?? 0),
         lucroReal: percentualVariacao(atual.lucroReal, anterior?.lucroReal ?? 0),
         margemMedia:
-          anterior && anterior.entradas > 0
+          anterior &&
+          anterior.entradas > 0 &&
+          anterior.lucroReal !== null &&
+          margemMedia !== null
             ? percentual(margemMedia - percentual((anterior.lucroReal / anterior.entradas) * 100))
             : null,
         prejuizoImprevistos: percentualVariacao(
@@ -438,10 +524,13 @@ export async function getDashboard(ano: number, mes: number): Promise<DashboardD
     historico,
     composicaoCustos: [
       { categoria: "Despesas fixas", valor: arredondar(fixasMes) },
-      { categoria: "Insumos", valor: arredondar(custoInsumos) },
+      { categoria: "Insumos", valor: custoInsumosAtual.valor },
       { categoria: "Despesas variáveis", valor: arredondar(variaveisMes) },
       { categoria: "Imprevistos", valor: imprevistosMes },
-      { categoria: "Taxas de pagamento", valor: arredondar(taxasMes) },
+      {
+        categoria: "Taxas de pagamento",
+        valor: taxasMes.completo ? taxasMes.valor : null,
+      },
     ],
     procedimentos,
     insumosEstoqueBaixo: insumos
@@ -465,7 +554,7 @@ export async function getDashboard(ano: number, mes: number): Promise<DashboardD
       teveImprevisto: numero(a.tempoAdicional) > 0 || numero(a.desperdicioMateriais) > 0,
     })),
     imprevistos: { tempoAdicionalMin, desperdicioMateriais: arredondar(desperdicioMateriais) },
-    avisos,
+    avisos: [...avisos, ...avisosDeCustos],
   };
 }
 

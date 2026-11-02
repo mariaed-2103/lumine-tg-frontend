@@ -12,8 +12,6 @@ import {
 import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
 import type {
   ConfiguracaoFinanceira,
-  DespesaFixa,
-  CompraInsumo,
   FormaPagamento,
 } from "@/components/financeiro/types";
 import type { Procedimento } from "@/components/procedimentos/types";
@@ -31,19 +29,12 @@ import {
 import { listarProcedimentos } from "@/services/procedimentoService";
 import { listarFichaTecnica } from "@/services/fichaTecnicaService";
 import { listarInsumos } from "@/services/insumoService";
-import { listarCompras } from "@/services/compraService";
-import { listarDespesasFixas } from "@/services/despesaFixaService";
 import { apiFetch } from "@/services/api";
 import {
   definirPrecoPadrao,
   simularPreco,
   type SimulacaoPrecoResponse,
 } from "@/services/simulacaoPrecoService";
-import {
-  calcularCustoFixoPorMinuto,
-  calcularCustoUnitarioInsumo,
-  calcularSimulacao,
-} from "@/lib/calcularSimulacao";
 import { ConfiguracaoFinanceiraTab } from "@/components/financeiro/ConfiguracaoFinanceiraTab";
 import { FormasPagamentoTab } from "@/components/financeiro/FormasPagamentoTab";
 import { FinanceiroTabs, type FinanceiroTabId } from "@/components/financeiro/FinanceiroTabs";
@@ -102,8 +93,6 @@ export function PrecificacaoPage() {
   const [temPerfil, setTemPerfil] = useState<boolean | null>(null);
   const [procedimentos, setProcedimentos] = useState<Procedimento[]>([]);
   const [formas, setFormas] = useState<FormaPagamento[]>([]);
-  const [compras, setCompras] = useState<CompraInsumo[]>([]);
-  const [despesas, setDespesas] = useState<DespesaFixa[]>([]);
   const [insumos, setInsumos] = useState<Insumo[]>([]);
 
   const [deleteForma, setDeleteForma] = useState<FormaPagamento | null>(null);
@@ -115,6 +104,8 @@ export function PrecificacaoPage() {
   const [savingPrice, setSavingPrice] = useState(false);
   const [simulacaoBackend, setSimulacaoBackend] =
     useState<SimulacaoPrecoResponse | null>(null);
+  const [simulacaoLoading, setSimulacaoLoading] = useState(false);
+  const [simulacaoErro, setSimulacaoErro] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -129,8 +120,6 @@ export function PrecificacaoPage() {
       fetchProfile(),
       listarProcedimentos(),
       listarFormasPagamento(),
-      listarCompras(),
-      listarDespesasFixas(),
       listarInsumos(),
     ]);
     const errs: string[] = [];
@@ -163,25 +152,11 @@ export function PrecificacaoPage() {
           ? jobs[2].reason.message
           : "Não foi possível carregar formas de pagamento."
       );
-    if (jobs[3].status === "fulfilled") setCompras(jobs[3].value);
+    if (jobs[3].status === "fulfilled") setInsumos(jobs[3].value);
     else
       errs.push(
         jobs[3].reason instanceof Error
           ? jobs[3].reason.message
-          : "Não foi possível carregar compras."
-      );
-    if (jobs[4].status === "fulfilled") setDespesas(jobs[4].value);
-    else
-      errs.push(
-        jobs[4].reason instanceof Error
-          ? jobs[4].reason.message
-          : "Não foi possível carregar despesas fixas."
-      );
-    if (jobs[5].status === "fulfilled") setInsumos(jobs[5].value);
-    else
-      errs.push(
-        jobs[5].reason instanceof Error
-          ? jobs[5].reason.message
           : "Não foi possível carregar insumos."
       );
     setErrorsLoad(errs);
@@ -208,7 +183,6 @@ export function PrecificacaoPage() {
   const anoCompetencia = parts[0] ?? new Date().getFullYear();
   const mesCompetencia = parts[1] ?? new Date().getMonth() + 1;
   const diasNoMes = new Date(anoCompetencia, mesCompetencia, 0).getDate();
-  const inicioCompetencia = `${competencia}-01`;
   const fimCompetencia = `${competencia}-${String(diasNoMes).padStart(2, "0")}`;
 
   useEffect(() => {
@@ -232,79 +206,44 @@ export function PrecificacaoPage() {
 
   useEffect(() => {
     setSimulacaoBackend(null);
+    setSimulacaoErro("");
     if (!selected || !competencia) return;
+    let active = true;
+    setSimulacaoLoading(true);
     simularPreco(Number(selected), mesCompetencia, anoCompetencia)
-      .then(setSimulacaoBackend)
-      .catch((e) =>
-        toast.error(
-          e instanceof Error ? e.message : "Não foi possível calcular a simulação."
-        )
-      );
+      .then((resultado) => {
+        if (active) setSimulacaoBackend(resultado);
+      })
+      .catch((error) => {
+        if (!active) return;
+        const mensagem =
+          error instanceof Error
+            ? error.message
+            : "Não foi possível calcular a simulação.";
+        setSimulacaoErro(mensagem);
+        toast.error(mensagem);
+      })
+      .finally(() => {
+        if (active) setSimulacaoLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [selected, competencia, mesCompetencia, anoCompetencia]);
 
   const linhas = ficha.map((f) => {
     const insumo = insumos.find((i) => i.idInsumo === f.idInsumo);
-    const comprasDoInsumo = compras.filter(
-      (c) =>
-        c.idInsumo === f.idInsumo &&
-        c.dataCompra >= inicioCompetencia &&
-        c.dataCompra <= fimCompetencia
-    );
-    const custoUnitario = calcularCustoUnitarioInsumo(
-      insumo?.quantidadePorEmbalagem ?? 0,
-      comprasDoInsumo
+    const custoCalculado = simulacaoBackend?.insumos.find(
+      (item) => item.idInsumo === f.idInsumo,
     );
     return {
       f,
       insumo,
-      custoUnitario,
-      custo:
-        custoUnitario === null ? null : custoUnitario * f.quantidadeUtilizada,
+      custoUnitario: custoCalculado?.custoUnitario ?? null,
+      custo: custoCalculado?.custoTotal ?? null,
     };
   });
-
-  const custoInsumos = linhas.reduce((sum, x) => sum + (x.custo ?? 0), 0);
-  const despesasAtivasMes = despesas.filter(
-    (d) =>
-      d.dataInicio <= fimCompetencia &&
-      (!d.dataFim || d.dataFim >= inicioCompetencia)
-  );
-  const despesasMes = despesasAtivasMes.reduce((sum, d) => sum + d.valor, 0);
-  const valorProLabore = despesasAtivasMes
-    .filter((d) =>
-      d.categoria
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLocaleLowerCase("pt-BR")
-        .includes("pro-labore")
-    )
-    .reduce((sum, d) => sum + d.valor, 0);
-
-  const fixoMin = calcularCustoFixoPorMinuto(
-    despesasMes,
-    valorProLabore,
-    perfil?.diasTrabalhadosMes,
-    perfil?.horasDisponiveisDia,
-    config?.provisaoFeriasAtiva ? (config.percentualProvisaoFerias ?? 0) : 0
-  );
-
-  const simulation =
-    procedimento &&
-    config &&
-    linhas.length > 0 &&
-    linhas.every((x) => x.custo !== null) &&
-    fixoMin !== null
-      ? calcularSimulacao({
-          duracaoMinutos: procedimento.duracaoMinutos,
-          custoInsumos,
-          custoFixoPorMinuto: fixoMin,
-          margemSeguranca: config.margemSeguranca,
-          lucroDesejado: config.lucroDesejado,
-        })
-      : null;
-
-  const precoSugerido =
-    simulacaoBackend?.precoSugerido ?? simulation?.precoSugerido;
+  const precoSugerido = simulacaoBackend?.precoSugerido;
 
   async function handleSaveConfiguracao(
     novaConfig: Omit<ConfiguracaoFinanceira, "idConfiguracao" | "dataAtualizacao">
@@ -643,7 +582,7 @@ export function PrecificacaoPage() {
                                 </span>
                               </div>
                               <span className="text-[11px] font-medium text-ink/50">
-                                Compras da competência
+                                Compras até {fimCompetencia}
                               </span>
                             </div>
 
@@ -701,40 +640,38 @@ export function PrecificacaoPage() {
                                     Total de Insumos
                                   </span>
                                   <span className="font-display text-lg font-bold tabular-nums text-berry">
-                                    {dinheiro(custoInsumos)}
+                                    {simulacaoBackend
+                                      ? dinheiro(simulacaoBackend.custoInsumos)
+                                      : "—"}
                                   </span>
                                 </div>
                               </div>
                             )}
 
-                            {linhas.some((x) => x.custo === null) && (
+                            {simulacaoLoading && (
                               <div className="flex items-center gap-2.5 rounded-xl border border-petal/50 bg-cream/50 p-3 text-xs font-medium text-wine/80">
                                 <AlertCircle className="h-4 w-4 shrink-0 text-berry" />
                                 <span>
-                                  Há insumos sem compras registradas nesta competência.
+                                  Calculando os custos com as compras registradas até o fim da competência...
                                 </span>
+                              </div>
+                            )}
+                            {simulacaoErro && (
+                              <div
+                                className="flex items-center gap-2.5 rounded-xl border border-petal/50 bg-cream/50 p-3 text-xs font-medium text-wine/80"
+                                role="alert"
+                              >
+                                <AlertCircle className="h-4 w-4 shrink-0 text-berry" />
+                                <span>{simulacaoErro}</span>
                               </div>
                             )}
                           </div>
                         )}
-
-                        {!config && (
-                          <div className="flex items-center gap-2.5 rounded-2xl border border-petal/60 bg-pale/60 p-4 text-xs font-medium text-wine">
-                            <AlertCircle className="h-4 w-4 shrink-0 text-berry" />
-                            <span>
-                              Salve a margem de segurança e o lucro desejado na aba Configuração para habilitar o cálculo local.
-                            </span>
-                          </div>
-                        )}
-
-                        {fixoMin === null && (
-                          <div className="flex items-center gap-2.5 rounded-2xl border border-petal/60 bg-pale/60 p-4 text-xs font-medium text-wine">
-                            <AlertCircle className="h-4 w-4 shrink-0 text-berry" />
-                            <span>
-                              Informe os dias trabalhados e horas disponíveis no Perfil da Empresa para calcular o custo fixo por minuto.
-                            </span>
-                          </div>
-                        )}
+                        <p className="text-[11px] leading-relaxed text-ink/60">
+                          O cálculo considera a média ponderada das compras até o fim desta competência,
+                          além das despesas fixas. Despesas variáveis e taxas de pagamento não estão
+                          incluídas no preço sugerido.
+                        </p>
                       </div>
 
                       {/* Coluna da direita: Composição do Preço */}
@@ -754,9 +691,7 @@ export function PrecificacaoPage() {
                             <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? dinheiro(simulacaoBackend.custoInsumos)
-                                : simulation
-                                  ? dinheiro(custoInsumos)
-                                  : "—"}
+                                : "—"}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3 py-2 text-ink/80">
@@ -764,9 +699,7 @@ export function PrecificacaoPage() {
                             <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? `${dinheiro(simulacaoBackend.custoFixoPorMinuto)} × ${simulacaoBackend.duracaoMinutos} min`
-                                : fixoMin === null
-                                  ? "—"
-                                  : `${dinheiro(fixoMin)} × ${procedimento?.duracaoMinutos ?? "—"} min`}
+                                : "—"}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3 py-2 text-ink/80">
@@ -774,9 +707,7 @@ export function PrecificacaoPage() {
                             <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? dinheiro(simulacaoBackend.custoFixoProcedimento)
-                                : simulation
-                                  ? dinheiro(simulation.custoFixoProcedimento)
-                                  : "—"}
+                                : "—"}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3 py-2.5 font-bold text-wine">
@@ -784,9 +715,7 @@ export function PrecificacaoPage() {
                             <span className="tabular-nums">
                               {simulacaoBackend
                                 ? dinheiro(simulacaoBackend.custoProcedimento)
-                                : simulation
-                                  ? dinheiro(simulation.custoProcedimento)
-                                  : "—"}
+                                : "—"}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3 py-2 text-ink/80">
@@ -794,9 +723,7 @@ export function PrecificacaoPage() {
                             <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? percentual(simulacaoBackend.margemSeguranca)
-                                : simulation
-                                  ? `${dinheiro(simulation.valorMargem)} (${percentual(config?.margemSeguranca ?? 0)})`
-                                  : "—"}
+                                : "—"}
                             </span>
                           </div>
                           <div className="flex justify-between gap-3 py-2 text-ink/80">
@@ -804,9 +731,7 @@ export function PrecificacaoPage() {
                             <span className="font-bold tabular-nums text-wine">
                               {simulacaoBackend
                                 ? percentual(simulacaoBackend.lucroDesejado)
-                                : simulation
-                                  ? `${dinheiro(simulation.valorLucro)} (${percentual(config?.lucroDesejado ?? 0)})`
-                                  : "—"}
+                                : "—"}
                             </span>
                           </div>
                         </div>

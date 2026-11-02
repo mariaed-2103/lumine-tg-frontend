@@ -12,6 +12,14 @@ export interface SimulacaoPrecoResponse {
   margemSeguranca: number;
   lucroDesejado: number;
   precoSugerido: number;
+  insumos: {
+    idInsumo: number;
+    nomeInsumo: string;
+    unidadeMedida: string;
+    quantidadeUtilizada: number;
+    custoUnitario: number;
+    custoTotal: number;
+  }[];
 }
 
 export async function simularPreco(idProcedimento: number, mes: number, ano: number): Promise<SimulacaoPrecoResponse> {
@@ -37,6 +45,14 @@ export async function simularPreco(idProcedimento: number, mes: number, ano: num
     margemSeguranca: Number(raw.margemSeguranca ?? 0),
     lucroDesejado: Number(raw.lucroDesejado ?? 0),
     precoSugerido: Number(raw.precoSugerido ?? 0),
+    insumos: (raw.insumos ?? []).map((item: Record<string, unknown>) => ({
+      idInsumo: Number(item.idInsumo),
+      nomeInsumo: String(item.nomeInsumo ?? ""),
+      unidadeMedida: String(item.unidadeMedida ?? ""),
+      quantidadeUtilizada: Number(item.quantidadeUtilizada ?? 0),
+      custoUnitario: Number(item.custoUnitario ?? 0),
+      custoTotal: Number(item.custoTotal ?? 0),
+    })),
   };
 }
 

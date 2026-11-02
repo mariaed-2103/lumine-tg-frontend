@@ -49,6 +49,11 @@ const descriptions = [
   "Quantidade de atendimentos registrados no mês.",
 ] as const;
 function exportarExcel(dados: DashboardData) {
+  const composicaoCompleta = dados.composicaoCustos.every((item) => item.valor !== null);
+  const totalCustos =
+    composicaoCompleta
+      ? dados.composicaoCustos.reduce((sum, item) => sum + (item.valor ?? 0), 0)
+      : null;
   const sheets: [string, (string | number)[][]][] = [
     [
       "Resumo",
@@ -56,9 +61,9 @@ function exportarExcel(dados: DashboardData) {
         ["Indicador", "Valor"],
         ["Competência", `${meses[dados.competencia.mes - 1]} ${dados.competencia.ano}`],
         ["Profissional", dados.perfil.nomeProfissional],
-        ["Lucro real", dados.resumo.lucroReal],
+        ["Lucro real", dados.resumo.lucroReal ?? "Indisponível"],
         ["Entradas do mês", dados.resumo.entradasMes],
-        ["Margem do mês (%)", dados.resumo.margemMedia],
+        ["Margem do mês (%)", dados.resumo.margemMedia ?? "Indisponível"],
         ["Prejuízo por imprevistos", dados.resumo.prejuizoImprevistos],
         ["Atendimentos realizados", dados.resumo.qtdAtendimentos],
         ["Meta de lucro (%)", dados.configuracao.lucroDesejado],
@@ -72,8 +77,8 @@ function exportarExcel(dados: DashboardData) {
           meses[x.mes - 1] ?? "Mês desconhecido",
           x.ano,
           x.entradas,
-          x.despesas,
-          x.lucroReal,
+          x.despesas ?? "Indisponível",
+          x.lucroReal ?? "Indisponível",
         ]),
       ],
     ],
@@ -83,10 +88,12 @@ function exportarExcel(dados: DashboardData) {
         ["Categoria", "Valor (R$)", "Participação (%)"],
         ...dados.composicaoCustos.map((x) => [
           x.categoria,
-          x.valor,
-          dados.composicaoCustos.reduce((s, c) => s + c.valor, 0)
-            ? (x.valor / dados.composicaoCustos.reduce((s, c) => s + c.valor, 0)) * 100
-            : 0,
+          x.valor ?? "Indisponível",
+          totalCustos === null
+            ? "Indisponível"
+            : totalCustos > 0
+              ? ((x.valor ?? 0) / totalCustos) * 100
+              : 0,
         ]),
       ],
     ],
@@ -97,7 +104,7 @@ function exportarExcel(dados: DashboardData) {
         ...dados.procedimentos.map((x) => [
           x.nome,
           x.qtdAtendimentos,
-          x.lucroTotal,
+          x.lucroTotal ?? "Indisponível",
           x.margem ?? "",
         ]),
       ],
@@ -251,15 +258,19 @@ function DashboardPage() {
                   : b.margem - a.margem
               : ordem === "qtd"
                 ? b.qtdAtendimentos - a.qtdAtendimentos
-                : b.lucroTotal - a.lucroTotal,
+                : (b.lucroTotal ?? -Infinity) - (a.lucroTotal ?? -Infinity),
           )
         : [],
     [dados, ordem],
   );
-  const totalCustos = dados?.composicaoCustos.reduce((sum, item) => sum + item.valor, 0) || 0;
+  const totalCustos =
+    dados && dados.composicaoCustos.every((item) => item.valor !== null)
+      ? dados.composicaoCustos.reduce((sum, item) => sum + (item.valor ?? 0), 0)
+      : null;
   const metaOk =
     !!dados &&
     dados.resumo.entradasMes > 0 &&
+    dados.resumo.margemMedia !== null &&
     dados.resumo.margemMedia >= dados.configuracao.lucroDesejado;
   const variacaoTexto = (variacao: number | null, sufixo = "%") =>
     variacao === null
@@ -267,7 +278,7 @@ function DashboardPage() {
       : `${variacao > 0 ? "+" : ""}${variacao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}${sufixo} vs. mês anterior`;
   const indicadores: {
     label: string;
-    value: number;
+    value: number | null;
     format: (value: number) => string;
     delta: number | null;
     kind: "good" | "inverse";
@@ -288,7 +299,7 @@ function DashboardPage() {
     },
     {
       label: "Margem do mês",
-      value: dados?.resumo.margemMedia ?? 0,
+      value: dados?.resumo.margemMedia ?? null,
       format: (value) =>
         `${value.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
       delta: dados?.resumo.variacao.margemMedia ?? null,
@@ -473,7 +484,7 @@ function DashboardPage() {
           </div>
         ) : (
           <>
-            {dados.resumo.lucroReal < 0 && (
+            {dados.resumo.lucroReal !== null && dados.resumo.lucroReal < 0 && (
               <p className="flex items-center gap-2 px-1 text-xs text-amber-800" role="status">
                 <AlertTriangle className="shrink-0" size={14} />
                 <span>
@@ -509,7 +520,9 @@ function DashboardPage() {
                 <div className="relative mt-4">
                   <div className="min-w-0">
                     <div className="font-display text-[clamp(1.125rem,1.9vw,1.5rem)] font-semibold leading-tight tracking-tight">
-                      <CountUp value={dados.resumo.lucroReal} format={money.format} />
+                      {dados.resumo.lucroReal === null
+                        ? "—"
+                        : money.format(dados.resumo.lucroReal)}
                     </div>
                     <span className="mt-2 block text-[10px] font-semibold text-white/75">
                       {variacaoTexto(dados.resumo.variacao.lucroReal)}
@@ -542,7 +555,7 @@ function DashboardPage() {
                       <Tip text={indicator.description} />
                     </div>
                     <div className="mt-1 font-display text-[25px] font-semibold leading-tight text-ink">
-                      <CountUp value={indicator.value} format={indicator.format} />
+                      {indicator.value === null ? "—" : <CountUp value={indicator.value} format={indicator.format} />}
                     </div>
                     <span
                       className={`mt-2 inline-flex text-[9px] font-semibold ${neutral ? "text-wine/45" : positive ? "text-[#2F9E74]" : "text-berry"}`}
@@ -602,7 +615,10 @@ function DashboardPage() {
                       </em>
                     </span>
                     <span className="text-wine/60">
-                      Despesas {money.format(dados.historico.at(-1)?.despesas || 0)}
+                      Despesas{" "}
+                      {dados.historico.at(-1)?.despesas == null
+                        ? "—"
+                        : money.format(dados.historico.at(-1).despesas)}
                     </span>
                   </div>
                 </div>
@@ -644,7 +660,7 @@ function DashboardPage() {
                                 <b>{meses[competenciaAtiva.mes - 1] ?? "Mês desconhecido"}</b>
                                 {payload?.map((item) => (
                                   <div key={item.name}>
-                                    {item.name}: {money.format(Number(item.value))}
+                                    {item.name}: {item.value == null ? "—" : money.format(Number(item.value))}
                                   </div>
                                 ))}
                               </div>
@@ -696,7 +712,7 @@ function DashboardPage() {
                             if (!active || !firstPayload) return null;
                             return (
                               <div className="rounded-xl bg-wine px-3 py-2 text-[11px] text-white">
-                                Lucro: {money.format(Number(firstPayload.value))}
+                                Lucro: {firstPayload.value == null ? "—" : money.format(Number(firstPayload.value))}
                               </div>
                             );
                           }}
@@ -753,12 +769,14 @@ function DashboardPage() {
                       strokeWidth="24"
                       strokeLinecap="round"
                       pathLength="100"
-                      strokeDasharray={`${Math.max(0, Math.min(dados.resumo.margemMedia, 100))} 100`}
+                      strokeDasharray={`${Math.max(0, Math.min(dados.resumo.margemMedia ?? 0, 100))} 100`}
                     />
                   </svg>
                   <div className="absolute inset-x-0 bottom-1 text-center">
                     <div className="font-display text-4xl font-semibold text-wine">
-                      {dados.resumo.margemMedia.toLocaleString("pt-BR")}%
+                      {dados.resumo.margemMedia === null
+                        ? "—"
+                        : `${dados.resumo.margemMedia.toLocaleString("pt-BR")}%`}
                     </div>
                     <div className="text-[11px] font-semibold text-wine/55">
                       Margem do mês · Meta: {dados.configuracao.lucroDesejado}%
@@ -770,7 +788,9 @@ function DashboardPage() {
                 >
                   {metaOk
                     ? "Meta atingida"
-                    : dados.resumo.entradasMes <= 0
+                    : dados.resumo.margemMedia === null
+                      ? "Margem indisponível: confira os custos dos insumos e taxas"
+                      : dados.resumo.entradasMes <= 0
                       ? "Sem entradas para comparar com a meta"
                       : dados.resumo.margemMedia < 0
                         ? "Sua margem ficou negativa neste período"
@@ -792,15 +812,21 @@ function DashboardPage() {
                 </h2>
                 <div className="mt-4 flex min-h-32 flex-wrap items-center justify-center gap-3">
                   {dados.composicaoCustos.map((c, i) => {
-                    const percentualCusto = totalCustos > 0 ? (c.valor / totalCustos) * 100 : 0;
-                    const tamanho = percentualCusto > 0 ? 56 + Math.sqrt(percentualCusto) * 5 : 56;
+                    const percentualCusto =
+                      c.valor !== null && totalCustos !== null && totalCustos > 0
+                        ? (c.valor / totalCustos) * 100
+                        : null;
+                    const tamanho =
+                      percentualCusto !== null && percentualCusto > 0
+                        ? 56 + Math.sqrt(percentualCusto) * 5
+                        : 56;
                     const selecionada = categoriaCustoSelecionada === c.categoria;
                     return (
                       <button
                         key={c.categoria}
                         type="button"
                         aria-pressed={selecionada}
-                        aria-label={`${c.categoria}: ${percentualCusto.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}% dos custos, ${money.format(c.valor)}`}
+                        aria-label={`${c.categoria}: ${percentualCusto === null ? "valor indisponível" : `${percentualCusto.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}% dos custos, ${c.valor === null ? "—" : money.format(c.valor)}`}`}
                         onClick={() =>
                           setCategoriaCustoSelecionada(selecionada ? null : c.categoria)
                         }
@@ -816,7 +842,9 @@ function DashboardPage() {
                             background: palette[i % palette.length],
                           }}
                         >
-                          {percentualCusto.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%
+                          {percentualCusto === null
+                            ? "—"
+                            : `${percentualCusto.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%`}
                         </span>
                         <span className="max-w-20 text-center text-[9px] leading-tight text-wine/65">
                           {c.categoria}
@@ -833,7 +861,10 @@ function DashboardPage() {
                         categoriaCustoSelecionada === c.categoria,
                     )
                     .map((c) => {
-                      const percentualCusto = totalCustos > 0 ? (c.valor / totalCustos) * 100 : 0;
+                      const percentualCusto =
+                        c.valor !== null && totalCustos !== null && totalCustos > 0
+                          ? (c.valor / totalCustos) * 100
+                          : null;
                       const colorIndex = dados.composicaoCustos.findIndex(
                         (item) => item.categoria === c.categoria,
                       );
@@ -842,7 +873,7 @@ function DashboardPage() {
                           <div className="flex justify-between gap-3 text-xs">
                             <span className="font-medium text-wine/75">{c.categoria}</span>
                             <span className="whitespace-nowrap font-semibold text-wine">
-                              {money.format(c.valor)}
+                              {c.valor === null ? "—" : money.format(c.valor)}
                             </span>
                           </div>
                           <div className="mt-1.5 flex items-center gap-2">
@@ -850,16 +881,17 @@ function DashboardPage() {
                               <div
                                 className="h-full rounded-full"
                                 style={{
-                                  width: `${percentualCusto}%`,
+                                  width: `${percentualCusto ?? 0}%`,
                                   background: palette[colorIndex % palette.length],
                                 }}
                               />
                             </div>
                             <span className="w-9 text-right text-[10px] text-wine/50">
-                              {percentualCusto.toLocaleString("pt-BR", {
-                                maximumFractionDigits: 0,
-                              })}
-                              %
+                              {percentualCusto === null
+                                ? "—"
+                                : `${percentualCusto.toLocaleString("pt-BR", {
+                                    maximumFractionDigits: 0,
+                                  })}%`}
                             </span>
                           </div>
                         </div>
@@ -886,7 +918,7 @@ function DashboardPage() {
                       Resultado por procedimento
                     </h2>
                     <p className="mt-1 text-[10px] text-wine/50">
-                      Após custo dos insumos; despesas gerais não são rateadas por procedimento.
+                      Após custo dos insumos e taxas de pagamento; despesas gerais não são rateadas.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-1 rounded-full bg-cream p-1">
@@ -921,7 +953,7 @@ function DashboardPage() {
                           <div className="flex flex-wrap items-center justify-between gap-x-2">
                             <b className="truncate text-xs text-wine">{p.nome}</b>
                             <span className="text-[10px] font-bold text-wine">
-                              {money.format(p.lucroTotal)}
+                              {p.lucroTotal === null ? "—" : money.format(p.lucroTotal)}
                             </span>
                           </div>
                           <div className="mt-1 flex items-center justify-between text-[9px] text-wine/55">
@@ -944,7 +976,7 @@ function DashboardPage() {
                                   style={{ width: `${Math.max(0, Math.min(p.margem, 100))}%` }}
                                 />
                               </div>
-                              <b className="text-[10px] text-wine">{p.margem}% após insumos</b>
+                              <b className="text-[10px] text-wine">{p.margem}% após insumos e taxas</b>
                             </div>
                           )}
                         </div>
