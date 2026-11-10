@@ -4,7 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrecificacaoPage } from "./precificacao";
 import { buscarPerfilEmpresa } from "@/services/perfilEmpresaService";
-import { buscarConfiguracaoFinanceira } from "@/services/configuracaoFinanceiraService";
+import {
+  buscarConfiguracaoFinanceira,
+  salvarConfiguracaoFinanceira,
+} from "@/services/configuracaoFinanceiraService";
 import { listarFormasPagamento } from "@/services/formaPagamentoService";
 import { listarProcedimentos } from "@/services/procedimentoService";
 import { listarFichaTecnica } from "@/services/fichaTecnicaService";
@@ -113,6 +116,35 @@ describe("atualização dos dados na tela de precificação", () => {
     await waitFor(() => {
       const precoPadraoAtual = screen.getByText("Preço padrão atual:").parentElement;
       expect(precoPadraoAtual?.textContent).toContain("42,75");
+    });
+  });
+
+  it("atualiza uma configuração existente preservando seu identificador", async () => {
+    const user = userEvent.setup();
+    vi.mocked(salvarConfiguracaoFinanceira).mockResolvedValue({
+      idConfiguracao: 1,
+      margemSeguranca: 11,
+      lucroDesejado: 20,
+      provisaoFeriasAtiva: false,
+      percentualProvisaoFerias: null,
+    });
+
+    render(<PrecificacaoPage />);
+
+    await user.click(await screen.findByRole("button", { name: "Editar configuração" }));
+    await user.clear(screen.getByLabelText("Margem de segurança (%) *"));
+    await user.type(screen.getByLabelText("Margem de segurança (%) *"), "11");
+    await user.click(screen.getByRole("button", { name: "Salvar Configuração" }));
+
+    await waitFor(() => {
+      expect(salvarConfiguracaoFinanceira).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          idConfiguracao: 1,
+          margemSeguranca: 11,
+          lucroDesejado: 20,
+        }),
+      );
     });
   });
 });

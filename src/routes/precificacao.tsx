@@ -252,7 +252,11 @@ export function PrecificacaoPage() {
     try {
       const saved = await salvarConfiguracaoFinanceira(
         perfil.idPerfilEmpresa,
-        novaConfig
+        {
+          ...config,
+          ...novaConfig,
+          dataAtualizacao: new Date().toISOString(),
+        }
       );
       setConfig(saved);
       toast.success("Configuração financeira salva com sucesso!");

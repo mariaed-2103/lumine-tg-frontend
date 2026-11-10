@@ -29,6 +29,7 @@ describe("validação da configuração financeira", () => {
     await user.type(screen.getByLabelText("Margem de segurança (%) *"), "50");
     await user.clear(screen.getByLabelText("Lucro desejado (%) *"));
     await user.type(screen.getByLabelText("Lucro desejado (%) *"), "50");
+    expect(screen.getByText(/Soma:\s*100,00%/)).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Salvar Configuração" }));
 
     expect(

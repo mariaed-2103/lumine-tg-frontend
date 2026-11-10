@@ -31,6 +31,14 @@ export const ConfiguracaoFinanceiraTab: React.FC<ConfiguracaoFinanceiraTabProps>
 
   const [errors, setErrors] = useState<ConfiguracaoFinanceiraFormErrors>({});
 
+  const margemExibida = isEditing
+    ? Number.parseFloat(formData.margemSeguranca.replace(",", "."))
+    : configuracao.margemSeguranca;
+  const lucroExibido = isEditing
+    ? Number.parseFloat(formData.lucroDesejado.replace(",", "."))
+    : configuracao.lucroDesejado;
+  const somaPercentuais = margemExibida + lucroExibido;
+
   const handleStartEdit = () => {
     setFormData({
       margemSeguranca: configuracao.margemSeguranca.toFixed(2).replace(".", ","),
@@ -125,10 +133,9 @@ export const ConfiguracaoFinanceiraTab: React.FC<ConfiguracaoFinanceiraTabProps>
             </h3>
             <span className="rounded-full border border-petal/50 bg-pale px-2.5 py-0.5 text-xs font-bold tabular-nums text-wine">
               Soma:{" "}
-              {(configuracao.margemSeguranca + configuracao.lucroDesejado)
-                .toFixed(2)
-                .replace(".", ",")}
-              %
+              {Number.isFinite(somaPercentuais)
+                ? `${somaPercentuais.toFixed(2).replace(".", ",")}%`
+                : "--"}
             </span>
           </div>
           <p className="mt-0.5 text-xs font-medium text-ink/60 sm:text-[13px]">
