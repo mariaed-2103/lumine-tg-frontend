@@ -92,7 +92,11 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (errors[name as keyof ProcedimentoFormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+      setErrors((prev) => {
+        const next: ProcedimentoFormErrors = { ...prev };
+        delete next[name as keyof ProcedimentoFormErrors];
+        return next;
+      });
     }
   };
 
@@ -318,12 +322,12 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                 onBlur={() => handleBlur('nome')}
                 disabled={isSubmitting}
                 className={`w-full px-4 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
-                  errors.nome && touched.nome
+                  errors.nome && touched['nome']
                     ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
                     : 'border-petal bg-white/70 focus:border-berry focus:ring-4 focus:ring-berry/15'
                 }`}
               />
-              {errors.nome && touched.nome && (
+              {errors.nome && touched['nome'] && (
                 <p className="flex items-center gap-1 text-xs text-berry font-semibold mt-1 ml-2 animate-in fade-in">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>{errors.nome}</span>
@@ -355,7 +359,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                     onBlur={() => handleBlur('duracaoMinutos')}
                     disabled={isSubmitting}
                     className={`w-full pl-4 pr-12 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
-                      errors.duracaoMinutos && touched.duracaoMinutos
+                      errors.duracaoMinutos && touched['duracaoMinutos']
                         ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
                         : 'border-petal bg-white/70 focus:border-berry focus:ring-4 focus:ring-berry/15'
                     }`}
@@ -364,7 +368,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                     min
                   </span>
                 </div>
-                {errors.duracaoMinutos && touched.duracaoMinutos && (
+                {errors.duracaoMinutos && touched['duracaoMinutos'] && (
                   <p className="flex items-center gap-1 text-xs text-berry font-semibold mt-1 ml-2 animate-in fade-in">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{errors.duracaoMinutos}</span>
@@ -396,7 +400,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                     onBlur={() => handleBlur('precoPadrao')}
                     disabled={isSubmitting}
                     className={`w-full pl-11 pr-4 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
-                      errors.precoPadrao && touched.precoPadrao
+                      errors.precoPadrao && touched['precoPadrao']
                         ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
                         : 'border-petal bg-white/70 focus:border-berry focus:ring-4 focus:ring-berry/15'
                     }`}
@@ -405,7 +409,7 @@ export const ProcedimentoFormModal: React.FC<ProcedimentoFormModalProps> = ({
                 <p className="text-[11px] text-wine/70 mt-1 ml-2 leading-tight">
                   Simule o preço deste procedimento na tela de Precificação.
                 </p>
-                {errors.precoPadrao && touched.precoPadrao && (
+                {errors.precoPadrao && touched['precoPadrao'] && (
                   <p className="flex items-center gap-1 text-xs text-berry font-semibold mt-1 ml-2 animate-in fade-in">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{errors.precoPadrao}</span>

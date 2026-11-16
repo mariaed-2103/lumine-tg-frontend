@@ -330,6 +330,7 @@ function DashboardPage() {
       description: descriptions[4],
     },
   ];
+  const despesasMesAtual = dados?.historico.at(-1)?.despesas ?? null;
   return (
     <AppShell mobileTitle="Dashboard">
       <div className="mx-auto w-full max-w-[1440px] space-y-5 pb-8">
@@ -485,24 +486,78 @@ function DashboardPage() {
         ) : (
           <>
             {dados.resumo.lucroReal !== null && dados.resumo.lucroReal < 0 && (
-              <p className="flex items-center gap-2 px-1 text-xs text-amber-800" role="status">
-                <AlertTriangle className="shrink-0" size={14} />
-                <span>
-                  As despesas superaram as entradas em{" "}
-                  <b>{money.format(Math.abs(dados.resumo.lucroReal))}</b> neste mês.
-                </span>
-              </p>
-            )}
-            {dados.avisos.length > 0 && (
               <div
-                className="border-l-2 border-amber-300 pl-3 text-xs leading-relaxed text-amber-800"
-                role="alert"
+                className="flex items-start gap-3 rounded-2xl bg-pale px-4 py-3 text-xs text-wine/80"
+                role="status"
               >
-                Alguns dados não puderam ser carregados (
-                {Array.from(new Set(dados.avisos)).join(", ")}). Os valores podem estar incompletos;
-                tente atualizar a página.
+                <BadgeInfo className="mt-0.5 shrink-0 text-berry" size={15} />
+                <span className="leading-relaxed">
+                  Suas despesas superaram as entradas em{" "}
+                  <b className="font-semibold text-wine">
+                    {money.format(Math.abs(dados.resumo.lucroReal))}
+                  </b>{" "}
+                  neste mês. Que tal revisar suas despesas ou ajustar seus preços?{" "}
+                  <button
+                    onClick={() => navigate({ to: "/gestao-financeira" })}
+                    className="focus-ring inline-flex items-center gap-0.5 font-semibold text-berry underline-offset-2 hover:underline"
+                  >
+                    Ver gestão financeira →
+                  </button>
+                </span>
               </div>
             )}
+            {(() => {
+              const avisosUnicos = Array.from(new Set(dados.avisos));
+              const temConfigFinanceira = avisosUnicos.some((a) =>
+                a.toLowerCase().includes("configuração financeira"),
+              );
+              const temCompraInsumo = avisosUnicos.some(
+                (a) =>
+                  a.toLowerCase().includes("compra válida") ||
+                  a.toLowerCase().includes("custo dos insumos"),
+              );
+              if (!temConfigFinanceira && !temCompraInsumo && dados.avisos.length === 0)
+                return null;
+              return (
+                <div className="flex flex-col gap-2">
+                  {temConfigFinanceira && (
+                    <div
+                      className="flex items-start gap-3 rounded-2xl bg-pale px-4 py-3 text-xs text-wine/80"
+                      role="status"
+                    >
+                      <BadgeInfo className="mt-0.5 shrink-0 text-berry" size={15} />
+                      <span className="leading-relaxed">
+                        Para ver sua margem e lucro real, complete a configuração financeira.{" "}
+                        <button
+                          onClick={() => navigate({ to: "/gestao-financeira" })}
+                          className="focus-ring inline-flex items-center gap-0.5 font-semibold text-berry underline-offset-2 hover:underline"
+                        >
+                          Configurar →
+                        </button>
+                      </span>
+                    </div>
+                  )}
+                  {temCompraInsumo && (
+                    <div
+                      className="flex items-start gap-3 rounded-2xl bg-pale px-4 py-3 text-xs text-wine/80"
+                      role="status"
+                    >
+                      <BadgeInfo className="mt-0.5 shrink-0 text-berry" size={15} />
+                      <span className="leading-relaxed">
+                        Alguns insumos usados neste período não têm compra registrada. Os cálculos
+                        de margem podem estar incompletos.{" "}
+                        <button
+                          onClick={() => navigate({ to: "/insumos" })}
+                          className="focus-ring inline-flex items-center gap-0.5 font-semibold text-berry underline-offset-2 hover:underline"
+                        >
+                          Registrar compra →
+                        </button>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
               <div className="relative col-span-2 overflow-hidden rounded-[24px] bg-gradient-to-br from-wine to-berry p-5 text-white shadow-[0_6px_20px_rgba(107,21,48,.16)] xl:col-span-1">
                 <div className="relative flex items-center justify-between">
@@ -616,9 +671,7 @@ function DashboardPage() {
                     </span>
                     <span className="text-wine/60">
                       Despesas{" "}
-                      {dados.historico.at(-1)?.despesas == null
-                        ? "—"
-                        : money.format(dados.historico.at(-1).despesas)}
+                      {despesasMesAtual == null ? "—" : money.format(despesasMesAtual)}
                     </span>
                   </div>
                 </div>

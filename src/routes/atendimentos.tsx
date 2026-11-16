@@ -443,10 +443,7 @@ export function AtendimentosPage() {
               </label>
 
               <div className="min-w-0">
-                <Select
-                  value={procedimentoFiltrado || undefined}
-                  onValueChange={setProcedimentoFiltrado}
-                >
+                <Select value={procedimentoFiltrado} onValueChange={setProcedimentoFiltrado}>
                   <SelectTrigger
                     aria-label="Filtrar por procedimento"
                     className="h-10 min-w-0 rounded-full border-petal/40 bg-white px-3 text-sm"
@@ -467,7 +464,7 @@ export function AtendimentosPage() {
               </div>
 
               <div className="min-w-0">
-                <Select value={pagamentoFiltrado || undefined} onValueChange={setPagamentoFiltrado}>
+                <Select value={pagamentoFiltrado} onValueChange={setPagamentoFiltrado}>
                   <SelectTrigger
                     aria-label="Filtrar por forma de pagamento"
                     className="h-10 min-w-0 rounded-full border-petal/40 bg-white px-3 text-sm"
@@ -489,10 +486,7 @@ export function AtendimentosPage() {
 
               <div className="flex min-w-0 gap-2">
                 <div className="min-w-0 flex-1">
-                  <Select
-                    value={imprevistoFiltrado || undefined}
-                    onValueChange={setImprevistoFiltrado}
-                  >
+                  <Select value={imprevistoFiltrado} onValueChange={setImprevistoFiltrado}>
                     <SelectTrigger
                       aria-label="Filtrar por imprevistos"
                       className="h-10 min-w-0 rounded-full border-petal/40 bg-white px-3 text-sm"

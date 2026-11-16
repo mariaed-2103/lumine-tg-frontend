@@ -96,6 +96,7 @@ describe("atualização dos dados na tela de precificação", () => {
       margemSeguranca: 10,
       lucroDesejado: 20,
       precoSugerido: 42.75,
+      insumos: [],
     });
     vi.mocked(definirPrecoPadrao).mockResolvedValue(undefined);
   });

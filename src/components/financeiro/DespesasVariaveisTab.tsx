@@ -380,7 +380,10 @@ export const DespesasVariaveisTab: React.FC<DespesasVariaveisTabProps> = ({
                   variant="rounded"
                   onChange={(val) => {
                     setFormData({ ...formData, data: val });
-                    if (errors.data) setErrors({ ...errors, data: undefined });
+                    if (errors.data) {
+                      const { data: _, ...rest } = errors;
+                      setErrors(rest);
+                    }
                   }}
                   hasError={!!errors.data}
                 />
@@ -405,7 +408,10 @@ export const DespesasVariaveisTab: React.FC<DespesasVariaveisTabProps> = ({
                   value={formData.nome}
                   onChange={(e) => {
                     setFormData({ ...formData, nome: e.target.value });
-                    if (errors.nome) setErrors({ ...errors, nome: undefined });
+                    if (errors.nome) {
+                      const { nome: _, ...rest } = errors;
+                      setErrors(rest);
+                    }
                   }}
                   className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-ink placeholder-wine/40 transition-colors focus:outline-none focus:ring-1 ${
                     errors.nome
@@ -437,7 +443,10 @@ export const DespesasVariaveisTab: React.FC<DespesasVariaveisTabProps> = ({
                       onChange={(e) => {
                         const clean = e.target.value.replace(/[^\d,.]/g, "");
                         setFormData({ ...formData, valor: clean });
-                        if (errors.valor) setErrors({ ...errors, valor: undefined });
+                        if (errors.valor) {
+                          const { valor: _, ...rest } = errors;
+                          setErrors(rest);
+                        }
                       }}
                       className={`w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl border bg-white text-ink font-bold placeholder-wine/40 transition-colors focus:outline-none focus:ring-1 ${
                         errors.valor
@@ -465,7 +474,10 @@ export const DespesasVariaveisTab: React.FC<DespesasVariaveisTabProps> = ({
                     value={formData.categoria}
                     onChange={(e) => {
                       setFormData({ ...formData, categoria: e.target.value });
-                      if (errors.categoria) setErrors({ ...errors, categoria: undefined });
+                      if (errors.categoria) {
+                        const { categoria: _, ...rest } = errors;
+                        setErrors(rest);
+                      }
                     }}
                     className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-ink transition-colors focus:outline-none focus:ring-1 ${
                       errors.categoria

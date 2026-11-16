@@ -136,10 +136,11 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
     }));
 
     if (errors[name as keyof InsumoFormErrors]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }));
+      setErrors((prev) => {
+        const next: InsumoFormErrors = { ...prev };
+        delete next[name as keyof InsumoFormErrors];
+        return next;
+      });
     }
   };
 
@@ -147,7 +148,10 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
     setFormData((prev) => ({ ...prev, unidadeMedida: unit }));
     setIsUnitDropdownOpen(false);
     if (errors.unidadeMedida) {
-      setErrors((prev) => ({ ...prev, unidadeMedida: undefined }));
+      setErrors((prev) => {
+        const { unidadeMedida: _, ...rest } = prev;
+        return rest;
+      });
     }
   };
 
@@ -246,12 +250,12 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               onBlur={() => handleBlur('nome')}
               disabled={isSubmitting}
               className={`w-full px-4 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
-                errors.nome && touched.nome
+                errors.nome && touched['nome']
                   ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
                   : 'border-petal focus:border-rose focus:ring-2 focus:ring-rose/20'
               }`}
             />
-            {errors.nome && touched.nome && (
+            {errors.nome && touched['nome'] && (
               <p className="flex items-center gap-1 text-xs text-berry font-semibold mt-1 ml-2 animate-in fade-in">
                 <AlertCircle className="w-3 h-3 shrink-0" />
                 <span>{errors.nome}</span>
@@ -329,7 +333,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                 onBlur={() => handleBlur('quantidadePorEmbalagem')}
                 disabled={isSubmitting}
                 className={`w-full pl-4 pr-12 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
-                  errors.quantidadePorEmbalagem && touched.quantidadePorEmbalagem
+                  errors.quantidadePorEmbalagem && touched['quantidadePorEmbalagem']
                     ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
                     : 'border-petal focus:border-rose focus:ring-2 focus:ring-rose/20'
                 }`}
@@ -338,7 +342,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                 {formData.unidadeMedida}
               </span>
             </div>
-            {errors.quantidadePorEmbalagem && touched.quantidadePorEmbalagem && (
+            {errors.quantidadePorEmbalagem && touched['quantidadePorEmbalagem'] && (
               <p className="flex items-center gap-1 text-xs text-berry font-semibold mt-1 ml-2 animate-in fade-in">
                 <AlertCircle className="w-3 h-3 shrink-0" />
                 <span>{errors.quantidadePorEmbalagem}</span>
@@ -370,7 +374,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                   onBlur={() => handleBlur('estoqueAtual')}
                   disabled={isSubmitting}
                   className={`w-full pl-4 pr-12 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
-                    errors.estoqueAtual && touched.estoqueAtual
+                    errors.estoqueAtual && touched['estoqueAtual']
                       ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
                       : 'border-petal focus:border-rose focus:ring-2 focus:ring-rose/20'
                   }`}
@@ -379,7 +383,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                   {formData.unidadeMedida}
                 </span>
               </div>
-              {errors.estoqueAtual && touched.estoqueAtual && (
+              {errors.estoqueAtual && touched['estoqueAtual'] && (
                 <p className="flex items-center gap-1 text-xs text-berry font-semibold mt-1 ml-2 animate-in fade-in">
                   <AlertCircle className="w-3 h-3 shrink-0" />
                   <span>{errors.estoqueAtual}</span>
@@ -408,7 +412,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                   onBlur={() => handleBlur('estoqueMinimo')}
                   disabled={isSubmitting}
                   className={`w-full pl-4 pr-12 py-2.5 bg-white border rounded-full text-sm text-ink placeholder-petal transition-all outline-none ${
-                    errors.estoqueMinimo && touched.estoqueMinimo
+                    errors.estoqueMinimo && touched['estoqueMinimo']
                       ? 'border-berry ring-2 ring-berry/20 bg-rose-50/20'
                       : 'border-petal focus:border-rose focus:ring-2 focus:ring-rose/20'
                   }`}
@@ -417,7 +421,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                   {formData.unidadeMedida}
                 </span>
               </div>
-              {errors.estoqueMinimo && touched.estoqueMinimo && (
+              {errors.estoqueMinimo && touched['estoqueMinimo'] && (
                 <p className="flex items-center gap-1 text-xs text-berry font-semibold mt-1 ml-2 animate-in fade-in">
                   <AlertCircle className="w-3 h-3 shrink-0" />
                   <span>{errors.estoqueMinimo}</span>

@@ -46,12 +46,12 @@ export async function simularPreco(idProcedimento: number, mes: number, ano: num
     lucroDesejado: Number(raw.lucroDesejado ?? 0),
     precoSugerido: Number(raw.precoSugerido ?? 0),
     insumos: (raw.insumos ?? []).map((item: Record<string, unknown>) => ({
-      idInsumo: Number(item.idInsumo),
-      nomeInsumo: String(item.nomeInsumo ?? ""),
-      unidadeMedida: String(item.unidadeMedida ?? ""),
-      quantidadeUtilizada: Number(item.quantidadeUtilizada ?? 0),
-      custoUnitario: Number(item.custoUnitario ?? 0),
-      custoTotal: Number(item.custoTotal ?? 0),
+      idInsumo: Number(item["idInsumo"]),
+      nomeInsumo: String(item["nomeInsumo"] ?? ""),
+      unidadeMedida: String(item["unidadeMedida"] ?? ""),
+      quantidadeUtilizada: Number(item["quantidadeUtilizada"] ?? 0),
+      custoUnitario: Number(item["custoUnitario"] ?? 0),
+      custoTotal: Number(item["custoTotal"] ?? 0),
     })),
   };
 }

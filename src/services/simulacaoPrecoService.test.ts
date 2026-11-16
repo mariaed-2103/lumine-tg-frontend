@@ -29,10 +29,10 @@ describe("integração HTTP da simulação de preço", () => {
 
     const resultado = await simularPreco(2, 10, 2026);
 
-    expect(fetchMock.mock.calls[0][0]).toContain(
+    expect(fetchMock.mock.calls[0]?.[0]).toContain(
       "/simulacoes-preco/procedimento/2?mes=10&ano=2026",
     );
-    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer token-teste");
+    expect(fetchMock.mock.calls[0]?.[1].headers.Authorization).toBe("Bearer token-teste");
     expect(resultado.custoInsumos).toBe(5);
     expect(resultado.custoFixoProcedimento).toBe(9);
     expect(resultado.precoSugerido).toBe(20);
@@ -44,9 +44,9 @@ describe("integração HTTP da simulação de preço", () => {
 
     await definirPrecoPadrao(2, 20);
 
-    expect(fetchMock.mock.calls[0][0]).toContain("/simulacoes-preco/procedimento/2/preco-padrao");
-    expect(fetchMock.mock.calls[0][1].method).toBe("PUT");
-    expect(fetchMock.mock.calls[0][1].body).toBe(JSON.stringify({ precoSugerido: 20 }));
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/simulacoes-preco/procedimento/2/preco-padrao");
+    expect(fetchMock.mock.calls[0]?.[1].method).toBe("PUT");
+    expect(fetchMock.mock.calls[0]?.[1].body).toBe(JSON.stringify({ precoSugerido: 20 }));
   });
 
   it("mostra a mensagem de validação enviada pelo backend", async () => {

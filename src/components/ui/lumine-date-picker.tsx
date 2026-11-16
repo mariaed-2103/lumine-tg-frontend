@@ -46,9 +46,9 @@ function parseISODate(isoStr?: string): { year: number; month: number; day: numb
   if (!isoStr || typeof isoStr !== "string") return null;
   const parts = isoStr.trim().split("-");
   if (parts.length !== 3) return null;
-  const year = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10) - 1;
-  const day = parseInt(parts[2], 10);
+  const year = parseInt(parts[0] ?? "", 10);
+  const month = parseInt(parts[1] ?? "", 10) - 1;
+  const day = parseInt(parts[2] ?? "", 10);
   if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
   return { year, month, day };
 }
@@ -200,7 +200,7 @@ export function LumineDatePicker({
         readOnly
       />
 
-      <Popover open={isOpen} onOpenChange={disabled ? undefined : setIsOpen}>
+      <Popover open={isOpen} {...(!disabled && { onOpenChange: setIsOpen })}>
         <PopoverTrigger asChild>
           <button
             type="button"

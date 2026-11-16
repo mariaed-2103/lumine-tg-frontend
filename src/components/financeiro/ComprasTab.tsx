@@ -63,7 +63,7 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
 
   // Form state — idInsumo is a string until submission.
   const [formData, setFormData] = useState<CompraInsumoFormData>({
-    idInsumo: insumos.length > 0 ? String(insumos[0].idInsumo) : "",
+    idInsumo: insumos.length > 0 ? String(insumos[0]?.idInsumo ?? "") : "",
     dataCompra: new Date().toISOString().slice(0, 10),
     quantidadeComprada: "1",
     valorTotalCompra: "",
@@ -87,7 +87,7 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
   const handleOpenCreate = () => {
     setEditingCompra(null);
     setFormData({
-      idInsumo: insumos.length > 0 ? String(insumos[0].idInsumo) : "",
+      idInsumo: insumos.length > 0 ? String(insumos[0]?.idInsumo ?? "") : "",
       dataCompra: new Date().toISOString().slice(0, 10),
       quantidadeComprada: "1",
       valorTotalCompra: "",
@@ -141,12 +141,13 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
       const qtdNumerica = parseFloat(formData.quantidadeComprada.replace(",", "."));
       const valorNumerico = parseFloat(formData.valorTotalCompra.replace(",", "."));
 
+      const descricaoTrimmed = formData.descricao.trim();
       const payload: Omit<CompraInsumo, "idCompra"> = {
         idInsumo: Number(formData.idInsumo), // string → number para o backend
         dataCompra: formData.dataCompra,
         quantidadeComprada: qtdNumerica,
         valorTotalCompra: valorNumerico,
-        descricao: formData.descricao.trim() || undefined,
+        ...(descricaoTrimmed ? { descricao: descricaoTrimmed } : {}),
       };
 
       if (editingCompra) {
@@ -400,7 +401,10 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
                     value={formData.idInsumo}
                     onValueChange={(value) => {
                       setFormData({ ...formData, idInsumo: value });
-                      if (errors.idInsumo) setErrors({ ...errors, idInsumo: undefined });
+                      if (errors.idInsumo) {
+                        const { idInsumo: _, ...rest } = errors;
+                        setErrors(rest);
+                      }
                     }}
                   >
                     <SelectTrigger
@@ -442,7 +446,10 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
                       variant="rounded"
                       onChange={(val) => {
                         setFormData({ ...formData, dataCompra: val });
-                        if (errors.dataCompra) setErrors({ ...errors, dataCompra: undefined });
+                        if (errors.dataCompra) {
+                          const { dataCompra: _, ...rest } = errors;
+                          setErrors(rest);
+                        }
                       }}
                       hasError={!!errors.dataCompra}
                     />
@@ -466,7 +473,10 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
                         onChange={(e) => {
                           const clean = e.target.value.replace(/[^\d,.]/g, "");
                           setFormData({ ...formData, quantidadeComprada: clean });
-                          if (errors.quantidadeComprada) setErrors({ ...errors, quantidadeComprada: undefined });
+                          if (errors.quantidadeComprada) {
+                            const { quantidadeComprada: _, ...rest } = errors;
+                            setErrors(rest);
+                          }
                         }}
                         className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-white text-ink pr-22 transition-colors focus:outline-none focus:ring-1 ${
                           errors.quantidadeComprada
@@ -502,7 +512,10 @@ export const ComprasTab: React.FC<ComprasTabProps> = ({
                       onChange={(e) => {
                         const clean = e.target.value.replace(/[^\d,.]/g, "");
                         setFormData({ ...formData, valorTotalCompra: clean });
-                        if (errors.valorTotalCompra) setErrors({ ...errors, valorTotalCompra: undefined });
+                        if (errors.valorTotalCompra) {
+                          const { valorTotalCompra: _, ...rest } = errors;
+                          setErrors(rest);
+                        }
                       }}
                       className={`w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl border bg-white text-ink font-bold placeholder-wine/40 transition-colors focus:outline-none focus:ring-1 ${
                         errors.valorTotalCompra

@@ -16,10 +16,12 @@ export const Toast: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
   useEffect(() => {
     if (toasts.length > 0) {
       const timer = setTimeout(() => {
-        onDismiss(toasts[0].id);
+        const first = toasts[0];
+        if (first) onDismiss(first.id);
       }, 4000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [toasts, onDismiss]);
 
   if (toasts.length === 0) return null;
