@@ -434,7 +434,7 @@
 }
 
 #procedimentos-table-container {
-  --proc-cols: minmax(220px, 2.4fr) 112px 128px 140px 88px;
+  --proc-cols: minmax(220px, 2.4fr) 112px 128px minmax(220px, 1.5fr) 88px;
   --proc-gap: 16px;
   --proc-pad-x: 20px;
 }
@@ -466,6 +466,7 @@
   --insumo-cols: minmax(200px, 2.2fr) minmax(130px, 1.2fr) minmax(130px, 1.2fr) minmax(115px, 1fr) minmax(130px, 1.1fr) 88px;
   --insumo-gap: 16px;
   --insumo-pad-x: 20px;
+  --insumo-pad-right: 30px;
 }
 
 .insumo-grid {

@@ -40,6 +40,7 @@ export interface LumineDatePickerProps {
   className?: string;
   clearable?: boolean;
   variant?: "pill" | "rounded";
+  ariaLabel?: string;
 }
 
 function parseISODate(isoStr?: string): { year: number; month: number; day: number } | null {
@@ -87,6 +88,7 @@ export function LumineDatePicker({
   className,
   clearable = true,
   variant = "pill",
+  ariaLabel = "Selecionar data",
 }: LumineDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -207,7 +209,7 @@ export function LumineDatePicker({
             id={id ? `${id}-trigger` : undefined}
             disabled={disabled}
             className={triggerClasses}
-            aria-label="Selecionar data"
+            aria-label={ariaLabel}
             aria-expanded={isOpen}
           >
             <span

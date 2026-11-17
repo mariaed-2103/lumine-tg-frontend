@@ -32,6 +32,12 @@ import {
   YAxis,
 } from "recharts";
 import { AppShell } from "@/components/layout/AppShell";
+import {
+  Tooltip as InfoTooltip,
+  TooltipContent as InfoTooltipContent,
+  TooltipProvider as InfoTooltipProvider,
+  TooltipTrigger as InfoTooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getDashboard, meses } from "@/services/dashboardService";
 
 export const Route = createFileRoute("/dashboard")({
@@ -161,14 +167,27 @@ function exportarExcel(dados: DashboardData) {
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
-function Tip({ text }: { text: string }) {
+function Tip({ text, lightIcon = false }: { text: string; lightIcon?: boolean }) {
   return (
-    <span className="group/tip relative inline-flex">
-      <BadgeInfo className="h-3.5 w-3.5 cursor-help text-wine/35" />
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-52 -translate-x-1/2 rounded-xl bg-wine px-3 py-2 text-[10px] font-medium leading-relaxed text-white opacity-0 shadow-lg transition group-hover/tip:opacity-100 group-focus-within/tip:opacity-100">
+    <InfoTooltip>
+      <InfoTooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label="Mais informações"
+          className={`focus-ring inline-flex shrink-0 rounded-full ${lightIcon ? "text-white/75 hover:text-white" : "text-wine/35 hover:text-wine/65"}`}
+        >
+          <BadgeInfo className="h-3.5 w-3.5" />
+        </button>
+      </InfoTooltipTrigger>
+      <InfoTooltipContent
+        side="top"
+        align="center"
+        collisionPadding={8}
+        className="max-w-[calc(100vw-1rem)] rounded-xl bg-wine px-3 py-2 text-[10px] font-medium leading-relaxed text-white shadow-lg"
+      >
         {text}
-      </span>
-    </span>
+      </InfoTooltipContent>
+    </InfoTooltip>
   );
 }
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -272,6 +291,11 @@ function DashboardPage() {
     dados.resumo.entradasMes > 0 &&
     dados.resumo.margemMedia !== null &&
     dados.resumo.margemMedia >= dados.configuracao.lucroDesejado;
+  const margemAtual = dados?.resumo.margemMedia ?? null;
+  const margemMeta = dados?.configuracao.lucroDesejado ?? 0;
+  const margemAtualPosicao = Math.min(100, Math.max(0, margemAtual ?? 0));
+  const margemMetaPosicao = Math.min(100, Math.max(0, margemMeta));
+  const diferencaMeta = margemAtual === null ? null : margemAtual - margemMeta;
   const variacaoTexto = (variacao: number | null, sufixo = "%") =>
     variacao === null
       ? "Sem comparação"
@@ -332,7 +356,8 @@ function DashboardPage() {
   ];
   const despesasMesAtual = dados?.historico.at(-1)?.despesas ?? null;
   return (
-    <AppShell mobileTitle="Dashboard">
+    <InfoTooltipProvider>
+      <AppShell mobileTitle="Dashboard">
       <div className="mx-auto w-full max-w-[1440px] space-y-5 pb-8">
         <header className="flex flex-col justify-between gap-4 px-1 md:flex-row md:items-center">
           <div>
@@ -562,7 +587,7 @@ function DashboardPage() {
               <div className="relative col-span-2 overflow-hidden rounded-[24px] bg-gradient-to-br from-wine to-berry p-5 text-white shadow-[0_6px_20px_rgba(107,21,48,.16)] xl:col-span-1">
                 <div className="relative flex items-center justify-between">
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/80">
-                    Lucro real <Tip text={descriptions[0]} />
+                    Lucro real <Tip text={descriptions[0]} lightIcon />
                   </span>
                   <button
                     onClick={() => navigate({ to: "/gestao-financeira" })}
@@ -788,70 +813,82 @@ function DashboardPage() {
                 </p>
               </Card>
               <Card className="flex flex-col lg:col-span-4">
-                <div>
+                <div className="mb-5">
                   <p className="text-[10px] font-bold uppercase tracking-[.15em] text-berry">
                     Seu objetivo
                   </p>
                   <h2 className="font-display text-xl font-semibold text-wine">Meta de margem</h2>
                 </div>
-                <div className="relative mx-auto mt-2 h-40 w-64 max-w-full">
-                  <svg viewBox="0 0 240 140" className="h-full w-full">
-                    <defs>
-                      <pattern
-                        id="hatch"
-                        width="7"
-                        height="7"
-                        patternTransform="rotate(45)"
-                        patternUnits="userSpaceOnUse"
-                      >
-                        <rect width="7" height="7" fill="#FCE1E8" />
-                        <line x1="0" y1="0" x2="0" y2="7" stroke="#F5A8BC" strokeWidth="2" />
-                      </pattern>
-                    </defs>
-                    <path
-                      d="M 30 120 A 90 90 0 0 1 210 120"
-                      fill="none"
-                      stroke="url(#hatch)"
-                      strokeWidth="24"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M 30 120 A 90 90 0 0 1 210 120"
-                      fill="none"
-                      stroke="#C5325A"
-                      strokeWidth="24"
-                      strokeLinecap="round"
-                      pathLength="100"
-                      strokeDasharray={`${Math.max(0, Math.min(dados.resumo.margemMedia ?? 0, 100))} 100`}
-                    />
-                  </svg>
-                  <div className="absolute inset-x-0 bottom-1 text-center">
-                    <div className="font-display text-4xl font-semibold text-wine">
-                      {dados.resumo.margemMedia === null
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="min-w-0 rounded-2xl bg-pale/60 p-3">
+                    <p className="text-[10px] font-semibold text-wine/60">Margem atual</p>
+                    <p className="mt-1 truncate font-display text-2xl font-semibold text-wine">
+                      {margemAtual === null
                         ? "—"
-                        : `${dados.resumo.margemMedia.toLocaleString("pt-BR")}%`}
-                    </div>
-                    <div className="text-[11px] font-semibold text-wine/55">
-                      Margem do mês · Meta: {dados.configuracao.lucroDesejado}%
-                    </div>
+                        : `${margemAtual.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`}
+                    </p>
+                  </div>
+                  <div className="min-w-0 rounded-2xl border border-petal/30 bg-white/70 p-3">
+                    <p className="text-[10px] font-semibold text-wine/60">Sua meta</p>
+                    <p className="mt-1 truncate font-display text-2xl font-semibold text-wine">
+                      {margemMeta.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
+                    </p>
                   </div>
                 </div>
-                <div
-                  className={`mx-auto rounded-full px-4 py-2 text-center text-xs font-bold ${metaOk ? "bg-[#E3F5EC] text-[#2F9E74]" : "bg-pale text-berry"}`}
-                >
-                  {metaOk
-                    ? "Meta atingida"
-                    : dados.resumo.margemMedia === null
+
+                <div className="mt-6">
+                  <div
+                    role="img"
+                    aria-label={`Escala de 0 a 100%. Margem atual: ${margemAtual === null ? "indisponível" : `${margemAtual}%`}. Meta: ${margemMeta}%.`}
+                    className="relative h-3 rounded-full bg-pale"
+                  >
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-berry to-[#E8698A]"
+                      style={{ width: `${margemAtualPosicao}%` }}
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="absolute -top-1 h-5 w-0.5 -translate-x-1/2 rounded-full bg-wine shadow-sm"
+                      style={{ left: `${margemMetaPosicao}%` }}
+                    />
+                    {margemAtual !== null && (
+                      <div
+                        aria-hidden="true"
+                        className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-berry shadow"
+                        style={{ left: `${margemAtualPosicao}%` }}
+                      />
+                    )}
+                  </div>
+                  <div className="mt-2 flex justify-between text-[10px] text-wine/45">
+                    <span>0%</span>
+                    <span>100%</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-wine/60">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-berry" aria-hidden="true" />
+                      Margem atual
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-3 w-0.5 bg-wine" aria-hidden="true" />
+                      Marcador da meta
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-5">
+                  <div
+                    className={`rounded-2xl px-3 py-2.5 text-center text-xs font-bold ${metaOk ? "bg-[#E3F5EC] text-[#2F9E74]" : "bg-pale text-berry"}`}
+                  >
+                    {margemAtual === null
                       ? "Margem indisponível: confira os custos dos insumos e taxas"
                       : dados.resumo.entradasMes <= 0
-                      ? "Sem entradas para comparar com a meta"
-                      : dados.resumo.margemMedia < 0
-                        ? "Sua margem ficou negativa neste período"
-                        : `Faltam ${(dados.configuracao.lucroDesejado - dados.resumo.margemMedia).toLocaleString("pt-BR")} pontos para sua meta`}
-                </div>
-                <div className="mt-auto flex justify-center gap-4 pt-4 text-[10px] text-wine/60">
-                  <span>● Margem atual</span>
-                  <span>▨ Até a meta</span>
+                        ? "Sem entradas para comparar com a meta"
+                        : metaOk
+                          ? diferencaMeta === 0
+                            ? "Meta atingida"
+                            : `Meta superada em ${diferencaMeta?.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} p.p.`
+                          : `Faltam ${Math.abs(diferencaMeta ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} p.p. para atingir a meta`}
+                  </div>
                 </div>
               </Card>
             </div>
@@ -1197,6 +1234,7 @@ function DashboardPage() {
           </>
         )}
       </div>
-    </AppShell>
+      </AppShell>
+    </InfoTooltipProvider>
   );
 }

@@ -30,7 +30,7 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
         {/* Cabeçalho das colunas */}
         <div
           role="row"
-          className="insumo-grid px-[calc(var(--insumo-pad-x)+1px)] text-[11px] font-bold uppercase tracking-[0.12em] text-[#6B1530]/55"
+          className="insumo-grid pl-[calc(var(--insumo-pad-x)+1px)] pr-[calc(var(--insumo-pad-right)+1px)] text-[11px] font-bold uppercase tracking-[0.12em] text-[#6B1530]/55"
         >
           <div className="min-w-0 whitespace-nowrap">Insumo / Unidade</div>
           <div className="min-w-0 text-center whitespace-nowrap">
@@ -43,7 +43,7 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
             Estoque Mínimo
           </div>
           <div className="min-w-0 text-center whitespace-nowrap">Status</div>
-          <div className="min-w-0 text-right whitespace-nowrap">Ações</div>
+          <div className="min-w-0 pr-4 text-right whitespace-nowrap">Ações</div>
         </div>
 
         {/* Lista de linhas no padrão de Procedimentos */}
@@ -57,10 +57,10 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
                 id={`row-insumo-${item.idInsumo}`}
                 className="proc-row-card group relative rounded-[20px] border border-white/80 bg-white/60 transition-all duration-200 hover:border-[#F5A8BC]/55 hover:bg-white/85"
               >
-                <div className="insumo-grid min-h-[72px] px-[var(--insumo-pad-x)] py-4">
-                  {/* 1. Nome & Unidade */}
-                  <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-                    <span className="min-w-0 text-[15px] font-bold leading-tight text-[#2E0F18] line-clamp-2">
+                <div className="insumo-grid min-h-[72px] py-4 pl-[var(--insumo-pad-x)] pr-[var(--insumo-pad-right)]">
+                  {/* 1. Nome e unidade sempre na mesma linha */}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="min-w-0 truncate text-[14px] font-bold leading-tight text-[#2E0F18]">
                       {item.nome}
                     </span>
                     <span className="inline-flex h-6 shrink-0 items-center rounded-full bg-[#FCE1E8] border border-[rgba(245,168,188,0.5)] px-2.5 text-[11px] font-bold text-[#6B1530]">
@@ -139,7 +139,7 @@ export const InsumoTable: React.FC<InsumoTableProps> = ({
                   </div>
 
                   {/* 6. Ações */}
-                  <div className="min-w-0 flex items-center justify-end gap-2 opacity-100 lg:opacity-70 lg:group-hover:opacity-100 transition-opacity">
+                  <div className="min-w-0 mr-4 flex items-center justify-end gap-2 opacity-100 lg:opacity-70 lg:group-hover:opacity-100 transition-opacity">
                     <button
                       type="button"
                       id={`btn-edit-insumo-${item.idInsumo}`}

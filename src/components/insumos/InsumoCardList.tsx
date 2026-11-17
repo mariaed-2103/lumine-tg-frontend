@@ -31,9 +31,9 @@ export const InsumoCardList: React.FC<InsumoCardListProps> = ({
             id={`card-insumo-${item.idInsumo}`}
             className="proc-row-card relative rounded-[20px] border border-white/80 bg-white/60 p-4 transition-all duration-200 space-y-3"
           >
-            {/* Topo: Nome + Unidade */}
-            <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <h4 className="font-sans font-bold text-[15px] text-[#2E0F18] leading-tight line-clamp-2 min-w-0">
+            {/* Topo: Nome e unidade sempre na mesma linha */}
+            <div className="flex min-w-0 items-center gap-2">
+              <h4 className="min-w-0 truncate font-sans text-[14px] font-bold leading-tight text-[#2E0F18]">
                 {item.nome}
               </h4>
               <span className="inline-flex h-6 shrink-0 items-center rounded-full bg-[#FCE1E8] border border-[rgba(245,168,188,0.5)] px-2.5 text-[11px] font-bold text-[#6B1530]">

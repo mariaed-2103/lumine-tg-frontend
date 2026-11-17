@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LumineDatePicker } from "@/components/ui/lumine-date-picker";
 
 import type {
   Atendimento,
@@ -67,6 +68,7 @@ export function AtendimentosPage() {
   const [procedimentoFiltrado, setProcedimentoFiltrado] = useState("");
   const [pagamentoFiltrado, setPagamentoFiltrado] = useState("");
   const [imprevistoFiltrado, setImprevistoFiltrado] = useState("");
+  const [dataFiltrada, setDataFiltrada] = useState("");
 
   // Contador usado como fallback caso o backend esteja desligado durante testes visuais
   const proximoId = useRef(1);
@@ -318,23 +320,36 @@ export function AtendimentosPage() {
         !procedimentoFiltrado || String(atendimento.idProcedimento) === procedimentoFiltrado;
       const correspondePagamento =
         !pagamentoFiltrado || String(atendimento.idFormaPagamento) === pagamentoFiltrado;
+      const correspondeData = !dataFiltrada || atendimento.dataAtendimento === dataFiltrada;
       const temImprevisto = atendimento.tempoAdicional > 0 || atendimento.desperdicioMateriais > 0;
       const correspondeImprevisto =
         !imprevistoFiltrado || (imprevistoFiltrado === "com" ? temImprevisto : !temImprevisto);
 
       return (
-        correspondeBusca && correspondeProcedimento && correspondePagamento && correspondeImprevisto
+        correspondeBusca &&
+        correspondeProcedimento &&
+        correspondePagamento &&
+        correspondeData &&
+        correspondeImprevisto
       );
     });
-  }, [atendimentosOrdenados, busca, procedimentoFiltrado, pagamentoFiltrado, imprevistoFiltrado]);
+  }, [
+    atendimentosOrdenados,
+    busca,
+    procedimentoFiltrado,
+    pagamentoFiltrado,
+    dataFiltrada,
+    imprevistoFiltrado,
+  ]);
 
   const filtrosAtivos = Boolean(
-    busca.trim() || procedimentoFiltrado || pagamentoFiltrado || imprevistoFiltrado,
+    busca.trim() || procedimentoFiltrado || pagamentoFiltrado || dataFiltrada || imprevistoFiltrado,
   );
   const limparFiltros = () => {
     setBusca("");
     setProcedimentoFiltrado("");
     setPagamentoFiltrado("");
+    setDataFiltrada("");
     setImprevistoFiltrado("");
   };
 
@@ -428,9 +443,9 @@ export function AtendimentosPage() {
           {filtrosAbertos && total > 0 && (
             <div
               id="atendimentos-filtros"
-              className="mb-5 grid gap-3 rounded-2xl border border-petal/25 bg-[#FFF9F7] p-4 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2"
+              className="mb-5 grid grid-cols-1 gap-3 rounded-2xl border border-petal/25 bg-[#FFF9F7] p-4 sm:grid-cols-2 xl:grid-cols-3"
             >
-              <label className="relative min-w-0 sm:col-span-2 2xl:col-span-1">
+              <label className="relative min-w-0">
                 <span className="sr-only">Buscar cliente ou procedimento</span>
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/40" />
                 <input
@@ -482,6 +497,18 @@ export function AtendimentosPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="min-w-0">
+                <LumineDatePicker
+                  id="filtro-data-atendimento"
+                  value={dataFiltrada}
+                  onChange={setDataFiltrada}
+                  placeholder="Qualquer data"
+                  ariaLabel="Filtrar por data do atendimento"
+                  variant="rounded"
+                  className="h-10 rounded-full border-petal/40 px-3 text-sm"
+                />
               </div>
 
               <div className="flex min-w-0 gap-2">
